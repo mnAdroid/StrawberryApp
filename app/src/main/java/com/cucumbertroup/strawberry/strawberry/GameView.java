@@ -9,18 +9,15 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.util.Log;
-import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.Random;
 
 /**
@@ -59,8 +56,11 @@ class GameView extends SurfaceView implements Runnable {
     private int zustand = 0;
 
     //Ort der letzten Berührung auf dem Bildschirm
-    private float touchX1, touchX2;
-    private float deltaX;
+    private float touchX1, touchX1down, touchX2;
+    private float deltaXmove, deltaXclick;
+
+    //Ort des Hintergrundbildes
+    private float backgroundX1;
     //Wie "stark" der Wisch sein muss, damit ich handel
     static final int MIN_DISTANCE = 200;
 
@@ -74,6 +74,7 @@ class GameView extends SurfaceView implements Runnable {
 
     //Bilder initialisieren
     Bitmap bitmapMainButtons;
+    Bitmap bitmapBackgroundColors;
 
     //Musik einlesen
     private SoundPool soundPool;
@@ -117,11 +118,17 @@ class GameView extends SurfaceView implements Runnable {
         this.screenX = screenX;
         this.screenY = screenY;
 
+        //Position des Hintergrundbildes festlegen
+        backgroundX1 = 0;
+
         //Die Buttons Shop und Einstellungen anzeigen
         bitmapMainButtons = BitmapFactory.decodeResource(this.getResources(), R.drawable.mainbuttons);
         //Bild an Größe des Bildschirms anpassen
         bitmapMainButtons = Bitmap.createScaledBitmap(bitmapMainButtons, screenX/3, screenY/9, false);
 
+        //Hintergrundbild einfügen
+        bitmapBackgroundColors = BitmapFactory.decodeResource(this.getResources(), R.drawable.background_colors);
+        bitmapBackgroundColors = Bitmap.createScaledBitmap(bitmapBackgroundColors, screenX*3, screenY, false);
         //Musik einlesen
         initialiseSound(context);
 
@@ -177,6 +184,7 @@ class GameView extends SurfaceView implements Runnable {
                     canvas.drawColor(Color.argb(255, 241, 238, 0));
                     break;
             }
+            canvas.drawBitmap(bitmapBackgroundColors, backgroundX1, 0, paint);
 
 
             //Pinselfarbe wählen(bisher nur für den Text)
@@ -207,7 +215,7 @@ class GameView extends SurfaceView implements Runnable {
                     break;
             }
             //Bewegungsrichtung als Text ausgeben
-            canvas.drawText("Delta X: " + deltaX, 20, 190, paint);
+            canvas.drawText("Background X + Delta X: " + (backgroundX1 + deltaXclick), 20, 190, paint);
 
             //Anzahl der Erdbeeren
             canvas.drawText("Erdbeeren: " + numStrawberries, 20, 240, paint);
@@ -221,6 +229,9 @@ class GameView extends SurfaceView implements Runnable {
             //Test Wachsstatus Erdbeere 1
             if(numStrawberries > 0)
                 canvas.drawText("Wachsstatus Erdbeere 1: " + strawberries[0].getWachsStatus(), 20, 390, paint);
+
+            //Hintergrundbild X
+            canvas.drawText("Bitmap X: " + backgroundX1, 20, 440, paint);
 
             //Bilder malen
             canvas.drawBitmap(bitmapMainButtons, (int) (screenX/1.6), screenY/96, paint); //noch ohne Anpassung für jede Screengröße
@@ -321,28 +332,80 @@ class GameView extends SurfaceView implements Runnable {
             //Spieler berührt den Bildschirm
             case MotionEvent.ACTION_DOWN:
                 //Wo befanden wir uns am Anfang?
+                touchX1down = motionEvent.getX();
                 touchX1 = motionEvent.getX();
+
                 //Wir haben geklickt, in einem Klickergame müssen wir doch mit der Info irgendwas machen oder? :D
                 gotClicked();
                 break;
 
-            //Spieler "verlässt" den Bildschirm
-            case MotionEvent.ACTION_UP:
+            //Spieler bewegt den Finger auf dem Bildschirm
+            case MotionEvent.ACTION_MOVE:
                 //In welche Richtung hat sich der Finger bewegt?
                 touchX2 = motionEvent.getX();
                 //Differenz der beiden Werte
-                deltaX = touchX2 - touchX1;
-                //Abfrage in welche Richtung es sich bewegt hat #deltaX < 0: nach rechts | deltaX > 0: nach links
-                if(deltaX < 0) {
-                    if (Math.abs(deltaX) > MIN_DISTANCE && zustand!= 2) {
-                        zustand++;
+                deltaXmove = touchX2 - touchX1;
+                //wo befinden wir uns in diesem Schritt
+                touchX1 = motionEvent.getX();
+
+                //Bedingung für die Äußeren Grenzen
+                if (((backgroundX1 + deltaXmove) < 0) && ((backgroundX1 + deltaXmove) > (-2 * screenX))) {
+                    //Standardmovement (Folge dem Finger)
+                    backgroundX1 += deltaXmove;
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                //Wie weit hat sich der Finger insgesamt bewegt?
+                touchX2 = motionEvent.getX();
+                //Differenz der beiden Werte
+                deltaXclick = touchX2 - touchX1down;
+
+                //reset der Hintergrundbildposition
+
+                //Wären wir über den Rand gekommen?
+                if (((backgroundX1 + deltaXclick) > 0) || ((backgroundX1 + deltaXclick) < (-2 * screenX))) {
+                    //Rechts
+                    if ((backgroundX1 + deltaXclick) < 0) {
+                        backgroundX1 = -2 * screenX;
+                        zustand = 2;
+                        break;
+                    }
+                    //Links
+                    if ((backgroundX1 + deltaXclick) > (-2 * screenX)) {
+                        backgroundX1 = 0;
+                        zustand = 0;
+                        break;
                     }
                 }
-                if(deltaX > 0) {
-                    if (Math.abs(deltaX) > MIN_DISTANCE && zustand!= 0) {
-                        zustand--;
-                    }
+                //Zurückswapen nach Links, Rechts, Mitte wenn nach Stillstand Bedingungen zutreffen
+
+                //Wenn wir von links nach links kommen
+                if (backgroundX1 + deltaXmove > (-0.3 * screenX) && zustand == 0) {
+                    backgroundX1 = 0;
+                    zustand = 0;
+                    break;
                 }
+                //wenn wir von der mitte nach links kommen
+                if (backgroundX1 + deltaXmove > (-0.7 * screenX) && zustand == 1) {
+                    backgroundX1 = 0;
+                    zustand = 0;
+                    break;
+                }
+                //wenn wir von rechts nach rechts kommen
+                if (backgroundX1 + deltaXmove < (-1.7 * screenX) && zustand == 2) {
+                    backgroundX1 = -2 * screenX;
+                    zustand = 2;
+                    break;
+                }
+                //von rechts zur mitte kommen
+                if (backgroundX1 + deltaXmove < (-1.3 * screenX) && zustand == 1) {
+                    backgroundX1 = -2 * screenX;
+                    zustand = 2;
+                    break;
+                }
+                //Mitte
+                backgroundX1 = (-1 * screenX);
+                zustand = 1;
                 break;
         }
         return true;
