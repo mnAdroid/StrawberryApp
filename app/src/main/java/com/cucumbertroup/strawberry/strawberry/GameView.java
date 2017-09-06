@@ -37,6 +37,9 @@ class GameView extends SurfaceView implements Runnable {
     //flüchtiger Boolean um den Fehler meiner letzten App (hoffentlich) zu verhindern
     volatile boolean isPlaying;
 
+    //In welchem Modus befinden wir uns gerade? (0: Farm, 1: Fight)
+    private int gameMode = 0;
+
     //Standard Canvas und Paint Objekte (um halt zu malen (du dummes Zukunftsich)
     Canvas canvas;
     Paint paint;
@@ -57,26 +60,25 @@ class GameView extends SurfaceView implements Runnable {
 
     //Ort der letzten Berührung auf dem Bildschirm
     private float touchX1, touchX1down, touchX2;
+    //Abstand der letzten Bewegung auf dem Bildschirm
     private float deltaXmove, deltaXclick;
 
     //Ort des Hintergrundbildes
     private float backgroundX1;
-    //Wie "stark" der Wisch sein muss, damit ich handel
-    static final int MIN_DISTANCE = 200;
 
-    //Erdbeeren Array (bis 240)
+    //Erdbeeren Array
     Strawberry[] strawberries;
     private int numStrawberries = 0;
+    //Anzahl der Farmfläche
     private int numAecker;
 
     //Gold initialisieren
     private int gold;
 
     //Bilder initialisieren
-    Bitmap bitmapMainButtons;
     Bitmap bitmapBackgroundColors;
 
-    //Musik einlesen
+    //Musik initialisieren
     private SoundPool soundPool;
     private int click1 = -1;
     private int clock1 = -1;
@@ -100,7 +102,7 @@ class GameView extends SurfaceView implements Runnable {
     private int plop7 = -1;
     private int plop8 = -1;
     private int plop9 = -1;
-    private MediaPlayer backgroundloop1;
+    private MediaPlayer backgroundloop1; //Farmmusik
 
     //Musiksettings
     private boolean musicOn;
@@ -121,14 +123,10 @@ class GameView extends SurfaceView implements Runnable {
         //Position des Hintergrundbildes festlegen
         backgroundX1 = 0;
 
-        //Die Buttons Shop und Einstellungen anzeigen
-        bitmapMainButtons = BitmapFactory.decodeResource(this.getResources(), R.drawable.mainbuttons);
-        //Bild an Größe des Bildschirms anpassen
-        bitmapMainButtons = Bitmap.createScaledBitmap(bitmapMainButtons, screenX/3, screenY/9, false);
-
         //Hintergrundbild einfügen
         bitmapBackgroundColors = BitmapFactory.decodeResource(this.getResources(), R.drawable.background_colors);
-        bitmapBackgroundColors = Bitmap.createScaledBitmap(bitmapBackgroundColors, screenX*3, screenY, false);
+        bitmapBackgroundColors = Bitmap.createScaledBitmap(bitmapBackgroundColors, screenX * 3, screenY, false);
+
         //Musik einlesen
         initialiseSound(context);
 
@@ -142,11 +140,19 @@ class GameView extends SurfaceView implements Runnable {
             //Derzeitige Zeit (für FPS Berechnung)
             long startFrameTime = System.currentTimeMillis();
 
-            //update ist quasi das DENKEN in der App
-            update();
+            //Das hier machen wir während des FARMens
+            if (gameMode == 0) {
 
-            //draw ist das ZEICHNEN in der App
-            draw();
+                //update ist quasi das DENKEN in der App
+                updateFarm();
+
+                //draw ist das ZEICHNEN in der App
+                drawFarm();
+            }
+            //Das hier machen wir während des FIGHTens
+            else {
+
+            }
 
             //FPS Berechung (Da Millisekunden -> 1000)
             timeThisFrame = System.currentTimeMillis() - startFrameTime;
@@ -158,7 +164,7 @@ class GameView extends SurfaceView implements Runnable {
 
     }
     //update ist quasi das DENKEN in der App
-    private void update() {
+    private void updateFarm() {
         //Erdbeeren wachsen hier automatisch durch Zeit
         for(int i = 0; i < numStrawberries; i++) {
             strawberries[i].update();
@@ -166,24 +172,13 @@ class GameView extends SurfaceView implements Runnable {
     }
 
     //draw ist das ZEICHNEN in der App
-    private void draw() {
+    private void drawFarm() {
         //Standardfehlerabfangen
         if(ourHolder.getSurface().isValid()) {
             //canvas wird das Zeichenobjekt
             canvas = ourHolder.lockCanvas();
 
             //Hintergrund malen
-            switch (zustand){
-                case 0:
-                    canvas.drawColor(Color.argb(255, 104, 211, 86));
-                    break;
-                case 1:
-                    canvas.drawColor(Color.argb(255, 26, 128, 182));
-                    break;
-                case 2:
-                    canvas.drawColor(Color.argb(255, 241, 238, 0));
-                    break;
-            }
             canvas.drawBitmap(bitmapBackgroundColors, backgroundX1, 0, paint);
 
 
@@ -233,12 +228,41 @@ class GameView extends SurfaceView implements Runnable {
             //Hintergrundbild X
             canvas.drawText("Bitmap X: " + backgroundX1, 20, 440, paint);
 
-            //Bilder malen
-            canvas.drawBitmap(bitmapMainButtons, (int) (screenX/1.6), screenY/96, paint); //noch ohne Anpassung für jede Screengröße
 
             //Alles auf den Bildschirm malen
             //Und Canvas wieder freilassen (um Fehler zu minimieren(das könnte sogar der Fehler meiner ersten App gewesen sein))
             ourHolder.unlockCanvasAndPost(canvas);
+        }
+    }
+
+    //SharedPreferences auslesen
+    private void getSharedPreferences() {
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberrySettings", 0);
+        numStrawberries = sharedPreferences.getInt("numStrawberries", 0);
+        numAecker = sharedPreferences.getInt("numAecker", 1);
+        gold = sharedPreferences.getInt("gold", 0);
+        clickCount = sharedPreferences.getInt("clicks", 0);
+        String strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
+        musicOn = sharedPreferences.getBoolean("musicOn", true);
+        soundOn = sharedPreferences.getBoolean("soundOn", true);
+
+        strawberries = new Strawberry[numAecker*16];
+
+        //um keine IndexoutofBoundException zu bekommen
+        if(!(strawberryStatus.equals(""))) {
+            //Initialisierung der gespeicherten Erdbeeren: 1. String auseinander nehmen, 2. aus den Daten auslesen
+            //Der erste Teil: wachsstatus, der zweite: Ackernummer, der dritte: Zeit
+            String[] strawberryStatusStrings = strawberryStatus.split("a");
+            int stringsCounter = 0;
+            for (int i = 0; i < (numAecker * 16); i++) {
+                strawberries[i] = new Strawberry(Integer.parseInt(strawberryStatusStrings[stringsCounter]), Integer.parseInt(strawberryStatusStrings[stringsCounter + 1]), Long.parseLong(strawberryStatusStrings[stringsCounter + 2]));
+                stringsCounter += 3;
+            }
+        }
+        else {
+            for (int i = 0; i < (numAecker * 16); i++) {
+                strawberries[i] = new Strawberry(1);
+            }
         }
     }
     //SharedPreferences wieder sicher verwahren
@@ -289,33 +313,7 @@ class GameView extends SurfaceView implements Runnable {
         isPlaying = true;
 
         //Auslesen der Daten vom letzten Game
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberrySettings", 0);
-        numStrawberries = sharedPreferences.getInt("numStrawberries", 0);
-        numAecker = sharedPreferences.getInt("numAecker", 1);
-        gold = sharedPreferences.getInt("gold", 0);
-        clickCount = sharedPreferences.getInt("clicks", 0);
-        String strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
-        musicOn = sharedPreferences.getBoolean("musicOn", true);
-        soundOn = sharedPreferences.getBoolean("soundOn", true);
-
-        strawberries = new Strawberry[numAecker*16];
-
-        //um keine IndexoutofBoundException zu bekommen
-        if(!(strawberryStatus.equals(""))) {
-            //Initialisierung der gespeicherten Erdbeeren: 1. String auseinander nehmen, 2. aus den Daten auslesen
-            //Der erste Teil: wachsstatus, der zweite: Ackernummer, der dritte: Zeit
-            String[] strawberryStatusStrings = strawberryStatus.split("a");
-            int stringsCounter = 0;
-            for (int i = 0; i < (numAecker * 16); i++) {
-                strawberries[i] = new Strawberry(Integer.parseInt(strawberryStatusStrings[stringsCounter]), Integer.parseInt(strawberryStatusStrings[stringsCounter + 1]), Long.parseLong(strawberryStatusStrings[stringsCounter + 2]));
-                stringsCounter += 3;
-            }
-        }
-        else {
-            for (int i = 0; i < (numAecker * 16); i++) {
-                strawberries[i] = new Strawberry(1);
-            }
-        }
+        getSharedPreferences();
 
         //Hintergrundmusik anschalten
         playSound(0);
@@ -327,6 +325,19 @@ class GameView extends SurfaceView implements Runnable {
     //Was passiert wenn man den Touchscreen berührt?
     @Override
     public boolean onTouchEvent(MotionEvent motionEvent) {
+        //Wenn wir im Farmmodus sind
+        if (gameMode == 0) {
+            return onTouchFarm(motionEvent);
+        }
+        //Wenn wir im Fightmodus sind
+        else {
+            return onTouchFight(motionEvent);
+        }
+
+    }
+
+    //Was passiert wenn man den Touchscreen im FARM Modus berührt
+    private boolean onTouchFarm(MotionEvent motionEvent) {
         //Alle Arten von Bewegung (auf dem Screen) die man bearbeiten will
         switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
             //Spieler berührt den Bildschirm
@@ -336,7 +347,7 @@ class GameView extends SurfaceView implements Runnable {
                 touchX1 = motionEvent.getX();
 
                 //Wir haben geklickt, in einem Klickergame müssen wir doch mit der Info irgendwas machen oder? :D
-                gotClicked();
+                gotClickedFarm();
                 break;
 
             //Spieler bewegt den Finger auf dem Bildschirm
@@ -409,11 +420,10 @@ class GameView extends SurfaceView implements Runnable {
                 break;
         }
         return true;
-
     }
 
-    //Was passiert wenn der Spieler klickt?
-    private void gotClicked() {
+    //Was passiert wenn der Spieler im FARM Modus klickt?
+    private void gotClickedFarm() {
         clickCount++;
         switch(zustand) {
             case 0:
@@ -449,6 +459,11 @@ class GameView extends SurfaceView implements Runnable {
                 }
                 break;
         }
+    }
+
+    //Was passiert wenn man den Touchscreen im FIGHT Modus berührt
+    private boolean onTouchFight(MotionEvent motionEvent) {
+        return true;
     }
 
     private void playSound(int whichOne) {
@@ -644,5 +659,6 @@ class GameView extends SurfaceView implements Runnable {
             Log.e("error", "failed to load sound files");
         }
     }
+
 
 }
