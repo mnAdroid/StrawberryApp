@@ -18,6 +18,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 
 /**
@@ -59,7 +60,7 @@ class GameView extends SurfaceView implements Runnable {
     private int zustand = 0;
 
     //Ort der letzten Berührung auf dem Bildschirm
-    private float touchX1, touchX1down, touchX2;
+    private float touchX1, touchX1down, touchX2, touchY1;
     //Abstand der letzten Bewegung auf dem Bildschirm
     private float deltaXmove, deltaXclick;
 
@@ -71,12 +72,20 @@ class GameView extends SurfaceView implements Runnable {
     private int numStrawberries = 0;
     //Anzahl der Farmfläche
     private int numAecker;
+    //Anzahl der arbeitenden Gurken
+    private int numGurken;
 
     //Gold initialisieren
     private int gold;
 
     //Bilder initialisieren
     Bitmap bitmapBackgroundColors;
+
+    //Testbuttons initialisieren
+    Bitmap bitmapAckerKaufenButton;
+    Bitmap bitmapFightButton;
+    Bitmap bitmapGurkeKaufenButton;
+    Bitmap bitmapMusikAnAusButton;
 
     //Musik initialisieren
     private SoundPool soundPool;
@@ -127,6 +136,15 @@ class GameView extends SurfaceView implements Runnable {
         bitmapBackgroundColors = BitmapFactory.decodeResource(this.getResources(), R.drawable.background_colors);
         bitmapBackgroundColors = Bitmap.createScaledBitmap(bitmapBackgroundColors, screenX * 3, screenY, false);
 
+        //Buttons initialisieren
+        bitmapAckerKaufenButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.ackerkaufen_button);
+        bitmapAckerKaufenButton = Bitmap.createScaledBitmap(bitmapAckerKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+        bitmapFightButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.fight_button);
+        bitmapFightButton = Bitmap.createScaledBitmap(bitmapFightButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+        bitmapGurkeKaufenButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.gurkekaufen_button);
+        bitmapGurkeKaufenButton = Bitmap.createScaledBitmap(bitmapGurkeKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+        bitmapMusikAnAusButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.musikanaus_button);
+        bitmapMusikAnAusButton = Bitmap.createScaledBitmap(bitmapMusikAnAusButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
         //Musik einlesen
         initialiseSound(context);
 
@@ -209,8 +227,8 @@ class GameView extends SurfaceView implements Runnable {
                     canvas.drawText("Something went wrong :D", 20, 140, paint);
                     break;
             }
-            //Bewegungsrichtung als Text ausgeben
-            canvas.drawText("Background X + Delta X: " + (backgroundX1 + deltaXclick), 20, 190, paint);
+            //Anzahl Gurken
+            canvas.drawText("Gurken: " + numGurken, 20, 190, paint);
 
             //Anzahl der Erdbeeren
             canvas.drawText("Erdbeeren: " + numStrawberries, 20, 240, paint);
@@ -225,9 +243,11 @@ class GameView extends SurfaceView implements Runnable {
             if(numStrawberries > 0)
                 canvas.drawText("Wachsstatus Erdbeere 1: " + strawberries[0].getWachsStatus(), 20, 390, paint);
 
-            //Hintergrundbild X
-            canvas.drawText("Bitmap X: " + backgroundX1, 20, 440, paint);
-
+            //Test Button malen
+            canvas.drawBitmap(bitmapAckerKaufenButton, getScaledCoordinates(screenX, 1080, 20), getScaledCoordinates(screenY, 1920, 490), paint);
+            canvas.drawBitmap(bitmapFightButton, getScaledCoordinates(screenX, 1080, 270), getScaledCoordinates(screenY, 1920, 490), paint);
+            canvas.drawBitmap(bitmapGurkeKaufenButton, getScaledCoordinates(screenX, 1080, 520), getScaledCoordinates(screenY, 1920, 490), paint);
+            canvas.drawBitmap(bitmapMusikAnAusButton, getScaledCoordinates(screenX, 1080, 770), getScaledCoordinates(screenY, 1920, 490), paint);
 
             //Alles auf den Bildschirm malen
             //Und Canvas wieder freilassen (um Fehler zu minimieren(das könnte sogar der Fehler meiner ersten App gewesen sein))
@@ -245,6 +265,7 @@ class GameView extends SurfaceView implements Runnable {
         String strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
         musicOn = sharedPreferences.getBoolean("musicOn", true);
         soundOn = sharedPreferences.getBoolean("soundOn", true);
+        numGurken = sharedPreferences.getInt("numGurken", 1);
 
         strawberries = new Strawberry[numAecker*16];
 
@@ -261,7 +282,7 @@ class GameView extends SurfaceView implements Runnable {
         }
         else {
             for (int i = 0; i < (numAecker * 16); i++) {
-                strawberries[i] = new Strawberry(1);
+                strawberries[i] = new Strawberry(((int)i/16) + 1);
             }
         }
     }
@@ -275,6 +296,7 @@ class GameView extends SurfaceView implements Runnable {
         editor.putInt("clicks", clickCount);
         editor.putBoolean("musicOn", musicOn);
         editor.putBoolean("soundOn", soundOn);
+        editor.putInt("numGurken", numGurken);
 
         //Hier kommen alle derzeitigen Erdbeeren rein um gespeichert zu werden
         String strawberryStatus = "";
@@ -345,9 +367,58 @@ class GameView extends SurfaceView implements Runnable {
                 //Wo befanden wir uns am Anfang?
                 touchX1down = motionEvent.getX();
                 touchX1 = motionEvent.getX();
+                touchY1 = motionEvent.getY();
+
+                //War da ein Button?
+                //acker kaufen Button
+                if (touchX1 >= getScaledCoordinates(screenX, 1080, 20) && touchX1 < (getScaledCoordinates(screenX, 1080, 20) + bitmapAckerKaufenButton.getWidth())
+                        && touchY1 >= getScaledCoordinates(screenY, 1920, 490) && touchY1 < (getScaledCoordinates(screenY, 1920, 490) + bitmapAckerKaufenButton.getHeight())) {
+                    playSound(4);
+                    if (gold >= 50 && numAecker < 16) {
+                        ackerGekauft();
+                    }
+                    break;
+                }
+                //fight button
+                if (touchX1 >= getScaledCoordinates(screenX, 1080, 270) && touchX1 < (getScaledCoordinates(screenX, 1080, 270) + bitmapFightButton.getWidth())
+                        && touchY1 >= getScaledCoordinates(screenY, 1920, 490) && touchY1 < (getScaledCoordinates(screenY, 1920, 490) + bitmapFightButton.getHeight())) {
+                    playSound(4);
+                    if (gameMode == 0) {
+                        //gameMode = 1;
+                    }
+                    break;
+                }
+                //gurke kaufen button
+                if (touchX1 >= getScaledCoordinates(screenX, 1080, 520) && touchX1 < (getScaledCoordinates(screenX, 1080, 520) + bitmapGurkeKaufenButton.getWidth())
+                        && touchY1 >= getScaledCoordinates(screenY, 1920, 490) && touchY1 < (getScaledCoordinates(screenY, 1920, 490) + bitmapGurkeKaufenButton.getHeight())) {
+                    playSound(4);
+                    if (gold >= 500) {
+                        numGurken++;
+                        gold -= 500;
+                    }
+                    break;
+                }
+                //musik an aus button
+                if (touchX1 >= getScaledCoordinates(screenX, 1080, 770) && touchX1 < (getScaledCoordinates(screenX, 1080, 770) + bitmapMusikAnAusButton.getWidth())
+                        && touchY1 >= getScaledCoordinates(screenY, 1920, 490) && touchY1 < (getScaledCoordinates(screenY, 1920, 490) + bitmapMusikAnAusButton.getHeight())) {
+                    playSound(4);
+                    if(soundOn == true) {
+                        musicOn = false;
+                        backgroundloop1.pause();
+                        soundOn = false;
+                    }
+                    else {
+                        musicOn = true;
+                        playSound(0);
+                        soundOn = true;
+                    }
+                    break;
+                }
+
 
                 //Wir haben geklickt, in einem Klickergame müssen wir doch mit der Info irgendwas machen oder? :D
                 gotClickedFarm();
+
                 break;
 
             //Spieler bewegt den Finger auf dem Bildschirm
@@ -428,33 +499,43 @@ class GameView extends SurfaceView implements Runnable {
         switch(zustand) {
             case 0:
                 //Aussähen: Prüfen ob noch Platz ist, wenn ja: Aussähen.
-                if(numStrawberries < (numAecker*16)) {
-                    for(int i = 0; i < numAecker*16; i++) {
-                        if (strawberries[i].getWachsStatus() <= -1) {
-                            strawberries[i].setStrawberry();
-                            numStrawberries++;
-                            playSound(1);
-                            break;
+                for(int j = 1; j <= numGurken; j++) {
+                    if (numStrawberries < (numAecker * 16)) {
+                        for (int i = 0; i < numAecker * 16; i++) {
+                            if (strawberries[i].getWachsStatus() <= -1) {
+                                strawberries[i].setStrawberry();
+                                numStrawberries++;
+                                if(j == numGurken) {
+                                    playSound(1);
+                                }
+                                break;
+                            }
                         }
                     }
                 }
                 break;
             case 1:
                 //Wachsen: Alles wächst viel schneller, aber es wächst auch schon so langsam.
-                for(int i = 0; i < numAecker*16; i++) {
-                    strawberries[i].incrWachsStatus(1);
-                    playSound(2);
+                if (numStrawberries > 0) {
+                    for (int i = 0; i < numAecker * 16; i++) {
+                        strawberries[i].incrWachsStatus(1);
+                        playSound(2);
+                    }
                 }
                 break;
             case 2:
                 //Ernten: Prüfen ob Erdbeeren fertig, wenn ja: Gold bekommen und Platz machen zum Aussähen
-                for(int i = 0; i < numAecker*16; i++) {
-                    if (strawberries[i].getWachsStatus() >= 5) {
-                        strawberries[i].resetStrawberry();
-                        numStrawberries--;
-                        gold += 10;
-                        playSound(3);
-                        break;
+                for(int j = 1; j <= numGurken; j++) {
+                    for (int i = 0; i < numAecker * 16; i++) {
+                        if (strawberries[i].getWachsStatus() >= 5) {
+                            strawberries[i].resetStrawberry();
+                            numStrawberries--;
+                            gold += 10;
+                            if (j == numGurken) {
+                                playSound(3);
+                            }
+                            break;
+                        }
                     }
                 }
                 break;
@@ -466,6 +547,7 @@ class GameView extends SurfaceView implements Runnable {
         return true;
     }
 
+    //Jede Art von Sound abspielen
     private void playSound(int whichOne) {
         boolean ticktack = true; //für den Uhr Sound
         //whichone Legende: 0 -> Hintergrundmusik; 1 -> Sähsound; 2 -> Uhr Sound; 3 -> Erntesound; 4 -> Buttonklick; 5 -> Geld
@@ -660,5 +742,29 @@ class GameView extends SurfaceView implements Runnable {
         }
     }
 
+    //Bitmaps rescalen
+    private int getScaledBitmapSize(int targetScreenSize, int defaultScreenSize, int bitmapSize) {
+        return ((targetScreenSize)/(defaultScreenSize))*bitmapSize;
+    }
+
+    //X-Y Koordinaten rescalen
+    private int getScaledCoordinates(int targetScreenSize, int defaultScreenSize, int defaultCoordinate) {
+        return (targetScreenSize / defaultScreenSize) * defaultCoordinate;
+    }
+
+    //Wenn ein Acker gekauft wurde
+    private void ackerGekauft() {
+        //Anzahl hochzählen und Gold abbuchen
+        numAecker++;
+        gold -= 50;
+
+        //Neues Strawberry Array erstellen
+        Strawberry[] strawberriesTemp = Arrays.copyOf(strawberries, numAecker*16);
+        for (int i = ((numAecker-1) * 16); i < (numAecker * 16); i++) {
+            strawberriesTemp[i] = new Strawberry(((int)i/16) + 1);
+        }
+
+        strawberries = strawberriesTemp;
+    }
 
 }
