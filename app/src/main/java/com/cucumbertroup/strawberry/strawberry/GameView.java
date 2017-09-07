@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
@@ -71,13 +72,17 @@ class GameView extends SurfaceView implements Runnable {
     //Erdbeeren Array
     Strawberry[] strawberries;
     private int numStrawberries = 0;
-    //Anzahl der Farmfläche
+    //Anzahl und Preis der Farmfläche
     private int numAecker;
-    //Anzahl der arbeitenden Gurken
+    private int priceAecker;
+    //Anzahl und Preis der arbeitenden Gurken
     private int numGurken;
+    private int priceGurken;
 
     //Gold initialisieren
     private int gold;
+    //Erdbeerkosten
+    private final int STRAWBERRY_PRICE = 1;
 
     //Bilder initialisieren
     Bitmap bitmapBackgroundColors;
@@ -91,13 +96,16 @@ class GameView extends SurfaceView implements Runnable {
     Bitmap bitmapFightButton;
     Bitmap bitmapGurkeKaufenButton;
     Bitmap bitmapMusikAnAusButton;
+    Bitmap bitmapResetButton;
 
     //Feste Größen speichern
-    private int textSize;
+    private int textSize, textX, textY;
     private int bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY;
     private int bitmapFightButtonX, bitmapFightButtonY;
     private int bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY;
     private int bitmapMusikAnAusButtonX, bitmapMusikAnAusButtonY;
+    private int bitmapResetButtonX, bitmapResetButtonY;
+
     //Musik initialisieren
     private SoundPool soundPool;
     private int click1 = -1;
@@ -128,6 +136,10 @@ class GameView extends SurfaceView implements Runnable {
     private boolean musicOn;
     private boolean soundOn;
 
+    //Ein paar Spaßbooleans
+    private boolean alphaTester;
+    private boolean betaTester;
+
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     public GameView(Context context, int screenX, int screenY) {
         super(context);
@@ -145,6 +157,17 @@ class GameView extends SurfaceView implements Runnable {
 
         //Musik einlesen
         initialiseSound(context);
+
+        //Textgröße errechnen
+        textSize = getScaledBitmapSize(screenX, 1080, 50);
+        //Textgröße setzen (möglicherweise muss das wieder zurück in drawFarm nach Hintergrundmalen)
+        paint.setTextSize(textSize);
+        //Textposition setzen
+        textX = getScaledCoordinates(screenX, 1080, 20);
+        textY = getScaledCoordinates(screenY, 1920, 50);
+        //Font einstellen
+        Typeface customFont = Typeface.createFromAsset(context.getAssets(),"fonts/caladea-bold.ttf");
+        paint.setTypeface(customFont);
 
     }
     //Der vermutlich wichtigste (und in der letzten App fehleranfälligste) Teil der Gameview
@@ -201,51 +224,50 @@ class GameView extends SurfaceView implements Runnable {
             //Pinselfarbe wählen(bisher nur für den Text)
             paint.setColor(Color.argb(255, 249, 129, 0));
 
-            //Textgröße
-            paint.setTextSize(50);
-
             //Derzeitigen FPS malen
-            canvas.drawText("FPS: " + fps, 20, 40, paint);
+            canvas.drawText("FPS: " + fps, textX, textY, paint);
 
             //Klickcounter malen
-            canvas.drawText("Clicks: " + clickCount, 20, 90, paint);
+            canvas.drawText("Clicks: " + clickCount, textX, 2*textY, paint);
 
             //Zustand als Text ausgeben
             switch(zustand) {
                 case 0:
-                    canvas.drawText("Zustand: Aussähen", 20, 140, paint);
+                    canvas.drawText("Zustand: Aussähen", textX, 3*textY, paint);
                     break;
                 case 1:
-                    canvas.drawText("Zustand: Wachsen", 20, 140, paint);
+                    canvas.drawText("Zustand: Wachsen", textX, 3*textY, paint);
                     break;
                 case 2:
-                    canvas.drawText("Zustand: Ernten", 20, 140, paint);
+                    canvas.drawText("Zustand: Ernten", textX, 3*textY, paint);
                     break;
                 default:
-                    canvas.drawText("Something went wrong :D", 20, 140, paint);
+                    canvas.drawText("Something went wrong :D", textX, 3*textY, paint);
                     break;
             }
-            //Anzahl Gurken
-            canvas.drawText("Gurken: " + numGurken, 20, 190, paint);
 
             //Anzahl der Erdbeeren
-            canvas.drawText("Erdbeeren: " + numStrawberries, 20, 240, paint);
+            canvas.drawText("Erdbeeren: " + numStrawberries, textX, 4*textY, paint);
+
+            //Anzahl Gurken
+            canvas.drawText("Gurken: " + numGurken + " | Kosten: " + priceGurken + " Gold", textX, 5*textY, paint);
 
             //Anzahl Aecker
-            canvas.drawText("Äcker: " + numAecker, 20, 290, paint);
+            canvas.drawText("Äcker: " + numAecker + " | Kosten: " + priceAecker + " Gold", textX, 6*textY, paint);
 
             //Wie viel Gold haben wir eigentlich?
-            canvas.drawText("Gold: " + gold, 20, 340, paint);
+            canvas.drawText("Gold: " + gold, textX, 7*textY, paint);
 
             //Test Wachsstatus Erdbeere 1
             if(numStrawberries > 0)
-                canvas.drawText("Wachsstatus Erdbeere 1: " + strawberries[0].getWachsStatus(), 20, 390, paint);
+                canvas.drawText("Wachsstatus Erdbeere 1: " + strawberries[0].getWachsStatus(), textX, 8*textY, paint);
 
             //Test Button malen
             canvas.drawBitmap(bitmapAckerKaufenButton, bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY, paint);
             canvas.drawBitmap(bitmapFightButton, bitmapFightButtonX, bitmapFightButtonY, paint);
             canvas.drawBitmap(bitmapGurkeKaufenButton, bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY, paint);
             canvas.drawBitmap(bitmapMusikAnAusButton, bitmapMusikAnAusButtonX, bitmapMusikAnAusButtonY, paint);
+            canvas.drawBitmap(bitmapResetButton, bitmapResetButtonX, bitmapResetButtonY, paint);
 
             //Alles auf den Bildschirm malen
             //Und Canvas wieder freilassen (um Fehler zu minimieren(das könnte sogar der Fehler meiner ersten App gewesen sein))
@@ -258,12 +280,14 @@ class GameView extends SurfaceView implements Runnable {
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberrySettings", 0);
         numStrawberries = sharedPreferences.getInt("numStrawberries", 0);
         numAecker = sharedPreferences.getInt("numAecker", 1);
-        gold = sharedPreferences.getInt("gold", 0);
+        gold = sharedPreferences.getInt("gold", 5);
         clickCount = sharedPreferences.getInt("clicks", 0);
         String strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
         musicOn = sharedPreferences.getBoolean("musicOn", true);
         soundOn = sharedPreferences.getBoolean("soundOn", true);
         numGurken = sharedPreferences.getInt("numGurken", 1);
+        alphaTester = sharedPreferences.getBoolean("alphaTester", true);
+        betaTester = sharedPreferences.getBoolean("betaTester", false);
 
         strawberries = new Strawberry[numAecker*16];
 
@@ -295,6 +319,8 @@ class GameView extends SurfaceView implements Runnable {
         editor.putBoolean("musicOn", musicOn);
         editor.putBoolean("soundOn", soundOn);
         editor.putInt("numGurken", numGurken);
+        editor.putBoolean("alphaTester", alphaTester);
+        editor.putBoolean("betaTester", betaTester);
 
         //Hier kommen alle derzeitigen Erdbeeren rein um gespeichert zu werden
         String strawberryStatus = "";
@@ -335,6 +361,10 @@ class GameView extends SurfaceView implements Runnable {
         //Auslesen der Daten vom letzten Game
         getSharedPreferences();
 
+        //Preise initialisieren
+        priceAecker = getPrice(0);
+        priceGurken = getPrice(1);
+
         //Hintergrundmusik anschalten
         playSound(0);
 
@@ -369,17 +399,17 @@ class GameView extends SurfaceView implements Runnable {
 
                 //War da ein Button?
                 //acker kaufen Button
-                if (touchX1 >= getScaledCoordinates(screenX, 1080, 20) && touchX1 < (getScaledCoordinates(screenX, 1080, 20) + bitmapAckerKaufenButton.getWidth())
-                        && touchY1 >= getScaledCoordinates(screenY, 1920, 490) && touchY1 < (getScaledCoordinates(screenY, 1920, 490) + bitmapAckerKaufenButton.getHeight())) {
+                if (touchX1 >= bitmapAckerKaufenButtonX && touchX1 < (bitmapAckerKaufenButtonX + bitmapAckerKaufenButton.getWidth())
+                        && touchY1 >= bitmapAckerKaufenButtonY && touchY1 < (bitmapAckerKaufenButtonY + bitmapAckerKaufenButton.getHeight())) {
                     playSound(4);
-                    if (gold >= 50 && numAecker < 16) {
+                    if (gold >= (priceAecker + STRAWBERRY_PRICE) && numAecker < 16) {
                         ackerGekauft();
                     }
                     break;
                 }
                 //fight button
-                if (touchX1 >= getScaledCoordinates(screenX, 1080, 270) && touchX1 < (getScaledCoordinates(screenX, 1080, 270) + bitmapFightButton.getWidth())
-                        && touchY1 >= getScaledCoordinates(screenY, 1920, 490) && touchY1 < (getScaledCoordinates(screenY, 1920, 490) + bitmapFightButton.getHeight())) {
+                if (touchX1 >= bitmapFightButtonX && touchX1 < (bitmapFightButtonX + bitmapFightButton.getWidth())
+                        && touchY1 >= bitmapFightButtonY && touchY1 < (bitmapFightButtonY + bitmapFightButton.getHeight())) {
                     playSound(4);
                     if (gameMode == 0) {
                         //gameMode = 1;
@@ -387,18 +417,19 @@ class GameView extends SurfaceView implements Runnable {
                     break;
                 }
                 //gurke kaufen button
-                if (touchX1 >= getScaledCoordinates(screenX, 1080, 520) && touchX1 < (getScaledCoordinates(screenX, 1080, 520) + bitmapGurkeKaufenButton.getWidth())
-                        && touchY1 >= getScaledCoordinates(screenY, 1920, 490) && touchY1 < (getScaledCoordinates(screenY, 1920, 490) + bitmapGurkeKaufenButton.getHeight())) {
+                if (touchX1 >= bitmapGurkeKaufenButtonX && touchX1 < (bitmapGurkeKaufenButtonX + bitmapGurkeKaufenButton.getWidth())
+                        && touchY1 >= bitmapGurkeKaufenButtonY && touchY1 < (bitmapGurkeKaufenButtonY + bitmapGurkeKaufenButton.getHeight())) {
                     playSound(4);
-                    if (gold >= 500) {
+                    if (gold >= (priceGurken + 1)) {
                         numGurken++;
-                        gold -= 500;
+                        gold -= priceGurken;
+                        priceGurken = getPrice(1);
                     }
                     break;
                 }
                 //musik an aus button
-                if (touchX1 >= getScaledCoordinates(screenX, 1080, 770) && touchX1 < (getScaledCoordinates(screenX, 1080, 770) + bitmapMusikAnAusButton.getWidth())
-                        && touchY1 >= getScaledCoordinates(screenY, 1920, 490) && touchY1 < (getScaledCoordinates(screenY, 1920, 490) + bitmapMusikAnAusButton.getHeight())) {
+                if (touchX1 >= bitmapMusikAnAusButtonX && touchX1 < (bitmapMusikAnAusButtonX + bitmapMusikAnAusButton.getWidth())
+                        && touchY1 >= bitmapMusikAnAusButtonY && touchY1 < (bitmapMusikAnAusButtonY + bitmapMusikAnAusButton.getHeight())) {
                     playSound(4);
                     if(soundOn == true) {
                         musicOn = false;
@@ -411,6 +442,26 @@ class GameView extends SurfaceView implements Runnable {
                         soundOn = true;
                     }
                     break;
+                }
+                //reset Button
+                if (touchX1 >= bitmapResetButtonX && touchX1 < (bitmapResetButtonX + bitmapMusikAnAusButton.getWidth())
+                        && touchY1 >= bitmapResetButtonY && touchY1 < (bitmapResetButtonY + bitmapMusikAnAusButton.getHeight())) {
+                    //Buttonsound
+                    playSound(4);
+
+                    //Allgemeine Werte resetten
+                    gold = 5;
+                    numAecker = 1;
+                    numStrawberries = 0;
+                    numGurken = 1;
+                    priceAecker = getPrice(0);
+                    priceGurken = getPrice(1);
+
+                    //Erdbeeren tatsächlich resetten
+                    strawberries = new Strawberry[numAecker*16];
+                    for (int i = 0; i < (numAecker * 16); i++) {
+                        strawberries[i] = new Strawberry(((int)i/16) + 1);
+                    }
                 }
 
 
@@ -500,10 +551,11 @@ class GameView extends SurfaceView implements Runnable {
                 for(int j = 1; j <= numGurken; j++) {
                     if (numStrawberries < (numAecker * 16)) {
                         for (int i = 0; i < numAecker * 16; i++) {
-                            if (strawberries[i].getWachsStatus() <= -1) {
+                            if (gold >= STRAWBERRY_PRICE && strawberries[i].getWachsStatus() <= -1) {
                                 strawberries[i].setStrawberry();
                                 numStrawberries++;
-                                if(j == numGurken) {
+                                gold -= STRAWBERRY_PRICE;
+                                if(j == 1) {
                                     playSound(1);
                                 }
                                 break;
@@ -529,7 +581,7 @@ class GameView extends SurfaceView implements Runnable {
                             strawberries[i].resetStrawberry();
                             numStrawberries--;
                             gold += 10;
-                            if (j == numGurken) {
+                            if (j == 1) {
                                 playSound(3);
                             }
                             break;
@@ -756,7 +808,8 @@ class GameView extends SurfaceView implements Runnable {
     private void ackerGekauft() {
         //Anzahl hochzählen und Gold abbuchen
         numAecker++;
-        gold -= 50;
+        gold -= priceAecker;
+        priceAecker = getPrice(0);
 
         //Neues Strawberry Array erstellen
         Strawberry[] strawberriesTemp = Arrays.copyOf(strawberries, numAecker*16);
@@ -853,7 +906,6 @@ class GameView extends SurfaceView implements Runnable {
         bitmapGurkeKaufenButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.gurkekaufen_button, 100, 100);
         bitmapGurkeKaufenButton = Bitmap.createScaledBitmap(bitmapGurkeKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
-
         options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         bitmapMusikAnAusButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.musikanaus_button, options);
@@ -861,6 +913,14 @@ class GameView extends SurfaceView implements Runnable {
         imageWidth = options.outWidth;
         bitmapMusikAnAusButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.musikanaus_button, 100, 100);
         bitmapMusikAnAusButton = Bitmap.createScaledBitmap(bitmapMusikAnAusButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+        options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        bitmapResetButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.reset_button, options);
+        imageHeight = options.outHeight;
+        imageWidth = options.outWidth;
+        bitmapResetButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.reset_button, 100, 100);
+        bitmapResetButton = Bitmap.createScaledBitmap(bitmapResetButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
         //Feste Werte setzen
         bitmapAckerKaufenButtonX = getScaledCoordinates(screenX, 1080, 20);
@@ -871,5 +931,21 @@ class GameView extends SurfaceView implements Runnable {
         bitmapGurkeKaufenButtonY = bitmapAckerKaufenButtonY;
         bitmapMusikAnAusButtonX = getScaledCoordinates(screenX, 1080, 770);
         bitmapMusikAnAusButtonY = bitmapAckerKaufenButtonY;
+        bitmapResetButtonX = getScaledCoordinates(screenX, 1080, 20);
+        bitmapResetButtonY = getScaledCoordinates(screenY, 1920, 640);
+    }
+
+    //Gibt den Preis der Elemente aus dem Shop aus
+    private int getPrice(int whichOne) {
+        //whichOne Legende: 0: Acker, 1: Gurke, 2: Werkzeug
+        switch (whichOne) {
+            case 0:
+                return (int) (50*Math.pow((double) numAecker, 1.7));
+            case 1:
+                return (int) (500*Math.pow((double) numGurken, 1.5));
+            case 2:
+                return 500;
+        }
+        return -1;
     }
 }
