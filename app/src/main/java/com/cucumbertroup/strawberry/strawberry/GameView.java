@@ -63,11 +63,13 @@ class GameView extends SurfaceView implements Runnable {
 
     //Ort der letzten Berührung auf dem Bildschirm
     private float touchX1, touchX1down, touchX2, touchY1;
+    private long touchTimer;
     //Abstand der letzten Bewegung auf dem Bildschirm
     private float deltaXmove, deltaXclick;
 
     //Ort des Hintergrundbildes
-    private float backgroundX1;
+    private float backgroundColorsX1;
+    private int backgroundFightX1;
 
     //Erdbeeren Array
     Strawberry[] strawberries;
@@ -86,6 +88,7 @@ class GameView extends SurfaceView implements Runnable {
 
     //Bilder initialisieren
     Bitmap bitmapBackgroundColors;
+    Bitmap bitmapBackgroundFights;
 
     //Größe der Bilder
     private int imageHeight;
@@ -140,6 +143,15 @@ class GameView extends SurfaceView implements Runnable {
     private boolean alphaTester;
     private boolean betaTester;
 
+    //Kampfessteuerung
+    private boolean fightmode1 = true;
+    private int screenMitte;
+
+    //Alles was ich für den Gegner brauche
+    private Weapon enemieWeapon;
+    private Enemie enemie;
+    private Character character;
+
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     public GameView(Context context, int screenX, int screenY) {
         super(context);
@@ -169,6 +181,7 @@ class GameView extends SurfaceView implements Runnable {
         Typeface customFont = Typeface.createFromAsset(context.getAssets(),"fonts/caladea-bold.ttf");
         paint.setTypeface(customFont);
 
+        screenMitte = screenX/2;
     }
     //Der vermutlich wichtigste (und in der letzten App fehleranfälligste) Teil der Gameview
     //run() ist quasi eine Endlosschleife (solange das Game läuft) in dem alles passiert
@@ -190,7 +203,7 @@ class GameView extends SurfaceView implements Runnable {
             }
             //Das hier machen wir während des FIGHTens
             else {
-
+                drawFight();
             }
 
             //FPS Berechung (Da Millisekunden -> 1000)
@@ -218,7 +231,8 @@ class GameView extends SurfaceView implements Runnable {
             canvas = ourHolder.lockCanvas();
 
             //Hintergrund malen
-            canvas.drawBitmap(bitmapBackgroundColors, backgroundX1, 0, paint);
+            if (bitmapBackgroundColors != null)
+                canvas.drawBitmap(bitmapBackgroundColors, backgroundColorsX1, 0, paint);
 
 
             //Pinselfarbe wählen(bisher nur für den Text)
@@ -263,11 +277,42 @@ class GameView extends SurfaceView implements Runnable {
                 canvas.drawText("Wachsstatus Erdbeere 1: " + strawberries[0].getWachsStatus(), textX, 8*textY, paint);
 
             //Test Button malen
-            canvas.drawBitmap(bitmapAckerKaufenButton, bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY, paint);
-            canvas.drawBitmap(bitmapFightButton, bitmapFightButtonX, bitmapFightButtonY, paint);
-            canvas.drawBitmap(bitmapGurkeKaufenButton, bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY, paint);
-            canvas.drawBitmap(bitmapMusikAnAusButton, bitmapMusikAnAusButtonX, bitmapMusikAnAusButtonY, paint);
-            canvas.drawBitmap(bitmapResetButton, bitmapResetButtonX, bitmapResetButtonY, paint);
+            if (bitmapAckerKaufenButton != null)
+                canvas.drawBitmap(bitmapAckerKaufenButton, bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY, paint);
+            if (bitmapFightButton != null)
+                canvas.drawBitmap(bitmapFightButton, bitmapFightButtonX, bitmapFightButtonY, paint);
+            if (bitmapGurkeKaufenButton != null)
+                canvas.drawBitmap(bitmapGurkeKaufenButton, bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY, paint);
+            if (bitmapMusikAnAusButton != null)
+                canvas.drawBitmap(bitmapMusikAnAusButton, bitmapMusikAnAusButtonX, bitmapMusikAnAusButtonY, paint);
+            if (bitmapResetButton != null)
+                canvas.drawBitmap(bitmapResetButton, bitmapResetButtonX, bitmapResetButtonY, paint);
+
+            //Alles auf den Bildschirm malen
+            //Und Canvas wieder freilassen (um Fehler zu minimieren(das könnte sogar der Fehler meiner ersten App gewesen sein))
+            ourHolder.unlockCanvasAndPost(canvas);
+        }
+    }
+
+    //draw ist das ZEICHNEN in der App
+    private void drawFight() {
+        //Standardfehlerabfangen
+        if(ourHolder.getSurface().isValid()) {
+            //canvas wird das Zeichenobjekt
+            canvas = ourHolder.lockCanvas();
+
+            //Hintergrund malen
+            paint.setColor(Color.argb(255, 255, 255, 0));
+
+            //Hintergrund malen
+            if (bitmapBackgroundFights != null)
+                canvas.drawBitmap(bitmapBackgroundFights, backgroundFightX1, 0, paint);
+
+            //Gegner Text malen
+            if (enemie != null) {
+                canvas.drawText("Gegner: " + enemie.getName(), textX, textY, paint);
+                canvas.drawText("Leben: " + enemie.getLife(), textX, 2*textY, paint);
+            }
 
             //Alles auf den Bildschirm malen
             //Und Canvas wieder freilassen (um Fehler zu minimieren(das könnte sogar der Fehler meiner ersten App gewesen sein))
@@ -412,7 +457,25 @@ class GameView extends SurfaceView implements Runnable {
                         && touchY1 >= bitmapFightButtonY && touchY1 < (bitmapFightButtonY + bitmapFightButton.getHeight())) {
                     playSound(4);
                     if (gameMode == 0) {
-                        //gameMode = 1;
+                        gameMode = 1;
+                        //Bitmaps Recyclen
+                        bitmapBackgroundColors.recycle();
+                        bitmapBackgroundColors = null;
+                        bitmapAckerKaufenButton.recycle();
+                        bitmapAckerKaufenButton = null;
+                        bitmapFightButton.recycle();
+                        bitmapFightButton = null;
+                        bitmapGurkeKaufenButton.recycle();
+                        bitmapGurkeKaufenButton = null;
+                        bitmapMusikAnAusButton.recycle();
+                        bitmapMusikAnAusButton = null;
+                        bitmapResetButton.recycle();
+                        bitmapResetButton = null;
+
+                        initialiseBitmaps();
+
+                        character = new Character();
+                        initialiseEnemie();
                     }
                     break;
                 }
@@ -480,9 +543,9 @@ class GameView extends SurfaceView implements Runnable {
                 touchX1 = motionEvent.getX();
 
                 //Bedingung für die Äußeren Grenzen
-                if (((backgroundX1 + deltaXmove) < 0) && ((backgroundX1 + deltaXmove) > (-2 * screenX))) {
+                if (((backgroundColorsX1 + deltaXmove) < 0) && ((backgroundColorsX1 + deltaXmove) > (-2 * screenX))) {
                     //Standardmovement (Folge dem Finger)
-                    backgroundX1 += deltaXmove;
+                    backgroundColorsX1 += deltaXmove;
                 }
                 break;
             case MotionEvent.ACTION_UP:
@@ -494,16 +557,16 @@ class GameView extends SurfaceView implements Runnable {
                 //reset der Hintergrundbildposition
 
                 //Wären wir über den Rand gekommen?
-                if (((backgroundX1 + deltaXclick) > 0) || ((backgroundX1 + deltaXclick) < (-2 * screenX))) {
+                if (((backgroundColorsX1 + deltaXclick) > 0) || ((backgroundColorsX1 + deltaXclick) < (-2 * screenX))) {
                     //Rechts
-                    if ((backgroundX1 + deltaXclick) < 0) {
-                        backgroundX1 = -2 * screenX;
+                    if ((backgroundColorsX1 + deltaXclick) < 0) {
+                        backgroundColorsX1 = -2 * screenX;
                         zustand = 2;
                         break;
                     }
                     //Links
-                    if ((backgroundX1 + deltaXclick) > (-2 * screenX)) {
-                        backgroundX1 = 0;
+                    if ((backgroundColorsX1 + deltaXclick) > (-2 * screenX)) {
+                        backgroundColorsX1 = 0;
                         zustand = 0;
                         break;
                     }
@@ -511,31 +574,31 @@ class GameView extends SurfaceView implements Runnable {
                 //Zurückswapen nach Links, Rechts, Mitte wenn nach Stillstand Bedingungen zutreffen
 
                 //Wenn wir von links nach links kommen
-                if (backgroundX1 + deltaXmove > (-0.3 * screenX) && zustand == 0) {
-                    backgroundX1 = 0;
+                if (backgroundColorsX1 + deltaXmove > (-0.3 * screenX) && zustand == 0) {
+                    backgroundColorsX1 = 0;
                     zustand = 0;
                     break;
                 }
                 //wenn wir von der mitte nach links kommen
-                if (backgroundX1 + deltaXmove > (-0.7 * screenX) && zustand == 1) {
-                    backgroundX1 = 0;
+                if (backgroundColorsX1 + deltaXmove > (-0.7 * screenX) && zustand == 1) {
+                    backgroundColorsX1 = 0;
                     zustand = 0;
                     break;
                 }
                 //wenn wir von rechts nach rechts kommen
-                if (backgroundX1 + deltaXmove < (-1.7 * screenX) && zustand == 2) {
-                    backgroundX1 = -2 * screenX;
+                if (backgroundColorsX1 + deltaXmove < (-1.7 * screenX) && zustand == 2) {
+                    backgroundColorsX1 = -2 * screenX;
                     zustand = 2;
                     break;
                 }
                 //von rechts zur mitte kommen
-                if (backgroundX1 + deltaXmove < (-1.3 * screenX) && zustand == 1) {
-                    backgroundX1 = -2 * screenX;
+                if (backgroundColorsX1 + deltaXmove < (-1.3 * screenX) && zustand == 1) {
+                    backgroundColorsX1 = -2 * screenX;
                     zustand = 2;
                     break;
                 }
                 //Mitte
-                backgroundX1 = (-1 * screenX);
+                backgroundColorsX1 = (-1 * screenX);
                 zustand = 1;
                 break;
         }
@@ -594,6 +657,23 @@ class GameView extends SurfaceView implements Runnable {
 
     //Was passiert wenn man den Touchscreen im FIGHT Modus berührt
     private boolean onTouchFight(MotionEvent motionEvent) {
+        //Alle Arten von Bewegung (auf dem Screen) die man bearbeiten will
+        switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                touchX1 = motionEvent.getX();
+                touchY1 = motionEvent.getY();
+                touchTimer = System.currentTimeMillis();
+
+                //Auf den rechten Teil des Bildschirms wird geklickt
+                if (touchX1 >= screenMitte) {
+                    attack();
+                }
+                //Auf den linken Teil des Bildschirms wird geklickt
+                else {
+
+                }
+                break;
+        }
         return true;
     }
 
@@ -862,77 +942,94 @@ class GameView extends SurfaceView implements Runnable {
 
     //Alle Bilder einlesen
     private void initialiseBitmaps() {
-        //Position des Hintergrundbildes festlegen
-        backgroundX1 = 0;
+        if (gameMode == 0) {
+            //Position des Hintergrundbildes festlegen
+            backgroundColorsX1 = 0;
 
-        //Hintergrundbild:
-        //Um das ganze effizient einzufügen müssen wir hier mit den Bitmapfactory Otions spielen
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true; //Nur die Ränder werden eingefügt
-        //Hintergrundbild einfügen
-        bitmapBackgroundColors = BitmapFactory.decodeResource(this.getResources(), R.drawable.background_colors, options);
-        //Dadurch, dass wir nur die Ränder haben wird nicht so viel RAM verbraucht und wir können trz die Größe erfahren und rescalen
-        imageHeight = options.outHeight;
-        imageWidth = options.outWidth;
-        //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
-        bitmapBackgroundColors = decodeSampledBitmapFromResource(this.getResources(), R.drawable.background_colors, 250, 250);
-        bitmapBackgroundColors = Bitmap.createScaledBitmap(bitmapBackgroundColors, screenX * 3, screenY, false);
+            //Hintergrundbild:
+            //Um das ganze effizient einzufügen müssen wir hier mit den Bitmapfactory Otions spielen
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true; //Nur die Ränder werden eingefügt
+            //Hintergrundbild einfügen
+            bitmapBackgroundColors = BitmapFactory.decodeResource(this.getResources(), R.drawable.background_colors, options);
+            //Dadurch, dass wir nur die Ränder haben wird nicht so viel RAM verbraucht und wir können trz die Größe erfahren und rescalen
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
+            bitmapBackgroundColors = decodeSampledBitmapFromResource(this.getResources(), R.drawable.background_colors, 250, 250);
+            bitmapBackgroundColors = Bitmap.createScaledBitmap(bitmapBackgroundColors, screenX * 3, screenY, false);
 
-        //Buttons initialisieren
+            //Buttons initialisieren
 
-        //Acker Kaufen Button
-        options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        bitmapAckerKaufenButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.ackerkaufen_button, options);
-        imageHeight = options.outHeight;
-        imageWidth = options.outWidth;
-        //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
-        bitmapAckerKaufenButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.ackerkaufen_button, 100, 100);
-        bitmapAckerKaufenButton = Bitmap.createScaledBitmap(bitmapAckerKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+            //Acker Kaufen Button
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapAckerKaufenButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.ackerkaufen_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
+            bitmapAckerKaufenButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.ackerkaufen_button, 100, 100);
+            bitmapAckerKaufenButton = Bitmap.createScaledBitmap(bitmapAckerKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
-        options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        bitmapFightButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.fight_button, options);
-        imageHeight = options.outHeight;
-        imageWidth = options.outWidth;
-        bitmapFightButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.fight_button, 100, 100);
-        bitmapFightButton = Bitmap.createScaledBitmap(bitmapFightButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapFightButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.fight_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapFightButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.fight_button, 100, 100);
+            bitmapFightButton = Bitmap.createScaledBitmap(bitmapFightButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
-        options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        bitmapGurkeKaufenButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.gurkekaufen_button, options);
-        imageHeight = options.outHeight;
-        imageWidth = options.outWidth;
-        bitmapGurkeKaufenButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.gurkekaufen_button, 100, 100);
-        bitmapGurkeKaufenButton = Bitmap.createScaledBitmap(bitmapGurkeKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapGurkeKaufenButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.gurkekaufen_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapGurkeKaufenButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.gurkekaufen_button, 100, 100);
+            bitmapGurkeKaufenButton = Bitmap.createScaledBitmap(bitmapGurkeKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
-        options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        bitmapMusikAnAusButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.musikanaus_button, options);
-        imageHeight = options.outHeight;
-        imageWidth = options.outWidth;
-        bitmapMusikAnAusButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.musikanaus_button, 100, 100);
-        bitmapMusikAnAusButton = Bitmap.createScaledBitmap(bitmapMusikAnAusButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapMusikAnAusButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.musikanaus_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapMusikAnAusButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.musikanaus_button, 100, 100);
+            bitmapMusikAnAusButton = Bitmap.createScaledBitmap(bitmapMusikAnAusButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
-        options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        bitmapResetButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.reset_button, options);
-        imageHeight = options.outHeight;
-        imageWidth = options.outWidth;
-        bitmapResetButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.reset_button, 100, 100);
-        bitmapResetButton = Bitmap.createScaledBitmap(bitmapResetButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapResetButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.reset_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapResetButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.reset_button, 100, 100);
+            bitmapResetButton = Bitmap.createScaledBitmap(bitmapResetButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
-        //Feste Werte setzen
-        bitmapAckerKaufenButtonX = getScaledCoordinates(screenX, 1080, 20);
-        bitmapAckerKaufenButtonY = getScaledCoordinates(screenY, 1920, 490);
-        bitmapFightButtonX = getScaledCoordinates(screenX, 1080, 270);
-        bitmapFightButtonY = bitmapAckerKaufenButtonY;
-        bitmapGurkeKaufenButtonX = getScaledCoordinates(screenX, 1080, 520);
-        bitmapGurkeKaufenButtonY = bitmapAckerKaufenButtonY;
-        bitmapMusikAnAusButtonX = getScaledCoordinates(screenX, 1080, 770);
-        bitmapMusikAnAusButtonY = bitmapAckerKaufenButtonY;
-        bitmapResetButtonX = getScaledCoordinates(screenX, 1080, 20);
-        bitmapResetButtonY = getScaledCoordinates(screenY, 1920, 640);
+            //Feste Werte setzen
+            bitmapAckerKaufenButtonX = getScaledCoordinates(screenX, 1080, 20);
+            bitmapAckerKaufenButtonY = getScaledCoordinates(screenY, 1920, 490);
+            bitmapFightButtonX = getScaledCoordinates(screenX, 1080, 270);
+            bitmapFightButtonY = bitmapAckerKaufenButtonY;
+            bitmapGurkeKaufenButtonX = getScaledCoordinates(screenX, 1080, 520);
+            bitmapGurkeKaufenButtonY = bitmapAckerKaufenButtonY;
+            bitmapMusikAnAusButtonX = getScaledCoordinates(screenX, 1080, 770);
+            bitmapMusikAnAusButtonY = bitmapAckerKaufenButtonY;
+            bitmapResetButtonX = getScaledCoordinates(screenX, 1080, 20);
+            bitmapResetButtonY = getScaledCoordinates(screenY, 1920, 640);
+        }
+        else {
+            //Hintergrundbildposition
+            backgroundFightX1 = getScaledCoordinates(screenX, 1080, -540);
+
+            //Hinntergrundbildscaling
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapBackgroundFights = BitmapFactory.decodeResource(this.getResources(), R.drawable.fightbackground2, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
+            bitmapBackgroundFights = decodeSampledBitmapFromResource(this.getResources(), R.drawable.fightbackground2, 200, 200);
+            bitmapBackgroundFights = Bitmap.createScaledBitmap(bitmapBackgroundFights, screenX*2, screenY, false);
+
+        }
     }
 
     //Gibt den Preis der Elemente aus dem Shop aus
@@ -947,5 +1044,15 @@ class GameView extends SurfaceView implements Runnable {
                 return 500;
         }
         return -1;
+    }
+
+    //Gegner erstellen
+    private void initialiseEnemie() {
+        enemieWeapon = new Weapon("Knüppel");
+        enemie = new Enemie("Goblin", 5);
+    }
+
+    private void attack() {
+        enemie.defend(character.getMeleeDamage());
     }
 }
