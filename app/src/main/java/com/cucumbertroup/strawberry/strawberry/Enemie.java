@@ -17,8 +17,10 @@ public class Enemie {
     private int positionX;
     private int positionY;
     private int experience;
+    private int lootLevel;
+    private boolean alive;
 
-    public Enemie(int level, int damage, int defense, Bitmap bitmapEnemie, String name, Weapon weapon, int life, int experience) {
+    public Enemie(int level, int damage, int defense, Bitmap bitmapEnemie, String name, Weapon weapon, int life, int experience, int lootLevel, boolean alive) {
         this.level = level;
         this.damage = damage;
         this.defense = defense;
@@ -27,6 +29,8 @@ public class Enemie {
         this.weapon = weapon;
         this.life = life;
         this.experience = experience;
+        this.lootLevel = lootLevel;
+        this.alive = alive;
     }
 
     public Enemie(String name, int level) {
@@ -35,28 +39,34 @@ public class Enemie {
                 this.weapon = new Weapon("Knüppel");
                 this.level = level;
                 this.damage = level + weapon.getDamage();
-                this.defense = level/2;
+                this.defense = level;
                 this.name = name;
-                this.life = 2*level;
+                this.life = 6 + 2*level;
                 this.experience = 5;
+                this.lootLevel = 0;
+                this.alive = true;
                 break;
             case "Ork":
                 this.weapon = new Weapon("Knüppel");
                 this.level = level;
-                this.damage = (int) (1.5*level + weapon.getDamage());
-                this.defense = (int) (1.5*level);
+                this.damage = (int) (1.5*level + weapon.getDamage() + 4);
+                this.defense = 5 + (int) (1.5*level);
                 this.name = name;
-                this.life = 4*level;
+                this.life = 20 + 3* level;
                 this.experience = 15;
+                this.lootLevel = 1;
+                this.alive = true;
                 break;
             case "Dieb":
                 this.weapon = new Weapon("Schwert");
                 this.level = level;
-                this.damage = level + weapon.getDamage();
-                this.defense = level;
+                this.damage = 7 + level + weapon.getDamage();
+                this.defense = 5 + level;
                 this.name = name;
-                this.life = 2*level;
+                this.life = 20 + 2*level;
                 this.experience = 20;
+                this.lootLevel = 1;
+                this.alive = true;
                 break;
         }
     }
@@ -101,12 +111,25 @@ public class Enemie {
         return experience;
     }
 
-    public boolean defend(int damage) {
-        life = defense/2 - damage;
-        if (life <= 0) {
-            return false;
-        }
-        return true;
+    public boolean getLifeStatus() { return alive; }
 
+    public void defend(int damage) {
+        if (life > 0) {
+            //Die ersten 10 Defense Punkte zehlen 1 zu 1 als Abwehr. Danach nur noch zur Hälfte
+            if (defense < 10) {
+                if (damage >= defense) //Damit man beim Angreifen nicht heilt
+                    life -= Math.abs(defense - damage);
+            } else {
+                if (damage - 10 >= ((defense - 10) / 2))
+                    life -= Math.abs(((defense - 10) / 2) - (damage - 10));
+            }
+            if (life <= 0) {
+                alive = false;
+            }
+        } else {
+            alive = false;
+        }
     }
+
+
 }

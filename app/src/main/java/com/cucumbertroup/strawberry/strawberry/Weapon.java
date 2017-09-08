@@ -9,22 +9,28 @@ import android.graphics.Bitmap;
 public class Weapon {
     private int damage;
     private int defense;
-    private boolean nahkampf;
+    private int waffenart;
+    /*Waffenart:
+    0: Keule
+    1: Schwert
+    2: Bogen
+    3: Schild
+     */
     private String name;
     private Bitmap bitmapWeapon;
 
-    public Weapon(int damage, int defense, boolean nahkampf, String name, Bitmap bitmapWeapon) {
+    public Weapon(int damage, int defense, int waffenart, String name, Bitmap bitmapWeapon) {
         this.damage = damage;
         this.defense = defense;
-        this.nahkampf = nahkampf;
+        this.waffenart = waffenart;
         this.name = name;
         this.bitmapWeapon = bitmapWeapon;
     }
 
-    public Weapon(int damage, int defense, boolean nahkampf, String name) {
+    public Weapon(int damage, int defense, int waffenart, String name) {
         this.damage = damage;
         this.defense = defense;
-        this.nahkampf = nahkampf;
+        this.waffenart = waffenart;
         this.name = name;
     }
 
@@ -33,31 +39,31 @@ public class Weapon {
             case "Knüppel":
                 this.damage = 5;
                 this.defense = 0;
-                this.nahkampf = true;
+                this.waffenart = 0;
                 this.name = name;
                 break;
             case "Schwert":
                 this.damage = 10;
                 this.defense = 0;
-                this.nahkampf = true;
+                this.waffenart = 1;
                 this.name = name;
                 break;
             case "Riesenschwert":
                 this.damage = 20;
                 this.defense = 0;
-                this.nahkampf = true;
+                this.waffenart = 1;
                 this.name = name;
                 break;
             case "Holzschild":
                 this.damage = 1;
                 this.defense = 5;
-                this.nahkampf = true;
+                this.waffenart = 3;
                 this.name = name;
                 break;
             case "Hacke":
                 this.damage = 2;
                 this.defense = 0;
-                this.nahkampf = true;
+                this.waffenart = 0;
                 this.name = name;
                 break;
         }
@@ -71,8 +77,8 @@ public class Weapon {
         return defense;
     }
 
-    public boolean getNahkampf() {
-        return nahkampf;
+    public int getWaffenart() {
+        return waffenart;
     }
 
     public String getName() {

@@ -46,4 +46,10 @@ public class MainActivity extends AppCompatActivity {
         gameView.pause();
     }
 
+    //Wenn der Zurückbutton geklickt wird.
+    @Override
+    public void onBackPressed() {
+        gameView.onBackPressed();
+    }
+
 }

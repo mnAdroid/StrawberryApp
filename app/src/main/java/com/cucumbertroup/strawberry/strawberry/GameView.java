@@ -94,20 +94,36 @@ class GameView extends SurfaceView implements Runnable {
     private int imageHeight;
     private int imageWidth;
 
-    //Testbuttons initialisieren
+    //Testbuttons FARM initialisieren
     Bitmap bitmapAckerKaufenButton;
     Bitmap bitmapFightButton;
     Bitmap bitmapGurkeKaufenButton;
     Bitmap bitmapMusikAnAusButton;
     Bitmap bitmapResetButton;
 
+    //Testbuttons FIGHT initialisieren
+    Bitmap bitmapSpawnDiebButton;
+    Bitmap bitmapSpawnGoblinButton;
+    Bitmap bitmapSpawnOrkButton;
+    Bitmap bitmapSpawnLevelUp;
+    Bitmap bitmapLevelUpDamage;
+    Bitmap bitmapLevelUpDefense;
+    Bitmap bitmapLevelUpLife;
+
     //Feste Größen speichern
-    private int textSize, textX, textY;
+    private int textSize, textSizeBig, textX, textY;
     private int bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY;
     private int bitmapFightButtonX, bitmapFightButtonY;
     private int bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY;
     private int bitmapMusikAnAusButtonX, bitmapMusikAnAusButtonY;
     private int bitmapResetButtonX, bitmapResetButtonY;
+    private int bitmapSpawnDiebButtonX, bitmapSpawnDiebButtonY;
+    private int bitmapSpawnGoblinButtonX, bitmapSpawnGoblinButtonY;
+    private int bitmapSpawnOrkButtonX, bitmapSpawnOrkButtonY;
+    private int bitmapSpawnLevelUpX, bitmapSpawnLevelUpY;
+    private int bitmapLevelUpDamageX, bitmapLevelUpDamageY;
+    private int bitmapLevelUpDefenseX, bitmapLevelUpDefenseY;
+    private int bitmapLevelUpLifeX, bitmapLevelUpLifeY;
 
     //Musik initialisieren
     private SoundPool soundPool;
@@ -146,9 +162,10 @@ class GameView extends SurfaceView implements Runnable {
     //Kampfessteuerung
     private boolean fightmode1 = true;
     private int screenMitte;
+    private int enemieSpawnLevel;
+    private boolean levelUpPossible;
 
     //Alles was ich für den Gegner brauche
-    private Weapon enemieWeapon;
     private Enemie enemie;
     private Character character;
 
@@ -172,6 +189,7 @@ class GameView extends SurfaceView implements Runnable {
 
         //Textgröße errechnen
         textSize = getScaledBitmapSize(screenX, 1080, 50);
+        textSizeBig = getScaledBitmapSize(screenX, 1080, 100);
         //Textgröße setzen (möglicherweise muss das wieder zurück in drawFarm nach Hintergrundmalen)
         paint.setTextSize(textSize);
         //Textposition setzen
@@ -313,7 +331,37 @@ class GameView extends SurfaceView implements Runnable {
                 canvas.drawText("Gegner: " + enemie.getName(), textX, textY, paint);
                 canvas.drawText("Leben: " + enemie.getLife(), textX, 2*textY, paint);
             }
+            //GegnerSpawnLevel
+            if (enemieSpawnLevel >= 1) {
+                canvas.drawText("Gegnerisches Spawnlevel: " + enemieSpawnLevel, textX, 4*textY, paint);
+            }
 
+            //Eigene Erfahrung malen:
+            if (character != null) {
+                canvas.drawText("Erfahrung: " + character.getExperience(), screenMitte,textY, paint);
+                canvas.drawText("Level: " + character.getLevel(), screenMitte, 2*textY, paint);
+            }
+
+            if (levelUpPossible) {
+                paint.setTextSize(textSizeBig);
+                canvas.drawText("LEVEL UP AVAILABLE!!", textX, 14*textY, paint);
+                paint.setTextSize(textSize);
+            }
+
+
+            //SpawnButtons malen
+            if (bitmapSpawnLevelUp != null) {
+                canvas.drawBitmap(bitmapSpawnLevelUp, bitmapSpawnLevelUpX, bitmapSpawnLevelUpY, paint);
+            }
+            if (bitmapSpawnGoblinButton != null) {
+                canvas.drawBitmap(bitmapSpawnGoblinButton, bitmapSpawnGoblinButtonX, bitmapSpawnGoblinButtonY, paint);
+            }
+            if (bitmapSpawnOrkButton != null) {
+                canvas.drawBitmap(bitmapSpawnOrkButton, bitmapSpawnOrkButtonX, bitmapSpawnOrkButtonY, paint);
+            }
+            if (bitmapSpawnDiebButton != null) {
+                canvas.drawBitmap(bitmapSpawnDiebButton, bitmapSpawnDiebButtonX, bitmapSpawnDiebButtonY, paint);
+            }
             //Alles auf den Bildschirm malen
             //Und Canvas wieder freilassen (um Fehler zu minimieren(das könnte sogar der Fehler meiner ersten App gewesen sein))
             ourHolder.unlockCanvasAndPost(canvas);
@@ -322,65 +370,79 @@ class GameView extends SurfaceView implements Runnable {
 
     //SharedPreferences auslesen
     private void getSharedPreferences() {
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberrySettings", 0);
-        numStrawberries = sharedPreferences.getInt("numStrawberries", 0);
-        numAecker = sharedPreferences.getInt("numAecker", 1);
-        gold = sharedPreferences.getInt("gold", 5);
-        clickCount = sharedPreferences.getInt("clicks", 0);
-        String strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
-        musicOn = sharedPreferences.getBoolean("musicOn", true);
-        soundOn = sharedPreferences.getBoolean("soundOn", true);
-        numGurken = sharedPreferences.getInt("numGurken", 1);
-        alphaTester = sharedPreferences.getBoolean("alphaTester", true);
-        betaTester = sharedPreferences.getBoolean("betaTester", false);
+        if (gameMode == 0) {
+            SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberrySettings", 0);
+            numStrawberries = sharedPreferences.getInt("numStrawberries", 0);
+            numAecker = sharedPreferences.getInt("numAecker", 1);
+            gold = sharedPreferences.getInt("gold", 5);
+            clickCount = sharedPreferences.getInt("clicks", 0);
+            String strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
+            musicOn = sharedPreferences.getBoolean("musicOn", true);
+            soundOn = sharedPreferences.getBoolean("soundOn", true);
+            numGurken = sharedPreferences.getInt("numGurken", 1);
+            alphaTester = sharedPreferences.getBoolean("alphaTester", true);
+            betaTester = sharedPreferences.getBoolean("betaTester", false);
 
-        strawberries = new Strawberry[numAecker*16];
+            strawberries = new Strawberry[numAecker * 16];
 
-        //um keine IndexoutofBoundException zu bekommen
-        if(!(strawberryStatus.equals(""))) {
-            //Initialisierung der gespeicherten Erdbeeren: 1. String auseinander nehmen, 2. aus den Daten auslesen
-            //Der erste Teil: wachsstatus, der zweite: Ackernummer, der dritte: Zeit
-            String[] strawberryStatusStrings = strawberryStatus.split("a");
-            int stringsCounter = 0;
-            for (int i = 0; i < (numAecker * 16); i++) {
-                strawberries[i] = new Strawberry(Integer.parseInt(strawberryStatusStrings[stringsCounter]), Integer.parseInt(strawberryStatusStrings[stringsCounter + 1]), Long.parseLong(strawberryStatusStrings[stringsCounter + 2]));
-                stringsCounter += 3;
+            //um keine IndexoutofBoundException zu bekommen
+            if (!(strawberryStatus.equals(""))) {
+                //Initialisierung der gespeicherten Erdbeeren: 1. String auseinander nehmen, 2. aus den Daten auslesen
+                //Der erste Teil: wachsstatus, der zweite: Ackernummer, der dritte: Zeit
+                String[] strawberryStatusStrings = strawberryStatus.split("a");
+                int stringsCounter = 0;
+                for (int i = 0; i < (numAecker * 16); i++) {
+                    strawberries[i] = new Strawberry(Integer.parseInt(strawberryStatusStrings[stringsCounter]), Integer.parseInt(strawberryStatusStrings[stringsCounter + 1]), Long.parseLong(strawberryStatusStrings[stringsCounter + 2]));
+                    stringsCounter += 3;
+                }
+            } else {
+                for (int i = 0; i < (numAecker * 16); i++) {
+                    strawberries[i] = new Strawberry(((int) i / 16) + 1);
+                }
             }
         }
-        else {
-            for (int i = 0; i < (numAecker * 16); i++) {
-                strawberries[i] = new Strawberry(((int)i/16) + 1);
-            }
+        if (gameMode == 1) {
+
         }
     }
     //SharedPreferences wieder sicher verwahren
     private void setSharedPreferences() {
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberrySettings", 0);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt("numStrawberries", numStrawberries);
-        editor.putInt("numAecker", numAecker);
-        editor.putInt("gold", gold);
-        editor.putInt("clicks", clickCount);
-        editor.putBoolean("musicOn", musicOn);
-        editor.putBoolean("soundOn", soundOn);
-        editor.putInt("numGurken", numGurken);
-        editor.putBoolean("alphaTester", alphaTester);
-        editor.putBoolean("betaTester", betaTester);
+        if (gameMode == 0) {
 
-        //Hier kommen alle derzeitigen Erdbeeren rein um gespeichert zu werden
-        String strawberryStatus = "";
-        //Der erste Teil: wachsstatus, der zweite: Ackernummer, der dritte: Zeit
-        for(int i = 0; i < (numAecker*16); i++) {
-            strawberryStatus += strawberries[i].getWachsStatus();
-            strawberryStatus += "a";
-            strawberryStatus += strawberries[i].getAcker();
-            strawberryStatus += "a";
-            strawberryStatus += strawberries[i].getTimeThisFruit();
-            strawberryStatus += "a";
+            SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberrySettings", 0);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putInt("numStrawberries", numStrawberries);
+            editor.putInt("numAecker", numAecker);
+            editor.putInt("gold", gold);
+            editor.putInt("clicks", clickCount);
+            editor.putBoolean("musicOn", musicOn);
+            editor.putBoolean("soundOn", soundOn);
+            editor.putInt("numGurken", numGurken);
+            editor.putBoolean("alphaTester", alphaTester);
+            editor.putBoolean("betaTester", betaTester);
+
+            //Hier kommen alle derzeitigen Erdbeeren rein um gespeichert zu werden
+            String strawberryStatus = "";
+            //Der erste Teil: wachsstatus, der zweite: Ackernummer, der dritte: Zeit
+            for (int i = 0; i < (numAecker * 16); i++) {
+                strawberryStatus += strawberries[i].getWachsStatus();
+                strawberryStatus += "a";
+                strawberryStatus += strawberries[i].getAcker();
+                strawberryStatus += "a";
+                strawberryStatus += strawberries[i].getTimeThisFruit();
+                strawberryStatus += "a";
+            }
+            editor.putString("strawberryStatus", strawberryStatus);
+
+            editor.commit();
         }
-        editor.putString("strawberryStatus", strawberryStatus);
+        if (gameMode == 1) {
+            SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberryFight", 0);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putInt("characterExperience", character.getExperience());
 
-        editor.commit();
+            editor.commit();
+        }
     }
 
     //Spiel wird geschlossen / pausiert
@@ -457,25 +519,7 @@ class GameView extends SurfaceView implements Runnable {
                         && touchY1 >= bitmapFightButtonY && touchY1 < (bitmapFightButtonY + bitmapFightButton.getHeight())) {
                     playSound(4);
                     if (gameMode == 0) {
-                        gameMode = 1;
-                        //Bitmaps Recyclen
-                        bitmapBackgroundColors.recycle();
-                        bitmapBackgroundColors = null;
-                        bitmapAckerKaufenButton.recycle();
-                        bitmapAckerKaufenButton = null;
-                        bitmapFightButton.recycle();
-                        bitmapFightButton = null;
-                        bitmapGurkeKaufenButton.recycle();
-                        bitmapGurkeKaufenButton = null;
-                        bitmapMusikAnAusButton.recycle();
-                        bitmapMusikAnAusButton = null;
-                        bitmapResetButton.recycle();
-                        bitmapResetButton = null;
-
-                        initialiseBitmaps();
-
-                        character = new Character();
-                        initialiseEnemie();
+                        initialiseFightMode();
                     }
                     break;
                 }
@@ -525,8 +569,8 @@ class GameView extends SurfaceView implements Runnable {
                     for (int i = 0; i < (numAecker * 16); i++) {
                         strawberries[i] = new Strawberry(((int)i/16) + 1);
                     }
+                    break;
                 }
-
 
                 //Wir haben geklickt, in einem Klickergame müssen wir doch mit der Info irgendwas machen oder? :D
                 gotClickedFarm();
@@ -664,9 +708,41 @@ class GameView extends SurfaceView implements Runnable {
                 touchY1 = motionEvent.getY();
                 touchTimer = System.currentTimeMillis();
 
+                //War da ein Button?
+                if (touchX1 >= bitmapSpawnLevelUpX && touchX1 < (bitmapSpawnLevelUpX + bitmapSpawnLevelUp.getWidth())
+                    && touchY1 >= bitmapSpawnLevelUpY && touchY1 < (bitmapSpawnLevelUpY + bitmapSpawnLevelUp.getHeight())) {
+                    playSound(4);
+                    enemieSpawnLevel++;
+                    break;
+                }
+                if (touchX1 >= bitmapSpawnGoblinButtonX && touchX1 < (bitmapSpawnGoblinButtonX + bitmapSpawnGoblinButton.getWidth())
+                        && touchY1 >= bitmapSpawnGoblinButtonY && touchY1 < (bitmapSpawnGoblinButtonY + bitmapSpawnGoblinButton.getHeight())) {
+                    playSound(4);
+                    if (enemie == null) {
+                        spawnEnemie("Goblin");
+                    }
+                    break;
+                }
+                if (touchX1 >= bitmapSpawnDiebButtonX && touchX1 < (bitmapSpawnDiebButtonX + bitmapSpawnDiebButton.getWidth())
+                        && touchY1 >= bitmapSpawnDiebButtonY && touchY1 < (bitmapSpawnDiebButtonY + bitmapSpawnDiebButton.getHeight())) {
+                    playSound(4);
+                    if (enemie == null) {
+                        spawnEnemie("Dieb");
+                    }
+                    break;
+                }
+                if (touchX1 >= bitmapSpawnOrkButtonX && touchX1 < (bitmapSpawnOrkButtonX + bitmapSpawnOrkButton.getWidth())
+                        && touchY1 >= bitmapSpawnOrkButtonY && touchY1 < (bitmapSpawnOrkButtonY + bitmapSpawnOrkButton.getHeight())) {
+                    playSound(4);
+                    if (enemie == null) {
+                        spawnEnemie("Ork");
+                    }
+                    break;
+                }
                 //Auf den rechten Teil des Bildschirms wird geklickt
                 if (touchX1 >= screenMitte) {
                     attack();
+                    break;
                 }
                 //Auf den linken Teil des Bildschirms wird geklickt
                 else {
@@ -901,7 +977,7 @@ class GameView extends SurfaceView implements Runnable {
     }
 
     //Einlesen der minimalen Bitmaps (vong Google perösnlich der Algorithmus)
-    public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
+    private static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
                                                               int reqWidth, int reqHeight) {
 
         // First decode with inJustDecodeBounds=true to check dimensions
@@ -917,7 +993,7 @@ class GameView extends SurfaceView implements Runnable {
         return BitmapFactory.decodeResource(res, resId, options);
     }
     //Annäherung an eine minimale Größe der Bitmaps vor dem Einlesen
-    public static int calculateInSampleSize(
+    private static int calculateInSampleSize(
             BitmapFactory.Options options, int reqWidth, int reqHeight) {
         // Raw height and width of image
         final int height = options.outHeight;
@@ -1014,6 +1090,7 @@ class GameView extends SurfaceView implements Runnable {
             bitmapMusikAnAusButtonY = bitmapAckerKaufenButtonY;
             bitmapResetButtonX = getScaledCoordinates(screenX, 1080, 20);
             bitmapResetButtonY = getScaledCoordinates(screenY, 1920, 640);
+
         }
         else {
             //Hintergrundbildposition
@@ -1029,6 +1106,48 @@ class GameView extends SurfaceView implements Runnable {
             bitmapBackgroundFights = decodeSampledBitmapFromResource(this.getResources(), R.drawable.fightbackground2, 200, 200);
             bitmapBackgroundFights = Bitmap.createScaledBitmap(bitmapBackgroundFights, screenX*2, screenY, false);
 
+            //Buttons
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapSpawnDiebButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.spawndieb_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapSpawnDiebButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.spawndieb_button, 100, 100);
+            bitmapSpawnDiebButton = Bitmap.createScaledBitmap(bitmapSpawnDiebButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapSpawnGoblinButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.spawngoblin_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapSpawnGoblinButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.spawngoblin_button, 100, 100);
+            bitmapSpawnGoblinButton = Bitmap.createScaledBitmap(bitmapSpawnGoblinButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapSpawnOrkButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.spawnork_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapSpawnOrkButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.spawnork_button, 100, 100);
+            bitmapSpawnOrkButton = Bitmap.createScaledBitmap(bitmapSpawnOrkButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapSpawnLevelUp = BitmapFactory.decodeResource(this.getResources(), R.drawable.spawnlevelplus_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapSpawnLevelUp = decodeSampledBitmapFromResource(this.getResources(), R.drawable.spawnlevelplus_button, 100, 100);
+            bitmapSpawnLevelUp = Bitmap.createScaledBitmap(bitmapSpawnLevelUp, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            //Feste Werte setzen
+            bitmapSpawnLevelUpX = getScaledCoordinates(screenX, 1080, 20);
+            bitmapSpawnLevelUpY = getScaledCoordinates(screenY, 1920, 250);
+            bitmapSpawnDiebButtonX = getScaledCoordinates(screenX, 1080, 520);
+            bitmapSpawnDiebButtonY = getScaledCoordinates(screenY, 1920, 400);;
+            bitmapSpawnGoblinButtonX = getScaledCoordinates(screenX, 1080, 20);
+            bitmapSpawnGoblinButtonY = bitmapSpawnDiebButtonY;
+            bitmapSpawnOrkButtonX = getScaledCoordinates(screenX, 1080, 270);
+            bitmapSpawnOrkButtonY = bitmapSpawnDiebButtonY;
         }
     }
 
@@ -1047,12 +1166,72 @@ class GameView extends SurfaceView implements Runnable {
     }
 
     //Gegner erstellen
-    private void initialiseEnemie() {
-        enemieWeapon = new Weapon("Knüppel");
-        enemie = new Enemie("Goblin", 5);
+    private void spawnEnemie(String name) {
+        enemie = new Enemie(name, enemieSpawnLevel);
     }
 
+    //AUF ZUM ANGRIFF!! AAAAHHH
     private void attack() {
-        enemie.defend(character.getMeleeDamage());
+        if (enemie != null) {
+            enemie.defend(character.getMeleeDamage());
+            if (!enemie.getLifeStatus()) {
+                if (character.setExperience(enemie.getExperience())) {
+                    levelUpPossible = true;
+                }
+                enemie = null;
+        }
+        }
+    }
+
+    //Wenn der Zurückbutton gedrücckt wurde
+    public void onBackPressed() {
+        if (gameMode == 0) {
+
+        }
+        if (gameMode == 1) {
+            //Fightmode Infos sichern
+            setSharedPreferences();
+            //alles leeren
+            enemie = null;
+            gameMode = 0;
+
+            initialiseBitmaps();
+
+            bitmapBackgroundFights.recycle();
+            bitmapBackgroundFights = null;
+
+        }
+    }
+
+    //Fight Mode initialisieren
+    private void initialiseFightMode() {
+        //Zur Sicherheit mal alles wichtige abspeichern
+        setSharedPreferences();
+        gameMode = 1;
+        //Bitmaps Recyclen
+        bitmapBackgroundColors.recycle();
+        bitmapBackgroundColors = null;
+        bitmapAckerKaufenButton.recycle();
+        bitmapAckerKaufenButton = null;
+        bitmapFightButton.recycle();
+        bitmapFightButton = null;
+        bitmapGurkeKaufenButton.recycle();
+        bitmapGurkeKaufenButton = null;
+        bitmapMusikAnAusButton.recycle();
+        bitmapMusikAnAusButton = null;
+        bitmapResetButton.recycle();
+        bitmapResetButton = null;
+
+        initialiseBitmaps();
+
+        SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberryFight", 0);
+        character = new Character(new Weapon(sharedPreferences.getString("characterEquippedWeapon", "Hacke")), sharedPreferences.getInt("characterBaseDamage", 1), sharedPreferences.getInt("characterLife", 10), sharedPreferences.getInt("characterDefense", 1), sharedPreferences.getInt("characterExperience", 0), sharedPreferences.getInt("characterLevel", 1));
+        enemieSpawnLevel = 1;
+        spawnEnemie("Goblin");
+        getSharedPreferences();
+        levelUpPossible = false;
+        if (character.canLevelUp()) {
+            levelUpPossible = true;
+        }
     }
 }

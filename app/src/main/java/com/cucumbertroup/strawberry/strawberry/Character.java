@@ -6,8 +6,7 @@ package com.cucumbertroup.strawberry.strawberry;
 
 public class Character {
     private Weapon equipedWeapon;
-    private int meleeDamage;
-    private int rangeDamage;
+    private int baseDamage;
     private int life;
     private int defense;
     private int experience;
@@ -15,20 +14,20 @@ public class Character {
 
     public Character() {
         equipedWeapon = new Weapon("Hacke");
-        meleeDamage = 1;
-        rangeDamage = 1;
+        baseDamage = 1;
         life = 10;
         defense = 1;
         experience = 0;
+        level = 1;
     }
 
-    public Character(Weapon equipedWeapon, int meleeDamage, int rangeDamage, int life, int defense, int experience) {
+    public Character(Weapon equipedWeapon, int baseDamage, int life, int defense, int experience, int level) {
         this.equipedWeapon = equipedWeapon;
-        this.meleeDamage = meleeDamage;
-        this.rangeDamage = rangeDamage;
+        this.baseDamage = baseDamage;
         this.life = life;
         this.defense = defense;
         this.experience = experience;
+        this.level = level;
     }
 
     public Weapon getEquipedWeapon() {
@@ -36,11 +35,11 @@ public class Character {
     }
 
     public int getMeleeDamage() {
-        return meleeDamage + equipedWeapon.getDamage();
+        return baseDamage + equipedWeapon.getDamage();
     }
 
     public int getRangeDamage() {
-        return rangeDamage;
+        return baseDamage;
     }
 
     public int getLife() {
@@ -61,17 +60,32 @@ public class Character {
 
     public boolean setExperience(int experience) {
         this.experience += experience;
+        return canLevelUp();
+    }
+
+    public boolean canLevelUp() {
+        if (level <= 15 && experience >= 10*level + 7) {
+            return true;
+        }
+        if (level <= 30 && experience >= 25*level - 38) {
+            return true;
+        }
+        if (level <= 60 && experience >= 45*level -158 ) {
+            return true;
+        }
         return false;
     }
 
     public void setEquipedWeapon(Weapon weapon) {
         equipedWeapon = weapon;
     }
-    public void levelUp(int meleeDamagePlus, int rangeDamagePlus, int lifePlus, int defensePlus) {
-        meleeDamage += meleeDamagePlus;
-        rangeDamage += rangeDamagePlus;
+
+    public void levelUp(int baseDamagePlus, int lifePlus, int defensePlus) {
+        baseDamage += baseDamagePlus;
         life += lifePlus;
         defense += defensePlus;
+        experience = 0;
+        level++;
     }
 
 }
