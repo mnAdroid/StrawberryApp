@@ -327,10 +327,10 @@ class GameView extends SurfaceView implements Runnable {
                 canvas.drawBitmap(bitmapBackgroundFights, backgroundFightX1, 0, paint);
 
             //Gegner Text malen
-            if (enemie != null) {
+            if (enemie != null)
                 canvas.drawText("Gegner: " + enemie.getName(), textX, textY, paint);
+            if (enemie != null)
                 canvas.drawText("Leben: " + enemie.getLife(), textX, 2*textY, paint);
-            }
             //GegnerSpawnLevel
             if (enemieSpawnLevel >= 1) {
                 canvas.drawText("Gegnerisches Spawnlevel: " + enemieSpawnLevel, textX, 4*textY, paint);
@@ -361,6 +361,16 @@ class GameView extends SurfaceView implements Runnable {
             }
             if (bitmapSpawnDiebButton != null) {
                 canvas.drawBitmap(bitmapSpawnDiebButton, bitmapSpawnDiebButtonX, bitmapSpawnDiebButtonY, paint);
+            }
+
+            //Levelup Buttons
+            if (levelUpPossible) {
+                if (bitmapLevelUpDamage != null)
+                    canvas.drawBitmap(bitmapLevelUpDamage, bitmapLevelUpDamageX, bitmapLevelUpDamageY, paint);
+                if (bitmapLevelUpDefense != null)
+                    canvas.drawBitmap(bitmapLevelUpDefense, bitmapLevelUpDefenseX, bitmapLevelUpDefenseY, paint);
+                if (bitmapLevelUpLife != null)
+                    canvas.drawBitmap(bitmapLevelUpLife, bitmapLevelUpLifeX, bitmapLevelUpLifeY, paint);
             }
             //Alles auf den Bildschirm malen
             //Und Canvas wieder freilassen (um Fehler zu minimieren(das könnte sogar der Fehler meiner ersten App gewesen sein))
@@ -439,7 +449,15 @@ class GameView extends SurfaceView implements Runnable {
         if (gameMode == 1) {
             SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberryFight", 0);
             SharedPreferences.Editor editor = sharedPreferences.edit();
-            editor.putInt("characterExperience", character.getExperience());
+            if (character != null) {
+                editor.putInt("characterExperience", character.getExperience());
+                editor.putString("characterEquippedWeapon", character.getEquipedWeapon().getName());
+                editor.putInt("characterBaseDamage",character.getBaseDamage());
+                editor.putInt("characterLife", character.getLife());
+                editor.putInt("characterDefense", character.getBaseDefense());
+                editor.putInt("characterExperience", character.getExperience());
+                editor.putInt("characterLevel", character.getLevel());
+            }
 
             editor.commit();
         }
@@ -569,6 +587,21 @@ class GameView extends SurfaceView implements Runnable {
                     for (int i = 0; i < (numAecker * 16); i++) {
                         strawberries[i] = new Strawberry(((int)i/16) + 1);
                     }
+
+                    //Fight Mode resetten
+                    SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberryFight", 0);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    if (character != null) {
+                        editor.putInt("characterExperience", 0);
+                        editor.putString("characterEquippedWeapon", "Hacke");
+                        editor.putInt("characterBaseDamage", 1);
+                        editor.putInt("characterLife", 10);
+                        editor.putInt("characterDefense", 1);
+                        editor.putInt("characterExperience", 0);
+                        editor.putInt("characterLevel", 1);
+                    }
+
+                    editor.commit();
                     break;
                 }
 
@@ -737,6 +770,30 @@ class GameView extends SurfaceView implements Runnable {
                     if (enemie == null) {
                         spawnEnemie("Ork");
                     }
+                    break;
+                }
+                if (touchX1 >= bitmapLevelUpDamageX && touchX1 < (bitmapLevelUpDamageX + bitmapLevelUpDamage.getWidth())
+                        && touchY1 >= bitmapLevelUpDamageY && touchY1 < (bitmapLevelUpDamageY + bitmapLevelUpDamage.getHeight())) {
+                    playSound(4);
+                    character.levelUp(1, 0, 0);
+                    if (!character.canLevelUp())
+                        levelUpPossible = false;
+                    break;
+                }
+                if (touchX1 >= bitmapLevelUpDefenseX && touchX1 < (bitmapLevelUpDefenseX + bitmapLevelUpDefense.getWidth())
+                        && touchY1 >= bitmapLevelUpDefenseY && touchY1 < (bitmapLevelUpDefenseY + bitmapLevelUpDefense.getHeight())) {
+                    playSound(4);
+                    character.levelUp(0, 0, 1);
+                    if (!character.canLevelUp())
+                        levelUpPossible = false;
+                    break;
+                }
+                if (touchX1 >= bitmapLevelUpLifeX && touchX1 < (bitmapLevelUpLifeX + bitmapLevelUpLife.getWidth())
+                        && touchY1 >= bitmapLevelUpLifeY && touchY1 < (bitmapLevelUpLifeY + bitmapLevelUpLife.getHeight())) {
+                    playSound(4);
+                    character.levelUp(0, 1, 0);
+                    if (!character.canLevelUp())
+                        levelUpPossible = false;
                     break;
                 }
                 //Auf den rechten Teil des Bildschirms wird geklickt
@@ -1104,7 +1161,7 @@ class GameView extends SurfaceView implements Runnable {
             imageWidth = options.outWidth;
             //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
             bitmapBackgroundFights = decodeSampledBitmapFromResource(this.getResources(), R.drawable.fightbackground2, 200, 200);
-            bitmapBackgroundFights = Bitmap.createScaledBitmap(bitmapBackgroundFights, screenX*2, screenY, false);
+            bitmapBackgroundFights = Bitmap.createScaledBitmap(bitmapBackgroundFights, screenX * 2, screenY, false);
 
             //Buttons
             options = new BitmapFactory.Options();
@@ -1143,11 +1200,44 @@ class GameView extends SurfaceView implements Runnable {
             bitmapSpawnLevelUpX = getScaledCoordinates(screenX, 1080, 20);
             bitmapSpawnLevelUpY = getScaledCoordinates(screenY, 1920, 250);
             bitmapSpawnDiebButtonX = getScaledCoordinates(screenX, 1080, 520);
-            bitmapSpawnDiebButtonY = getScaledCoordinates(screenY, 1920, 400);;
+            bitmapSpawnDiebButtonY = getScaledCoordinates(screenY, 1920, 400);
             bitmapSpawnGoblinButtonX = getScaledCoordinates(screenX, 1080, 20);
             bitmapSpawnGoblinButtonY = bitmapSpawnDiebButtonY;
             bitmapSpawnOrkButtonX = getScaledCoordinates(screenX, 1080, 270);
             bitmapSpawnOrkButtonY = bitmapSpawnDiebButtonY;
+
+            //Level UP Buttons
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapLevelUpDamage = BitmapFactory.decodeResource(this.getResources(), R.drawable.levelupdamage_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapLevelUpDamage = decodeSampledBitmapFromResource(this.getResources(), R.drawable.levelupdamage_button, 100, 100);
+            bitmapLevelUpDamage = Bitmap.createScaledBitmap(bitmapLevelUpDamage, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapLevelUpDefense = BitmapFactory.decodeResource(this.getResources(), R.drawable.levelupdefense_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapLevelUpDefense = decodeSampledBitmapFromResource(this.getResources(), R.drawable.levelupdefense_button, 100, 100);
+            bitmapLevelUpDefense = Bitmap.createScaledBitmap(bitmapLevelUpDefense, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapLevelUpLife = BitmapFactory.decodeResource(this.getResources(), R.drawable.leveluplife_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapLevelUpLife = decodeSampledBitmapFromResource(this.getResources(), R.drawable.leveluplife_button, 100, 100);
+            bitmapLevelUpLife = Bitmap.createScaledBitmap(bitmapLevelUpLife, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            bitmapLevelUpDamageX = getScaledCoordinates(screenX, 1080, 170);
+            bitmapLevelUpDamageY = getScaledCoordinates(screenY, 1920, 800);
+            bitmapLevelUpDefenseX = getScaledCoordinates(screenX, 1080, 420);
+            bitmapLevelUpDefenseY = getScaledCoordinates(screenY, 1920, 800);
+            bitmapLevelUpLifeX = getScaledCoordinates(screenX, 1080, 670);
+            bitmapLevelUpLifeY = getScaledCoordinates(screenY, 1920, 800);
+
         }
     }
 

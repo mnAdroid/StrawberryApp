@@ -38,7 +38,7 @@ public class Character {
         return baseDamage + equipedWeapon.getDamage();
     }
 
-    public int getRangeDamage() {
+    public int getBaseDamage() {
         return baseDamage;
     }
 
@@ -46,7 +46,7 @@ public class Character {
         return life;
     }
 
-    public int getDefense() {
+    public int getBaseDefense() {
         return defense;
     }
 
@@ -64,15 +64,15 @@ public class Character {
     }
 
     public boolean canLevelUp() {
-        if (level <= 15 && experience >= 10*level + 7) {
-            return true;
-        }
-        if (level <= 30 && experience >= 25*level - 38) {
-            return true;
-        }
-        if (level <= 60 && experience >= 45*level -158 ) {
-            return true;
-        }
+            if (level <= 15 && experience >= 10 * level + 7 &&  10 * level + 7 > 0) {
+                return true;
+            }
+            if (level <= 30 && experience >= 25 * level - 38 && 25 * level - 38 > 0) {
+                return true;
+            }
+            if (level <= 60 && experience >= 45 * level - 158 && 45 * level - 158 > 0) {
+                return true;
+            }
         return false;
     }
 
@@ -81,11 +81,21 @@ public class Character {
     }
 
     public void levelUp(int baseDamagePlus, int lifePlus, int defensePlus) {
-        baseDamage += baseDamagePlus;
-        life += lifePlus;
-        defense += defensePlus;
-        experience = 0;
-        level++;
+        if (canLevelUp()) {
+            baseDamage += baseDamagePlus;
+            life += lifePlus;
+            defense += defensePlus;
+            if (level <= 15) {
+                experience -= 10*level + 7;
+            }
+            else if (level <= 30) {
+                experience -= 25*level - 38;
+            }
+            else if(level <= 60) {
+                experience -= 45*level -158;
+            }
+            level++;
+        }
     }
 
 }
