@@ -109,6 +109,12 @@ class GameView extends SurfaceView implements Runnable {
     Bitmap bitmapLevelUpDamage;
     Bitmap bitmapLevelUpDefense;
     Bitmap bitmapLevelUpLife;
+    Bitmap bitmapWaffeHackeButton;
+    Bitmap bitmapWaffeHolzschildButton;
+    Bitmap bitmapWaffeKnueppelButton;
+    Bitmap bitmapWaffeRiesenschwertButton;
+    Bitmap bitmapWaffeSchwertButton;
+    Bitmap bitmapWaffeWechselnButton;
 
     //Feste Größen speichern
     private int textSize, textSizeBig, textX, textY;
@@ -124,6 +130,12 @@ class GameView extends SurfaceView implements Runnable {
     private int bitmapLevelUpDamageX, bitmapLevelUpDamageY;
     private int bitmapLevelUpDefenseX, bitmapLevelUpDefenseY;
     private int bitmapLevelUpLifeX, bitmapLevelUpLifeY;
+    private int bitmapWaffeHackeButtonX, bitmapWaffeHackeButtonY;
+    private int bitmapWaffeHolzschildButtonX, bitmapWaffeHolzschildButtonY;
+    private int bitmapWaffeKnueppelButtonX, bitmapWaffeKnueppelButtonY;
+    private int bitmapWaffeRiesenschwertButtonX, bitmapWaffeRiesenschwertButtonY;
+    private int bitmapWaffeSchwertButtonX, bitmapWaffeSchwertButtonY;
+    private int bitmapWaffeWechselnButtonX, bitmapWaffeWechselnButtonY;
 
     //Musik initialisieren
     private SoundPool soundPool;
@@ -164,10 +176,12 @@ class GameView extends SurfaceView implements Runnable {
     private int screenMitte;
     private int enemieSpawnLevel;
     private boolean levelUpPossible;
+    private boolean chooseWeapon;
 
     //Alles was ich für den Gegner brauche
     private Enemie enemie;
     private Character character;
+    private Weapon equippedWeapon;
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     public GameView(Context context, int screenX, int screenY) {
@@ -248,63 +262,69 @@ class GameView extends SurfaceView implements Runnable {
             //canvas wird das Zeichenobjekt
             canvas = ourHolder.lockCanvas();
 
-            //Hintergrund malen
-            if (bitmapBackgroundColors != null)
-                canvas.drawBitmap(bitmapBackgroundColors, backgroundColorsX1, 0, paint);
+            try {
+                //Hintergrund malen
+                if (bitmapBackgroundColors != null)
+                    canvas.drawBitmap(bitmapBackgroundColors, backgroundColorsX1, 0, paint);
 
 
-            //Pinselfarbe wählen(bisher nur für den Text)
-            paint.setColor(Color.argb(255, 249, 129, 0));
+                //Pinselfarbe wählen(bisher nur für den Text)
+                paint.setColor(Color.argb(255, 249, 129, 0));
 
-            //Derzeitigen FPS malen
-            canvas.drawText("FPS: " + fps, textX, textY, paint);
+                //Derzeitigen FPS malen
+                canvas.drawText("FPS: " + fps, textX, textY, paint);
 
-            //Klickcounter malen
-            canvas.drawText("Clicks: " + clickCount, textX, 2*textY, paint);
+                //Klickcounter malen
+                canvas.drawText("Clicks: " + clickCount, textX, 2 * textY, paint);
 
-            //Zustand als Text ausgeben
-            switch(zustand) {
-                case 0:
-                    canvas.drawText("Zustand: Aussähen", textX, 3*textY, paint);
-                    break;
-                case 1:
-                    canvas.drawText("Zustand: Wachsen", textX, 3*textY, paint);
-                    break;
-                case 2:
-                    canvas.drawText("Zustand: Ernten", textX, 3*textY, paint);
-                    break;
-                default:
-                    canvas.drawText("Something went wrong :D", textX, 3*textY, paint);
-                    break;
-            }
+                //Zustand als Text ausgeben
+                switch (zustand) {
+                    case 0:
+                        canvas.drawText("Zustand: Aussähen", textX, 3 * textY, paint);
+                        break;
+                    case 1:
+                        canvas.drawText("Zustand: Wachsen", textX, 3 * textY, paint);
+                        break;
+                    case 2:
+                        canvas.drawText("Zustand: Ernten", textX, 3 * textY, paint);
+                        break;
+                    default:
+                        canvas.drawText("Something went wrong :D", textX, 3 * textY, paint);
+                        break;
+                }
 
-            //Anzahl der Erdbeeren
-            canvas.drawText("Erdbeeren: " + numStrawberries, textX, 4*textY, paint);
+                //Anzahl der Erdbeeren
+                canvas.drawText("Erdbeeren: " + numStrawberries, textX, 4 * textY, paint);
 
-            //Anzahl Gurken
-            canvas.drawText("Gurken: " + numGurken + " | Kosten: " + priceGurken + " Gold", textX, 5*textY, paint);
+                //Anzahl Gurken
+                canvas.drawText("Gurken: " + numGurken + " | Kosten: " + priceGurken + " Gold", textX, 5 * textY, paint);
 
-            //Anzahl Aecker
-            canvas.drawText("Äcker: " + numAecker + " | Kosten: " + priceAecker + " Gold", textX, 6*textY, paint);
+                //Anzahl Aecker
+                canvas.drawText("Äcker: " + numAecker + " | Kosten: " + priceAecker + " Gold", textX, 6 * textY, paint);
 
-            //Wie viel Gold haben wir eigentlich?
-            canvas.drawText("Gold: " + gold, textX, 7*textY, paint);
+                //Wie viel Gold haben wir eigentlich?
+                canvas.drawText("Gold: " + gold, textX, 7 * textY, paint);
 
-            //Test Wachsstatus Erdbeere 1
-            if(numStrawberries > 0)
-                canvas.drawText("Wachsstatus Erdbeere 1: " + strawberries[0].getWachsStatus(), textX, 8*textY, paint);
+                //Test Wachsstatus Erdbeere 1
+                if (numStrawberries > 0)
+                    canvas.drawText("Wachsstatus Erdbeere 1: " + strawberries[0].getWachsStatus(), textX, 8 * textY, paint);
 
-            //Test Button malen
-            if (bitmapAckerKaufenButton != null)
-                canvas.drawBitmap(bitmapAckerKaufenButton, bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY, paint);
-            if (bitmapFightButton != null)
-                canvas.drawBitmap(bitmapFightButton, bitmapFightButtonX, bitmapFightButtonY, paint);
-            if (bitmapGurkeKaufenButton != null)
-                canvas.drawBitmap(bitmapGurkeKaufenButton, bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY, paint);
-            if (bitmapMusikAnAusButton != null)
-                canvas.drawBitmap(bitmapMusikAnAusButton, bitmapMusikAnAusButtonX, bitmapMusikAnAusButtonY, paint);
-            if (bitmapResetButton != null)
-                canvas.drawBitmap(bitmapResetButton, bitmapResetButtonX, bitmapResetButtonY, paint);
+                //Test Button malen
+                if (bitmapAckerKaufenButton != null)
+                    canvas.drawBitmap(bitmapAckerKaufenButton, bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY, paint);
+                if (bitmapFightButton != null)
+                    canvas.drawBitmap(bitmapFightButton, bitmapFightButtonX, bitmapFightButtonY, paint);
+                if (bitmapGurkeKaufenButton != null)
+                    canvas.drawBitmap(bitmapGurkeKaufenButton, bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY, paint);
+                if (bitmapMusikAnAusButton != null)
+                    canvas.drawBitmap(bitmapMusikAnAusButton, bitmapMusikAnAusButtonX, bitmapMusikAnAusButtonY, paint);
+                if (bitmapResetButton != null)
+                    canvas.drawBitmap(bitmapResetButton, bitmapResetButtonX, bitmapResetButtonY, paint);
+
+            } catch (NullPointerException e) {
+            setSharedPreferences();
+            return;
+        }
 
             //Alles auf den Bildschirm malen
             //Und Canvas wieder freilassen (um Fehler zu minimieren(das könnte sogar der Fehler meiner ersten App gewesen sein))
@@ -319,58 +339,74 @@ class GameView extends SurfaceView implements Runnable {
             //canvas wird das Zeichenobjekt
             canvas = ourHolder.lockCanvas();
 
-            //Hintergrund malen
-            paint.setColor(Color.argb(255, 255, 255, 0));
+            try {
+                //Hintergrund malen
+                paint.setColor(Color.argb(255, 255, 255, 0));
 
-            //Hintergrund malen
-            if (bitmapBackgroundFights != null)
-                canvas.drawBitmap(bitmapBackgroundFights, backgroundFightX1, 0, paint);
+                //Hintergrund malen
+                if (bitmapBackgroundFights != null)
+                    canvas.drawBitmap(bitmapBackgroundFights, backgroundFightX1, 0, paint);
 
-            //Gegner Text malen
-            if (enemie != null)
-                canvas.drawText("Gegner: " + enemie.getName(), textX, textY, paint);
-            if (enemie != null)
-                canvas.drawText("Leben: " + enemie.getLife(), textX, 2*textY, paint);
-            //GegnerSpawnLevel
-            if (enemieSpawnLevel >= 1) {
-                canvas.drawText("Gegnerisches Spawnlevel: " + enemieSpawnLevel, textX, 4*textY, paint);
-            }
+                //Gegner Text malen
+                if (enemie != null)
+                    canvas.drawText("Gegner: " + enemie.getName(), textX, textY, paint);
+                if (enemie != null)
+                    canvas.drawText("Leben: " + enemie.getLife(), textX, 2 * textY, paint);
+                //GegnerSpawnLevel
+                if (enemieSpawnLevel >= 1) {
+                    canvas.drawText("Gegnerisches Spawnlevel: " + enemieSpawnLevel, textX, 4 * textY, paint);
+                }
 
-            //Eigene Erfahrung malen:
-            if (character != null) {
-                canvas.drawText("Erfahrung: " + character.getExperience(), screenMitte,textY, paint);
-                canvas.drawText("Level: " + character.getLevel(), screenMitte, 2*textY, paint);
-            }
+                //Eigene Erfahrung malen:
+                if (character != null) {
+                    canvas.drawText("Erfahrung: " + character.getExperience(), screenMitte, textY, paint);
+                    canvas.drawText("Level: " + character.getLevel(), screenMitte, 2 * textY, paint);
+                }
 
-            if (levelUpPossible) {
-                paint.setTextSize(textSizeBig);
-                canvas.drawText("LEVEL UP AVAILABLE!!", textX, 14*textY, paint);
-                paint.setTextSize(textSize);
-            }
+                if (levelUpPossible) {
+                    paint.setTextSize(textSizeBig);
+                    canvas.drawText("LEVEL UP AVAILABLE!!", textX, 14 * textY, paint);
+                    paint.setTextSize(textSize);
+                }
 
+                //SpawnButtons malen
+                if (bitmapSpawnLevelUp != null)
+                    canvas.drawBitmap(bitmapSpawnLevelUp, bitmapSpawnLevelUpX, bitmapSpawnLevelUpY, paint);
+                if (bitmapSpawnGoblinButton != null)
+                    canvas.drawBitmap(bitmapSpawnGoblinButton, bitmapSpawnGoblinButtonX, bitmapSpawnGoblinButtonY, paint);
+                if (bitmapSpawnOrkButton != null)
+                    canvas.drawBitmap(bitmapSpawnOrkButton, bitmapSpawnOrkButtonX, bitmapSpawnOrkButtonY, paint);
+                if (bitmapSpawnDiebButton != null)
+                    canvas.drawBitmap(bitmapSpawnDiebButton, bitmapSpawnDiebButtonX, bitmapSpawnDiebButtonY, paint);
 
-            //SpawnButtons malen
-            if (bitmapSpawnLevelUp != null) {
-                canvas.drawBitmap(bitmapSpawnLevelUp, bitmapSpawnLevelUpX, bitmapSpawnLevelUpY, paint);
-            }
-            if (bitmapSpawnGoblinButton != null) {
-                canvas.drawBitmap(bitmapSpawnGoblinButton, bitmapSpawnGoblinButtonX, bitmapSpawnGoblinButtonY, paint);
-            }
-            if (bitmapSpawnOrkButton != null) {
-                canvas.drawBitmap(bitmapSpawnOrkButton, bitmapSpawnOrkButtonX, bitmapSpawnOrkButtonY, paint);
-            }
-            if (bitmapSpawnDiebButton != null) {
-                canvas.drawBitmap(bitmapSpawnDiebButton, bitmapSpawnDiebButtonX, bitmapSpawnDiebButtonY, paint);
-            }
+                //Levelup Buttons
+                if (levelUpPossible) {
+                    if (bitmapLevelUpDamage != null)
+                        canvas.drawBitmap(bitmapLevelUpDamage, bitmapLevelUpDamageX, bitmapLevelUpDamageY, paint);
+                    if (bitmapLevelUpDefense != null)
+                        canvas.drawBitmap(bitmapLevelUpDefense, bitmapLevelUpDefenseX, bitmapLevelUpDefenseY, paint);
+                    if (bitmapLevelUpLife != null)
+                        canvas.drawBitmap(bitmapLevelUpLife, bitmapLevelUpLifeX, bitmapLevelUpLifeY, paint);
+                }
 
-            //Levelup Buttons
-            if (levelUpPossible) {
-                if (bitmapLevelUpDamage != null)
-                    canvas.drawBitmap(bitmapLevelUpDamage, bitmapLevelUpDamageX, bitmapLevelUpDamageY, paint);
-                if (bitmapLevelUpDefense != null)
-                    canvas.drawBitmap(bitmapLevelUpDefense, bitmapLevelUpDefenseX, bitmapLevelUpDefenseY, paint);
-                if (bitmapLevelUpLife != null)
-                    canvas.drawBitmap(bitmapLevelUpLife, bitmapLevelUpLifeX, bitmapLevelUpLifeY, paint);
+                //Chooseweapon Buttons
+                if (bitmapWaffeWechselnButton != null)
+                    canvas.drawBitmap(bitmapWaffeWechselnButton, bitmapWaffeWechselnButtonX, bitmapWaffeWechselnButtonY, paint);
+                if (chooseWeapon) {
+                    if (bitmapWaffeHackeButton != null)
+                        canvas.drawBitmap(bitmapWaffeHackeButton, bitmapWaffeHackeButtonX, bitmapWaffeHackeButtonY, paint);
+                    if (bitmapWaffeHolzschildButton != null)
+                        canvas.drawBitmap(bitmapWaffeHolzschildButton, bitmapWaffeHolzschildButtonX, bitmapWaffeHolzschildButtonY, paint);
+                    if (bitmapWaffeKnueppelButton != null)
+                        canvas.drawBitmap(bitmapWaffeKnueppelButton, bitmapWaffeKnueppelButtonX, bitmapWaffeKnueppelButtonY, paint);
+                    if (bitmapWaffeRiesenschwertButton != null)
+                        canvas.drawBitmap(bitmapWaffeRiesenschwertButton, bitmapWaffeRiesenschwertButtonX, bitmapWaffeRiesenschwertButtonY, paint);
+                    if (bitmapWaffeSchwertButton != null)
+                        canvas.drawBitmap(bitmapWaffeSchwertButton, bitmapWaffeSchwertButtonX, bitmapWaffeSchwertButtonY, paint);
+                }
+            } catch (NullPointerException e) {
+                setSharedPreferences();
+                return;
             }
             //Alles auf den Bildschirm malen
             //Und Canvas wieder freilassen (um Fehler zu minimieren(das könnte sogar der Fehler meiner ersten App gewesen sein))
@@ -796,6 +832,55 @@ class GameView extends SurfaceView implements Runnable {
                         levelUpPossible = false;
                     break;
                 }
+
+                //Weapon Choose Buttons
+                if (touchX1 >= bitmapWaffeWechselnButtonX && touchX1 < (bitmapWaffeWechselnButtonX + bitmapWaffeWechselnButton.getWidth())
+                        && touchY1 >= bitmapWaffeWechselnButtonY && touchY1 < (bitmapWaffeWechselnButtonY + bitmapWaffeWechselnButton.getHeight())) {
+                    playSound(4);
+                    if (chooseWeapon)
+                        chooseWeapon = false;
+                    else
+                        chooseWeapon = true;
+                    break;
+                }
+                if (chooseWeapon) {
+                    if (touchX1 >= bitmapWaffeHackeButtonX && touchX1 < (bitmapWaffeHackeButtonX + bitmapWaffeHackeButton.getWidth())
+                            && touchY1 >= bitmapWaffeHackeButtonY && touchY1 < (bitmapWaffeHackeButtonY + bitmapWaffeHackeButton.getHeight())) {
+                        playSound(4);
+                        equippedWeapon = new Weapon("Hacke");
+                        character.setEquipedWeapon(equippedWeapon);
+                        break;
+                    }
+                    if (touchX1 >= bitmapWaffeHolzschildButtonX && touchX1 < (bitmapWaffeHolzschildButtonX + bitmapWaffeHolzschildButton.getWidth())
+                            && touchY1 >= bitmapWaffeHolzschildButtonY && touchY1 < (bitmapWaffeHolzschildButtonY + bitmapWaffeHolzschildButton.getHeight())) {
+                        playSound(4);
+                        equippedWeapon = new Weapon("Holzschild");
+                        character.setEquipedWeapon(equippedWeapon);
+                        break;
+                    }
+                    if (touchX1 >= bitmapWaffeKnueppelButtonX && touchX1 < (bitmapWaffeKnueppelButtonX + bitmapWaffeKnueppelButton.getWidth())
+                            && touchY1 >= bitmapWaffeKnueppelButtonY && touchY1 < (bitmapWaffeKnueppelButtonY + bitmapWaffeKnueppelButton.getHeight())) {
+                        playSound(4);
+                        equippedWeapon = new Weapon("Knüppel");
+                        character.setEquipedWeapon(equippedWeapon);
+                        break;
+                    }
+                    if (touchX1 >= bitmapWaffeRiesenschwertButtonX && touchX1 < (bitmapWaffeRiesenschwertButtonX + bitmapWaffeRiesenschwertButton.getWidth())
+                            && touchY1 >= bitmapWaffeRiesenschwertButtonY && touchY1 < (bitmapWaffeRiesenschwertButtonY + bitmapWaffeRiesenschwertButton.getHeight())) {
+                        playSound(4);
+                        equippedWeapon = new Weapon("Riesenschwert");
+                        character.setEquipedWeapon(equippedWeapon);
+                        break;
+                    }
+                    if (touchX1 >= bitmapWaffeSchwertButtonX && touchX1 < (bitmapWaffeSchwertButtonX + bitmapWaffeSchwertButton.getWidth())
+                            && touchY1 >= bitmapWaffeSchwertButtonY && touchY1 < (bitmapWaffeSchwertButtonY + bitmapWaffeSchwertButton.getHeight())) {
+                        playSound(4);
+                        equippedWeapon = new Weapon("Schwert");
+                        character.setEquipedWeapon(equippedWeapon);
+                        break;
+                    }
+                }
+
                 //Auf den rechten Teil des Bildschirms wird geklickt
                 if (touchX1 >= screenMitte) {
                     attack();
@@ -1238,6 +1323,68 @@ class GameView extends SurfaceView implements Runnable {
             bitmapLevelUpLifeX = getScaledCoordinates(screenX, 1080, 670);
             bitmapLevelUpLifeY = getScaledCoordinates(screenY, 1920, 800);
 
+            //Weaponchoose Buttons
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapWaffeHackeButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.waffehacke_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapWaffeHackeButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.waffehacke_button, 100, 100);
+            bitmapWaffeHackeButton = Bitmap.createScaledBitmap(bitmapWaffeHackeButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapWaffeHolzschildButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.waffeholzschild_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapWaffeHolzschildButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.waffeholzschild_button, 100, 100);
+            bitmapWaffeHolzschildButton = Bitmap.createScaledBitmap(bitmapWaffeHolzschildButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapWaffeKnueppelButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.waffeknueppel_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapWaffeKnueppelButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.waffeknueppel_button, 100, 100);
+            bitmapWaffeKnueppelButton = Bitmap.createScaledBitmap(bitmapWaffeKnueppelButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapWaffeRiesenschwertButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.wafferiesenschwert_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapWaffeRiesenschwertButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.wafferiesenschwert_button, 100, 100);
+            bitmapWaffeRiesenschwertButton = Bitmap.createScaledBitmap(bitmapWaffeRiesenschwertButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapWaffeSchwertButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.waffeschwert_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapWaffeSchwertButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.waffeschwert_button, 100, 100);
+            bitmapWaffeSchwertButton = Bitmap.createScaledBitmap(bitmapWaffeSchwertButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapWaffeWechselnButton = BitmapFactory.decodeResource(this.getResources(), R.drawable.waffewechseln_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapWaffeWechselnButton = decodeSampledBitmapFromResource(this.getResources(), R.drawable.waffewechseln_button, 100, 100);
+            bitmapWaffeWechselnButton = Bitmap.createScaledBitmap(bitmapWaffeWechselnButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            //Feste Werte
+            bitmapWaffeWechselnButtonX = getScaledCoordinates(screenX, 1080, 50);
+            bitmapWaffeWechselnButtonY = getScaledCoordinates(screenY, 1920, 1620);
+            bitmapWaffeSchwertButtonX = getScaledCoordinates(screenX, 1080, 300);
+            bitmapWaffeSchwertButtonY = getScaledCoordinates(screenY, 1920, 1620);
+            bitmapWaffeRiesenschwertButtonX = getScaledCoordinates(screenX, 1080, 550);
+            bitmapWaffeRiesenschwertButtonY = getScaledCoordinates(screenY, 1920, 1620);
+            bitmapWaffeKnueppelButtonX = getScaledCoordinates(screenX, 1080, 550);
+            bitmapWaffeKnueppelButtonY = getScaledCoordinates(screenY, 1920, 1770);
+            bitmapWaffeHolzschildButtonX = getScaledCoordinates(screenX, 1080, 50);
+            bitmapWaffeHolzschildButtonY = getScaledCoordinates(screenY, 1920, 1770);
+            bitmapWaffeHackeButtonX = getScaledCoordinates(screenX, 1080, 300);
+            bitmapWaffeHackeButtonY = getScaledCoordinates(screenY, 1920, 1770);
         }
     }
 
@@ -1289,7 +1436,34 @@ class GameView extends SurfaceView implements Runnable {
 
             bitmapBackgroundFights.recycle();
             bitmapBackgroundFights = null;
+            bitmapSpawnDiebButton.recycle();
+            bitmapSpawnDiebButton = null;
+            bitmapSpawnGoblinButton.recycle();
+            bitmapSpawnGoblinButton = null;
+            bitmapSpawnOrkButton.recycle();
+            bitmapSpawnOrkButton = null;
+            bitmapSpawnLevelUp.recycle();
+            bitmapSpawnLevelUp = null;
+            bitmapLevelUpDamage.recycle();
+            bitmapLevelUpDamage = null;
+            bitmapLevelUpDefense.recycle();
+            bitmapLevelUpDefense = null;
+            bitmapLevelUpLife.recycle();
+            bitmapLevelUpLife = null;
+            bitmapWaffeHackeButton.recycle();
+            bitmapWaffeHackeButton = null;
+            bitmapWaffeHolzschildButton.recycle();
+            bitmapWaffeHolzschildButton = null;
+            bitmapWaffeKnueppelButton.recycle();
+            bitmapWaffeKnueppelButton = null;
+            bitmapWaffeRiesenschwertButton.recycle();
+            bitmapWaffeRiesenschwertButton = null;
+            bitmapWaffeSchwertButton.recycle();
+            bitmapWaffeSchwertButton = null;
+            bitmapWaffeWechselnButton.recycle();
+            bitmapWaffeWechselnButton = null;
 
+            chooseWeapon = false;
         }
     }
 
@@ -1323,5 +1497,6 @@ class GameView extends SurfaceView implements Runnable {
         if (character.canLevelUp()) {
             levelUpPossible = true;
         }
+        chooseWeapon = false;
     }
 }

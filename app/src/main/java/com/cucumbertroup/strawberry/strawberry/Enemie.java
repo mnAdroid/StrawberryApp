@@ -42,7 +42,7 @@ public class Enemie {
                 this.defense = level;
                 this.name = name;
                 this.life = 6 + 2*level;
-                this.experience = 5;
+                this.experience = 5 + Math.abs(level/4);
                 this.lootLevel = 0;
                 this.alive = true;
                 break;
@@ -53,7 +53,7 @@ public class Enemie {
                 this.defense = 5 + (int) (1.5*level);
                 this.name = name;
                 this.life = 20 + 3* level;
-                this.experience = 15;
+                this.experience = 15 + Math.abs(level/4);
                 this.lootLevel = 1;
                 this.alive = true;
                 break;
@@ -64,7 +64,7 @@ public class Enemie {
                 this.defense = 5 + level;
                 this.name = name;
                 this.life = 20 + 2*level;
-                this.experience = 20;
+                this.experience = 20 + Math.abs(level/4);
                 this.lootLevel = 1;
                 this.alive = true;
                 break;
