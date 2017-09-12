@@ -15,6 +15,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.os.Build;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -63,8 +64,9 @@ class GameView extends SurfaceView implements Runnable {
     private int zustand = 0;
 
     //Ort der letzten Berührung auf dem Bildschirm
-    private float touchX1, touchX1down, touchX2, touchY1;
+    private float touchX1, touchX1down, touchX2, touchY1, touchXPointer;
     private long touchTimer;
+    private boolean touchPointer, actionDown, noButtonKlicked;
     //Abstand der letzten Bewegung auf dem Bildschirm
     private float deltaXmove, deltaXclick;
 
@@ -191,6 +193,9 @@ class GameView extends SurfaceView implements Runnable {
     private Weapon equippedWeapon;
     private StatusEffect enemieStatusEffect;
 
+    //Muss ich als haptisches Feedback dank Ability vibrieren?
+    private boolean alreadyVibrating;
+
     //Verteidige dich gegen die Gegner
     private boolean defendNecessary;
 
@@ -273,8 +278,9 @@ class GameView extends SurfaceView implements Runnable {
             defendNecessary = enemie.attackUpdate();
             if (defendNecessary)
                 gotAttacked();
+            statusEffectUpdate();
+            abilityFeedbackUpdate();
         }
-        statusEffectUpdate();
     }
 
     //draw ist das ZEICHNEN in der App
@@ -599,6 +605,7 @@ class GameView extends SurfaceView implements Runnable {
                 touchX1down = motionEvent.getX();
                 touchX1 = motionEvent.getX();
                 touchY1 = motionEvent.getY();
+                touchPointer = false;
 
                 //War da ein Button?
                 //acker kaufen Button
@@ -693,18 +700,24 @@ class GameView extends SurfaceView implements Runnable {
 
             //Spieler bewegt den Finger auf dem Bildschirm
             case MotionEvent.ACTION_MOVE:
-                //In welche Richtung hat sich der Finger bewegt?
-                touchX2 = motionEvent.getX();
-                //Differenz der beiden Werte
-                deltaXmove = touchX2 - touchX1;
-                //wo befinden wir uns in diesem Schritt
-                touchX1 = motionEvent.getX();
+                if (!touchPointer) {
+                    //In welche Richtung hat sich der Finger bewegt?
+                    touchX2 = motionEvent.getX();
+                    //Differenz der beiden Werte
+                    deltaXmove = touchX2 - touchX1;
+                    //wo befinden wir uns in diesem Schritt
+                    touchX1 = motionEvent.getX();
 
-                //Bedingung für die Äußeren Grenzen
-                if (((backgroundColorsX1 + deltaXmove) < 0) && ((backgroundColorsX1 + deltaXmove) > (-2 * screenX))) {
-                    //Standardmovement (Folge dem Finger)
-                    backgroundColorsX1 += deltaXmove;
+                    //Bedingung für die Äußeren Grenzen
+                    if (((backgroundColorsX1 + deltaXmove) < 0) && ((backgroundColorsX1 + deltaXmove) > (-2 * screenX))) {
+                        //Standardmovement (Folge dem Finger)
+                        backgroundColorsX1 += deltaXmove;
+                    }
                 }
+                break;
+            //Zweiter Finger kommt dazu:
+            case MotionEvent.ACTION_POINTER_DOWN:
+                touchPointer = true;
                 break;
             case MotionEvent.ACTION_UP:
                 //Wie weit hat sich der Finger insgesamt bewegt?
@@ -821,6 +834,9 @@ class GameView extends SurfaceView implements Runnable {
                 touchX1 = motionEvent.getX();
                 touchY1 = motionEvent.getY();
                 touchTimer = System.currentTimeMillis();
+                alreadyVibrating = false;
+                actionDown = true;
+                noButtonKlicked = false;
 
                 //War da ein Button?
                 if (touchX1 >= bitmapSpawnLevelUpX && touchX1 < (bitmapSpawnLevelUpX + bitmapSpawnLevelUp.getWidth())
@@ -947,16 +963,37 @@ class GameView extends SurfaceView implements Runnable {
                         break;
                     }
                 }
-
-                //Auf den rechten Teil des Bildschirms wird geklickt
-                if (touchX1 >= screenMitte) {
-                    attack();
-                    break;
-                }
+                noButtonKlicked = true;
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                int index = (motionEvent.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+                touchXPointer = motionEvent.getX(index);
+                float test = touchXPointer - touchX1;
                 //Auf den linken Teil des Bildschirms wird geklickt
-                if (touchX1 < screenMitte){
+                if (touchXPointer < screenMitte) {
                     defend();
                     break;
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                actionDown = false;
+                //Fähigkeiten Spells
+                if (noButtonKlicked) { //Solange kein Button benutzt wurde
+                    if (System.currentTimeMillis() - touchTimer >= 1500) {
+                        fireball();
+                        alreadyVibrating = false;
+                        break;
+                    }
+                    //Auf den rechten Teil des Bildschirms wird geklickt
+                    if (touchX1 >= screenMitte) {
+                        attack();
+                        break;
+                    }
+                    //Auf den linken Teil des Bildschirms wird geklickt
+                    if (touchX1 < screenMitte) {
+                        defend();
+                        break;
+                    }
                 }
                 break;
         }
@@ -1508,7 +1545,7 @@ class GameView extends SurfaceView implements Runnable {
 
     //AUF ZUM ANGRIFF!! AAAAHHH
     private void attack() {
-        if (enemie != null) {
+        if (enemie != null && character != null) {
             if (System.currentTimeMillis() - character.getLastAttackTime() > character.getAttackspeed()) {
                 enemie.defend(character.getMeleeDamage());
                 character.setLastAttackTime();
@@ -1618,6 +1655,24 @@ class GameView extends SurfaceView implements Runnable {
         }
     }
 
+    //Fireball
+    public void fireball() {
+        if (enemie != null) {
+            enemie.defend(30);
+            enemieStatusEffect.setStatusEffect("ignite");
+            if (!enemie.getLifeStatus()) {
+                if (character.setExperience(enemie.getExperience())) {
+                    levelUpPossible = true;
+                }
+                enemie = null;
+                defendNecessary = false;
+                if (character != null)
+                    character.setLife();
+                enemieStatusEffect.resetStatusEffect();
+            }
+        }
+    }
+
     //Fight Mode initialisieren
     private void initialiseFightMode() {
         //Zur Sicherheit mal alles wichtige abspeichern
@@ -1637,6 +1692,8 @@ class GameView extends SurfaceView implements Runnable {
         bitmapResetButton.recycle();
         bitmapResetButton = null;
 
+        touchTimer = System.currentTimeMillis();
+
         initialiseBitmaps();
 
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberryFight", 0);
@@ -1650,23 +1707,34 @@ class GameView extends SurfaceView implements Runnable {
         }
         levelUpPossible = character.canLevelUp();
         chooseWeapon = false;
-
-
+        alreadyVibrating = false;
+        noButtonKlicked = true;
     }
 
+    //Statuseffekte abgeben?
     private void statusEffectUpdate() {
         //enemie status effect
         if (enemie != null && enemieStatusEffect != null) {
             if (enemieStatusEffect.getStatusEffectNumber() == 0) { //ignite
-                long test1 = System.currentTimeMillis();
-                long test2 = enemieStatusEffect.getLastTick();
-                long test3 = test1 - test2;
-                if (System.currentTimeMillis() - enemieStatusEffect.getLastTick() >= 1000) {
+                if ((System.currentTimeMillis() - enemieStatusEffect.getLastTick()) >= 1000) {
                     enemie.trueDamage(1);
                     enemieStatusEffect.setLastTick();
+                    if ((System.currentTimeMillis() - enemieStatusEffect.getTimeGotEffect()) >= 5000) {
+                        enemieStatusEffect.resetStatusEffect();
+                    }
                 }
-                if (System.currentTimeMillis() - enemieStatusEffect.getStatusEffectNumber() >= 5000) {
-                    enemieStatusEffect.resetStatusEffect();
+            }
+        }
+    }
+
+    //Haptisches Feedback abgeben?
+    private void abilityFeedbackUpdate() {
+        if (enemie != null) {
+            Vibrator vibrator = (Vibrator) getContext().getSystemService(Context.VIBRATOR_SERVICE);
+            if (actionDown && System.currentTimeMillis() - touchTimer >= 1500 && !alreadyVibrating) {
+                if (vibrator.hasVibrator()) {
+                    vibrator.vibrate(100);
+                    alreadyVibrating = true;
                 }
             }
         }
