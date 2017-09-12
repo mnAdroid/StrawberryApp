@@ -1,6 +1,8 @@
 package com.cucumbertroup.strawberry.strawberry;
 
 import android.graphics.Bitmap;
+import android.icu.text.SymbolTable;
+import android.icu.util.TimeZone;
 
 /**
  * Created by Max on 07.09.2017.
@@ -19,8 +21,13 @@ public class Enemie {
     private int experience;
     private int lootLevel;
     private boolean alive;
+    private int attackspeed;
+    private long lastAttackTime;
+    private boolean attackRightNow;
 
-    public Enemie(int level, int damage, int defense, Bitmap bitmapEnemie, String name, Weapon weapon, int life, int experience, int lootLevel, boolean alive) {
+    /*
+    //Standardkonstruktor
+    public Enemie(int level, int damage, int defense, Bitmap bitmapEnemie, String name, Weapon weapon, int life, int experience, int lootLevel, boolean alive, int attackspeedmultiplier) {
         this.level = level;
         this.damage = damage;
         this.defense = defense;
@@ -31,7 +38,11 @@ public class Enemie {
         this.experience = experience;
         this.lootLevel = lootLevel;
         this.alive = alive;
+        this.attackspeedmultiplier = attackspeedmultiplier;
+        this.lastAttackTime = System.currentTimeMillis();
+        this.attackRightNow = false;
     }
+    */
 
     public Enemie(String name, int level) {
         switch (name) {
@@ -45,6 +56,9 @@ public class Enemie {
                 this.experience = 5 + Math.abs(level/4);
                 this.lootLevel = 0;
                 this.alive = true;
+                this.attackspeed = weapon.getAttackspeed();
+                this.lastAttackTime = System.currentTimeMillis();
+                this.attackRightNow = false;
                 break;
             case "Ork":
                 this.weapon = new Weapon("Knüppel");
@@ -56,6 +70,9 @@ public class Enemie {
                 this.experience = 15 + Math.abs(level/4);
                 this.lootLevel = 1;
                 this.alive = true;
+                this.attackspeed = weapon.getAttackspeed() + 1000;
+                this.lastAttackTime = System.currentTimeMillis();
+                this.attackRightNow = false;
                 break;
             case "Dieb":
                 this.weapon = new Weapon("Schwert");
@@ -67,6 +84,23 @@ public class Enemie {
                 this.experience = 20 + Math.abs(level/4);
                 this.lootLevel = 1;
                 this.alive = true;
+                this.attackspeed = weapon.getAttackspeed() - 500;
+                this.lastAttackTime = System.currentTimeMillis();
+                this.attackRightNow = false;
+                break;
+            case "Riese":
+                this.weapon = new Weapon("Knüppel");
+                this.level = level;
+                this.damage = level + weapon.getDamage();
+                this.defense = 7 + 2*level;
+                this.name = name;
+                this.life = 50 + 5*level;
+                this.experience = 20 + Math.abs(level/4);
+                this.lootLevel = 2;
+                this.alive = true;
+                this.attackspeed = weapon.getAttackspeed() + 2000;
+                this.lastAttackTime = System.currentTimeMillis();
+                this.attackRightNow = false;
                 break;
         }
     }
@@ -131,5 +165,25 @@ public class Enemie {
         }
     }
 
+    public boolean attackUpdate() {
+        if (System.currentTimeMillis() - lastAttackTime > attackspeed && !attackRightNow) {
+            attackRightNow = true;
+            lastAttackTime = System.currentTimeMillis();
+        }
+        return attackRightNow;
+    }
+
+    public boolean getAttackRightNow() {
+        return attackRightNow;
+    }
+
+    public void attackRightNowReset() {
+        attackRightNow = false;
+        lastAttackTime = System.currentTimeMillis();
+    }
+
+    public long getLastAttackTime() {
+        return lastAttackTime;
+    }
 
 }

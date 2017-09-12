@@ -11,23 +11,31 @@ public class Character {
     private int defense;
     private int experience;
     private int level;
+    private long lastAttackTime;
+    private int baseAttackspeed;
+    private int attackspeed;
+    private final int ATTACKSPEED_CAP = 500;
 
     public Character() {
         equipedWeapon = new Weapon("Hacke");
         baseDamage = 1;
-        life = 10;
+        life = 25;
         defense = 1;
         experience = 0;
         level = 1;
+        baseAttackspeed = 2000;
+        attackspeed = baseAttackspeed + equipedWeapon.getAttackspeed();
     }
 
-    public Character(Weapon equipedWeapon, int baseDamage, int life, int defense, int experience, int level) {
+    public Character(Weapon equipedWeapon, int baseDamage, int life, int defense, int experience, int level, int baseAttackspeed) {
         this.equipedWeapon = equipedWeapon;
         this.baseDamage = baseDamage;
         this.life = life;
         this.defense = defense;
         this.experience = experience;
         this.level = level;
+        this.baseAttackspeed = baseAttackspeed;
+        this.attackspeed = baseAttackspeed + equipedWeapon.getAttackspeed();
     }
 
     public Weapon getEquipedWeapon() {
@@ -58,33 +66,48 @@ public class Character {
         return level;
     }
 
+    public int getAttackspeed() {
+        return attackspeed;
+    }
+
+    public int getBaseAttackspeed() {
+        return baseAttackspeed;
+    }
+
     public boolean setExperience(int experience) {
         this.experience += experience;
         return canLevelUp();
     }
 
     public boolean canLevelUp() {
-            if (level <= 15 && experience >= 10 * level + 7 &&  10 * level + 7 > 0) {
-                return true;
-            }
-            if (level <= 30 && experience >= 25 * level - 38 && 25 * level - 38 > 0) {
-                return true;
-            }
-            if (level <= 60 && experience >= 45 * level - 158 && 45 * level - 158 > 0) {
-                return true;
-            }
+        if (level <= 15 && experience >= (10 * level + 7) &&  (10 * level + 7) > 0) {
+            return true;
+        }
+        if (level <= 30 && level > 15 && experience >= (25 * level - 38) && (25 * level - 38) > 0) {
+            return true;
+        }
+        if (level <= 60 && level > 30 && experience >= (45 * level - 158) && (45 * level - 158) > 0) {
+            return true;
+        }
         return false;
     }
 
     public void setEquipedWeapon(Weapon weapon) {
         equipedWeapon = weapon;
+        attackspeedUpdate();
     }
 
-    public void levelUp(int baseDamagePlus, int lifePlus, int defensePlus) {
-        if (canLevelUp()) {
+    public void levelUp(int baseDamagePlus, int lifePlus, int defensePlus, int attackspeedPlus) {
+        if (canLevelUp() == true) {
             baseDamage += baseDamagePlus;
             life += lifePlus;
             defense += defensePlus;
+            //Vorerst ist das Attackspeedcap 2x pro Sekunde
+            if (attackspeed >= ATTACKSPEED_CAP + 100) {
+                baseAttackspeed -= attackspeedPlus;
+                attackspeedUpdate();
+            }
+
             if (level <= 15) {
                 experience -= 10*level + 7;
             }
@@ -96,6 +119,14 @@ public class Character {
             }
             level++;
         }
+    }
+
+    public void gotAttacked(int damage) {
+        life -= damage;
+    }
+
+    private void attackspeedUpdate() {
+        attackspeed = baseAttackspeed + equipedWeapon.getAttackspeed();
     }
 
 }

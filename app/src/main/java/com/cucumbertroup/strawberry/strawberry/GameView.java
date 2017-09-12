@@ -115,6 +115,8 @@ class GameView extends SurfaceView implements Runnable {
     Bitmap bitmapWaffeRiesenschwertButton;
     Bitmap bitmapWaffeSchwertButton;
     Bitmap bitmapWaffeWechselnButton;
+    Bitmap bitmapSpawnRiese;
+    Bitmap bitmapLevelUpAttackspeed;
 
     //Feste Größen speichern
     private int textSize, textSizeBig, textX, textY;
@@ -136,6 +138,8 @@ class GameView extends SurfaceView implements Runnable {
     private int bitmapWaffeRiesenschwertButtonX, bitmapWaffeRiesenschwertButtonY;
     private int bitmapWaffeSchwertButtonX, bitmapWaffeSchwertButtonY;
     private int bitmapWaffeWechselnButtonX, bitmapWaffeWechselnButtonY;
+    private int bitmapSpawnRieseX, bitmapSpawnRieseY;
+    private int bitmapLevelUpAttackspeedX, bitmapLevelUpAttackspeedY;
 
     //Musik initialisieren
     private SoundPool soundPool;
@@ -182,6 +186,9 @@ class GameView extends SurfaceView implements Runnable {
     private Enemie enemie;
     private Character character;
     private Weapon equippedWeapon;
+
+    //Verteidige dich gegen die Gegner
+    private boolean defendNecessary;
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     public GameView(Context context, int screenX, int screenY) {
@@ -235,6 +242,7 @@ class GameView extends SurfaceView implements Runnable {
             }
             //Das hier machen wir während des FIGHTens
             else {
+                updateFight();
                 drawFight();
             }
 
@@ -252,6 +260,15 @@ class GameView extends SurfaceView implements Runnable {
         //Erdbeeren wachsen hier automatisch durch Zeit
         for(int i = 0; i < numStrawberries; i++) {
             strawberries[i].update();
+        }
+    }
+
+    //update ist quasi das DENKEN in der App
+    private void updateFight() {
+        if (enemie != null) {
+            defendNecessary = enemie.attackUpdate();
+            if (defendNecessary)
+                gotAttacked();
         }
     }
 
@@ -357,15 +374,24 @@ class GameView extends SurfaceView implements Runnable {
                     canvas.drawText("Gegnerisches Spawnlevel: " + enemieSpawnLevel, textX, 4 * textY, paint);
                 }
 
-                //Eigene Erfahrung malen:
+                //Character Stats malen:
                 if (character != null) {
                     canvas.drawText("Erfahrung: " + character.getExperience(), screenMitte, textY, paint);
                     canvas.drawText("Level: " + character.getLevel(), screenMitte, 2 * textY, paint);
+                    canvas.drawText("Leben: " + character.getLife(), screenMitte, 3*textY, paint);
                 }
 
-                if (levelUpPossible) {
+                //Du kannst Levelupn
+                if (levelUpPossible && !defendNecessary) {
                     paint.setTextSize(textSizeBig);
                     canvas.drawText("LEVEL UP AVAILABLE!!", textX, 14 * textY, paint);
+                    paint.setTextSize(textSize);
+                }
+
+                //Du wirst angegriffen
+                if (defendNecessary) {
+                    paint.setTextSize(textSizeBig);
+                    canvas.drawText("VERTEIDIGE DICH!!", textX, 14 * textY, paint);
                     paint.setTextSize(textSize);
                 }
 
@@ -378,15 +404,19 @@ class GameView extends SurfaceView implements Runnable {
                     canvas.drawBitmap(bitmapSpawnOrkButton, bitmapSpawnOrkButtonX, bitmapSpawnOrkButtonY, paint);
                 if (bitmapSpawnDiebButton != null)
                     canvas.drawBitmap(bitmapSpawnDiebButton, bitmapSpawnDiebButtonX, bitmapSpawnDiebButtonY, paint);
+                if (bitmapSpawnRiese != null)
+                    canvas.drawBitmap(bitmapSpawnRiese, bitmapSpawnRieseX, bitmapSpawnRieseY, paint);
 
                 //Levelup Buttons
-                if (levelUpPossible) {
+                if (levelUpPossible && !defendNecessary) {
                     if (bitmapLevelUpDamage != null)
                         canvas.drawBitmap(bitmapLevelUpDamage, bitmapLevelUpDamageX, bitmapLevelUpDamageY, paint);
                     if (bitmapLevelUpDefense != null)
                         canvas.drawBitmap(bitmapLevelUpDefense, bitmapLevelUpDefenseX, bitmapLevelUpDefenseY, paint);
                     if (bitmapLevelUpLife != null)
                         canvas.drawBitmap(bitmapLevelUpLife, bitmapLevelUpLifeX, bitmapLevelUpLifeY, paint);
+                    if (bitmapLevelUpAttackspeed != null)
+                        canvas.drawBitmap(bitmapLevelUpAttackspeed, bitmapLevelUpAttackspeedX, bitmapLevelUpAttackspeedY, paint);
                 }
 
                 //Chooseweapon Buttons
@@ -493,6 +523,7 @@ class GameView extends SurfaceView implements Runnable {
                 editor.putInt("characterDefense", character.getBaseDefense());
                 editor.putInt("characterExperience", character.getExperience());
                 editor.putInt("characterLevel", character.getLevel());
+                editor.putInt("characterAttackspeed", character.getBaseAttackspeed());
             }
 
             editor.commit();
@@ -631,7 +662,7 @@ class GameView extends SurfaceView implements Runnable {
                         editor.putInt("characterExperience", 0);
                         editor.putString("characterEquippedWeapon", "Hacke");
                         editor.putInt("characterBaseDamage", 1);
-                        editor.putInt("characterLife", 10);
+                        editor.putInt("characterLife", 25);
                         editor.putInt("characterDefense", 1);
                         editor.putInt("characterExperience", 0);
                         editor.putInt("characterLevel", 1);
@@ -808,10 +839,19 @@ class GameView extends SurfaceView implements Runnable {
                     }
                     break;
                 }
+                if (touchX1 >= bitmapSpawnRieseX && touchX1 < (bitmapSpawnRieseX + bitmapSpawnRiese.getWidth())
+                        && touchY1 >= bitmapSpawnRieseY && touchY1 < (bitmapSpawnRieseY + bitmapSpawnRiese.getHeight())) {
+                    playSound(4);
+                    if (enemie == null) {
+                        spawnEnemie("Riese");
+                    }
+                    break;
+                }
+                //Level Up
                 if (touchX1 >= bitmapLevelUpDamageX && touchX1 < (bitmapLevelUpDamageX + bitmapLevelUpDamage.getWidth())
                         && touchY1 >= bitmapLevelUpDamageY && touchY1 < (bitmapLevelUpDamageY + bitmapLevelUpDamage.getHeight())) {
                     playSound(4);
-                    character.levelUp(1, 0, 0);
+                    character.levelUp(1, 0, 0, 0);
                     if (!character.canLevelUp())
                         levelUpPossible = false;
                     break;
@@ -819,7 +859,7 @@ class GameView extends SurfaceView implements Runnable {
                 if (touchX1 >= bitmapLevelUpDefenseX && touchX1 < (bitmapLevelUpDefenseX + bitmapLevelUpDefense.getWidth())
                         && touchY1 >= bitmapLevelUpDefenseY && touchY1 < (bitmapLevelUpDefenseY + bitmapLevelUpDefense.getHeight())) {
                     playSound(4);
-                    character.levelUp(0, 0, 1);
+                    character.levelUp(0, 0, 1, 0);
                     if (!character.canLevelUp())
                         levelUpPossible = false;
                     break;
@@ -827,7 +867,15 @@ class GameView extends SurfaceView implements Runnable {
                 if (touchX1 >= bitmapLevelUpLifeX && touchX1 < (bitmapLevelUpLifeX + bitmapLevelUpLife.getWidth())
                         && touchY1 >= bitmapLevelUpLifeY && touchY1 < (bitmapLevelUpLifeY + bitmapLevelUpLife.getHeight())) {
                     playSound(4);
-                    character.levelUp(0, 1, 0);
+                    character.levelUp(0, 1, 0, 0);
+                    if (!character.canLevelUp())
+                        levelUpPossible = false;
+                    break;
+                }
+                if (touchX1 >= bitmapLevelUpAttackspeedX && touchX1 < (bitmapLevelUpAttackspeedX + bitmapLevelUpAttackspeed.getWidth())
+                        && touchY1 >= bitmapLevelUpAttackspeedY && touchY1 < (bitmapLevelUpAttackspeedY + bitmapLevelUpAttackspeed.getHeight())) {
+                    playSound(4);
+                    character.levelUp(0, 0, 0, 100);
                     if (!character.canLevelUp())
                         levelUpPossible = false;
                     break;
@@ -887,8 +935,9 @@ class GameView extends SurfaceView implements Runnable {
                     break;
                 }
                 //Auf den linken Teil des Bildschirms wird geklickt
-                else {
-
+                if (touchX1 < screenMitte){
+                    defend();
+                    break;
                 }
                 break;
         }
@@ -1281,15 +1330,25 @@ class GameView extends SurfaceView implements Runnable {
             bitmapSpawnLevelUp = decodeSampledBitmapFromResource(this.getResources(), R.drawable.spawnlevelplus_button, 100, 100);
             bitmapSpawnLevelUp = Bitmap.createScaledBitmap(bitmapSpawnLevelUp, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapSpawnRiese = BitmapFactory.decodeResource(this.getResources(), R.drawable.spawnriese_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapSpawnRiese = decodeSampledBitmapFromResource(this.getResources(), R.drawable.spawnriese_button, 100, 100);
+            bitmapSpawnRiese = Bitmap.createScaledBitmap(bitmapSpawnRiese, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
             //Feste Werte setzen
             bitmapSpawnLevelUpX = getScaledCoordinates(screenX, 1080, 20);
             bitmapSpawnLevelUpY = getScaledCoordinates(screenY, 1920, 250);
-            bitmapSpawnDiebButtonX = getScaledCoordinates(screenX, 1080, 520);
-            bitmapSpawnDiebButtonY = getScaledCoordinates(screenY, 1920, 400);
             bitmapSpawnGoblinButtonX = getScaledCoordinates(screenX, 1080, 20);
-            bitmapSpawnGoblinButtonY = bitmapSpawnDiebButtonY;
+            bitmapSpawnGoblinButtonY = getScaledCoordinates(screenY, 1920, 400);
             bitmapSpawnOrkButtonX = getScaledCoordinates(screenX, 1080, 270);
-            bitmapSpawnOrkButtonY = bitmapSpawnDiebButtonY;
+            bitmapSpawnOrkButtonY = bitmapSpawnGoblinButtonY;
+            bitmapSpawnDiebButtonX = getScaledCoordinates(screenX, 1080, 520);
+            bitmapSpawnDiebButtonY = bitmapSpawnGoblinButtonY;
+            bitmapSpawnRieseX = getScaledCoordinates(screenX, 1080, 770);
+            bitmapSpawnRieseY = bitmapSpawnGoblinButtonY;
 
             //Level UP Buttons
             options = new BitmapFactory.Options();
@@ -1316,12 +1375,23 @@ class GameView extends SurfaceView implements Runnable {
             bitmapLevelUpLife = decodeSampledBitmapFromResource(this.getResources(), R.drawable.leveluplife_button, 100, 100);
             bitmapLevelUpLife = Bitmap.createScaledBitmap(bitmapLevelUpLife, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
-            bitmapLevelUpDamageX = getScaledCoordinates(screenX, 1080, 170);
+            options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            bitmapLevelUpAttackspeed = BitmapFactory.decodeResource(this.getResources(), R.drawable.levelupattackspeed_button, options);
+            imageHeight = options.outHeight;
+            imageWidth = options.outWidth;
+            bitmapLevelUpAttackspeed = decodeSampledBitmapFromResource(this.getResources(), R.drawable.levelupattackspeed_button, 100, 100);
+            bitmapLevelUpAttackspeed = Bitmap.createScaledBitmap(bitmapLevelUpAttackspeed, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+
+            //bitmapLevelUpAttackspeed
+            bitmapLevelUpDamageX = getScaledCoordinates(screenX, 1080, 50);
             bitmapLevelUpDamageY = getScaledCoordinates(screenY, 1920, 800);
-            bitmapLevelUpDefenseX = getScaledCoordinates(screenX, 1080, 420);
+            bitmapLevelUpDefenseX = getScaledCoordinates(screenX, 1080, 300);
             bitmapLevelUpDefenseY = getScaledCoordinates(screenY, 1920, 800);
-            bitmapLevelUpLifeX = getScaledCoordinates(screenX, 1080, 670);
+            bitmapLevelUpLifeX = getScaledCoordinates(screenX, 1080, 550);
             bitmapLevelUpLifeY = getScaledCoordinates(screenY, 1920, 800);
+            bitmapLevelUpAttackspeedX = getScaledCoordinates(screenX, 1080, 800);
+            bitmapLevelUpAttackspeedY = getScaledCoordinates(screenY, 1920, 800);
 
             //Weaponchoose Buttons
             options = new BitmapFactory.Options();
@@ -1420,6 +1490,40 @@ class GameView extends SurfaceView implements Runnable {
         }
     }
 
+    //VERTEIDIGE DICH GEGEN DAS SCHWEIN!
+    private void defend() {
+        //Solange der Gegner auch existiert
+        if (enemie != null) {
+            //falls der Gegner gerade angreift
+            if (enemie.getAttackRightNow()) {
+                enemie.attackRightNowReset();
+                defendNecessary = false;
+            }
+        }
+    }
+
+    //wurden wir / wir wurden angegriffen
+    private void gotAttacked() {
+        if (enemie != null && character != null) {
+            //man hat eine halbe Sekunde Zeit um auf einen Angriff zu reagieren
+            if (System.currentTimeMillis() - enemie.getLastAttackTime() > 500 && defendNecessary) {
+                //Man wird tatsächlich angegriffen
+                if (character.getLife() > 0) {
+                    //Die ersten 10 Defense Punkte zehlen 1 zu 1 als Abwehr. Danach nur noch zur Hälfte
+                    if (character.getBaseDefense() < 10) {
+                        if (enemie.getDamage() >= character.getBaseDefense()) //Damit man beim Angreifen nicht heilt
+                            character.gotAttacked(Math.abs(character.getBaseDefense() - enemie.getDamage()));
+                    } else {
+                        if (enemie.getDamage() - 10 >= ((character.getBaseDefense() - 10) / 2))
+                            character.gotAttacked(Math.abs(((character.getBaseDefense() - 10) / 2) - (enemie.getDamage() - 10)));
+                    }
+                }
+                enemie.attackRightNowReset();
+                defendNecessary = false;
+            }
+        }
+    }
+
     //Wenn der Zurückbutton gedrücckt wurde
     public void onBackPressed() {
         if (gameMode == 0) {
@@ -1462,6 +1566,10 @@ class GameView extends SurfaceView implements Runnable {
             bitmapWaffeSchwertButton = null;
             bitmapWaffeWechselnButton.recycle();
             bitmapWaffeWechselnButton = null;
+            bitmapSpawnRiese.recycle();
+            bitmapSpawnRiese = null;
+            bitmapLevelUpAttackspeed.recycle();
+            bitmapLevelUpAttackspeed = null;
 
             chooseWeapon = false;
         }
@@ -1489,14 +1597,15 @@ class GameView extends SurfaceView implements Runnable {
         initialiseBitmaps();
 
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberryFight", 0);
-        character = new Character(new Weapon(sharedPreferences.getString("characterEquippedWeapon", "Hacke")), sharedPreferences.getInt("characterBaseDamage", 1), sharedPreferences.getInt("characterLife", 10), sharedPreferences.getInt("characterDefense", 1), sharedPreferences.getInt("characterExperience", 0), sharedPreferences.getInt("characterLevel", 1));
+        character = new Character(new Weapon(sharedPreferences.getString("characterEquippedWeapon", "Hacke")), sharedPreferences.getInt("characterBaseDamage", 1), sharedPreferences.getInt("characterLife", 25), sharedPreferences.getInt("characterDefense", 1), sharedPreferences.getInt("characterExperience", 0), sharedPreferences.getInt("characterLevel", 1), sharedPreferences.getInt("characterAttackspeed", 2000));
         enemieSpawnLevel = 1;
         spawnEnemie("Goblin");
-        getSharedPreferences();
+        //getSharedPreferences();
         levelUpPossible = false;
-        if (character.canLevelUp()) {
+        if (character.canLevelUp() == true) {
             levelUpPossible = true;
         }
+        levelUpPossible = character.canLevelUp();
         chooseWeapon = false;
     }
 }
