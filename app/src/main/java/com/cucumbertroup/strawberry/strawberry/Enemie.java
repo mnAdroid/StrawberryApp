@@ -122,28 +122,12 @@ public class Enemie {
         }
     }
 
-    public int getLevel() {
-        return level;
-    }
-
     public int getDamage() {
         return damage;
     }
 
-    public int getDefense() {
-        return defense;
-    }
-
-    public Bitmap getBitmapEnemie() {
-        return bitmapEnemie;
-    }
-
     public String getName() {
         return name;
-    }
-
-    public Weapon getWeapon() {
-        return weapon;
     }
 
     public int getLife() {
@@ -219,6 +203,13 @@ public class Enemie {
 
     public long getLastAttackTime() {
         return lastAttackTime;
+    }
+
+    public void trueDamage(int trueDamage) {
+        if (life > 0)
+            life -= trueDamage;
+        if (life <= 0)
+            alive = false;
     }
 
 }

@@ -51,21 +51,21 @@ public class Weapon {
                 this.defense = 0;
                 this.waffenart = 1;
                 this.name = name;
-                this.attackspeed = 2000;
+                this.attackspeed = 1500;
                 break;
             case "Riesenschwert":
                 this.damage = 20;
                 this.defense = 0;
                 this.waffenart = 1;
                 this.name = name;
-                this.attackspeed = 3000;
+                this.attackspeed = 2000;
                 break;
             case "Holzschild":
                 this.damage = 1;
                 this.defense = 5;
                 this.waffenart = 3;
                 this.name = name;
-                this.attackspeed = 0;
+                this.attackspeed = 2000;
                 break;
             case "Hacke":
                 this.damage = 2;

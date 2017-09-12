@@ -8,6 +8,7 @@ public class Character {
     private Weapon equipedWeapon;
     private int baseDamage;
     private int life;
+    private int maxLife;
     private int defense;
     private int experience;
     private int level;
@@ -16,21 +17,11 @@ public class Character {
     private int attackspeed;
     private final int ATTACKSPEED_CAP = 500;
 
-    public Character() {
-        equipedWeapon = new Weapon("Hacke");
-        baseDamage = 1;
-        life = 25;
-        defense = 1;
-        experience = 0;
-        level = 1;
-        baseAttackspeed = 2000;
-        attackspeed = baseAttackspeed + equipedWeapon.getAttackspeed();
-    }
-
-    public Character(Weapon equipedWeapon, int baseDamage, int life, int defense, int experience, int level, int baseAttackspeed) {
+    public Character(Weapon equipedWeapon, int baseDamage, int life, int maxLife, int defense, int experience, int level, int baseAttackspeed) {
         this.equipedWeapon = equipedWeapon;
         this.baseDamage = baseDamage;
         this.life = life;
+        this.maxLife = maxLife;
         this.defense = defense;
         this.experience = experience;
         this.level = level;
@@ -54,6 +45,9 @@ public class Character {
         return life;
     }
 
+    //reset des Lebens nach einem Kampf
+    public void setLife() { life = maxLife; }
+
     public int getBaseDefense() {
         return defense;
     }
@@ -75,7 +69,11 @@ public class Character {
     }
 
     public void setLastAttackTime() {
-        this.lastAttackTime = System.currentTimeMillis();
+        lastAttackTime = System.currentTimeMillis();
+    }
+
+    public void resetLastAttackTime() {
+        lastAttackTime = 0;
     }
 
     public int getBaseAttackspeed() {
@@ -108,7 +106,7 @@ public class Character {
     public void levelUp(int baseDamagePlus, int lifePlus, int defensePlus, int attackspeedPlus) {
         if (canLevelUp() == true) {
             baseDamage += baseDamagePlus;
-            life += lifePlus;
+            maxLife += lifePlus;
             defense += defensePlus;
             //Vorerst ist das Attackspeedcap 2x pro Sekunde
             if (attackspeed >= ATTACKSPEED_CAP + 100) {

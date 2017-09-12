@@ -14,6 +14,7 @@ import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
+import android.os.Build;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -77,6 +78,7 @@ class GameView extends SurfaceView implements Runnable {
     //Anzahl und Preis der Farmfläche
     private int numAecker;
     private int priceAecker;
+    private final int AECKER_MAX = 32;
     //Anzahl und Preis der arbeitenden Gurken
     private int numGurken;
     private int priceGurken;
@@ -182,10 +184,12 @@ class GameView extends SurfaceView implements Runnable {
     private boolean levelUpPossible;
     private boolean chooseWeapon;
 
-    //Alles was ich für den Gegner brauche
+    //Alles was ich für den Fightmode brauche
     private Enemie enemie;
     private Character character;
+    private StatusEffect characterStatusEffect;
     private Weapon equippedWeapon;
+    private StatusEffect enemieStatusEffect;
 
     //Verteidige dich gegen die Gegner
     private boolean defendNecessary;
@@ -270,6 +274,7 @@ class GameView extends SurfaceView implements Runnable {
             if (defendNecessary)
                 gotAttacked();
         }
+        statusEffectUpdate();
     }
 
     //draw ist das ZEICHNEN in der App
@@ -459,7 +464,7 @@ class GameView extends SurfaceView implements Runnable {
             alphaTester = sharedPreferences.getBoolean("alphaTester", true);
             betaTester = sharedPreferences.getBoolean("betaTester", false);
 
-            strawberries = new Strawberry[numAecker * 16];
+            strawberries = new Strawberry[numAecker * AECKER_MAX];
 
             //um keine IndexoutofBoundException zu bekommen
             if (!(strawberryStatus.equals(""))) {
@@ -478,7 +483,8 @@ class GameView extends SurfaceView implements Runnable {
             }
         }
         if (gameMode == 1) {
-
+            SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberryFight", 0);
+            characterStatusEffect = new StatusEffect(sharedPreferences.getString("characterStatusEffect", "default"));
         }
     }
     //SharedPreferences wieder sicher verwahren
@@ -523,7 +529,9 @@ class GameView extends SurfaceView implements Runnable {
                 editor.putInt("characterDefense", character.getBaseDefense());
                 editor.putInt("characterExperience", character.getExperience());
                 editor.putInt("characterLevel", character.getLevel());
-                editor.putInt("characterAttackspeed", character.getBaseAttackspeed());
+                editor.putInt("characterBaseAttackspeed", character.getBaseAttackspeed());
+                if (characterStatusEffect != null)
+                    editor.putString("characterStatusEffect", characterStatusEffect.getName());
             }
 
             editor.commit();
@@ -597,7 +605,7 @@ class GameView extends SurfaceView implements Runnable {
                 if (touchX1 >= bitmapAckerKaufenButtonX && touchX1 < (bitmapAckerKaufenButtonX + bitmapAckerKaufenButton.getWidth())
                         && touchY1 >= bitmapAckerKaufenButtonY && touchY1 < (bitmapAckerKaufenButtonY + bitmapAckerKaufenButton.getHeight())) {
                     playSound(4);
-                    if (gold >= (priceAecker + STRAWBERRY_PRICE) && numAecker < 16) {
+                    if (gold >= (priceAecker + STRAWBERRY_PRICE) && numAecker < AECKER_MAX) {
                         ackerGekauft();
                     }
                     break;
@@ -653,7 +661,7 @@ class GameView extends SurfaceView implements Runnable {
                     priceGurken = getPrice(1);
 
                     //Erdbeeren tatsächlich resetten
-                    strawberries = new Strawberry[numAecker*16];
+                    strawberries = new Strawberry[numAecker*AECKER_MAX];
                     for (int i = 0; i < (numAecker * 16); i++) {
                         strawberries[i] = new Strawberry(((int)i/16) + 1);
                     }
@@ -669,6 +677,9 @@ class GameView extends SurfaceView implements Runnable {
                         editor.putInt("characterDefense", 1);
                         editor.putInt("characterExperience", 0);
                         editor.putInt("characterLevel", 1);
+                        editor.putInt("characterMaxLife", 25);
+                        editor.putInt("characterBaseAttackspeed", 1000);
+                        editor.putString("characterStatusEffect", "default");
                     }
 
                     editor.commit();
@@ -1059,7 +1070,15 @@ class GameView extends SurfaceView implements Runnable {
 
     //Musik einlesen
     private void initialiseSound(Context context) {
-        soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
+        //In neuen Versionen soll man das halt jetzt so machen
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            soundPool = new SoundPool.Builder()
+                    .setMaxStreams(10)
+                    .build();
+        } else {
+            //Aber ich will die alten Versionen trz nicht verlieren deshalb lassen wir das mal drin
+            soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
+        }
 
         try {
             AssetManager assetManager = context.getAssets();
@@ -1483,6 +1502,8 @@ class GameView extends SurfaceView implements Runnable {
     //Gegner erstellen
     private void spawnEnemie(String name) {
         enemie = new Enemie(name, enemieSpawnLevel);
+        enemieStatusEffect = new StatusEffect("default");
+        character.resetLastAttackTime();
     }
 
     //AUF ZUM ANGRIFF!! AAAAHHH
@@ -1497,6 +1518,9 @@ class GameView extends SurfaceView implements Runnable {
                     }
                     enemie = null;
                     defendNecessary = false;
+                    if (character != null)
+                        character.setLife();
+                    enemieStatusEffect.resetStatusEffect();
                 }
             }
         }
@@ -1584,6 +1608,13 @@ class GameView extends SurfaceView implements Runnable {
             bitmapLevelUpAttackspeed = null;
 
             chooseWeapon = false;
+
+            if(enemieStatusEffect != null)
+                enemieStatusEffect.resetStatusEffect();
+            enemieStatusEffect = null;
+            if (characterStatusEffect != null)
+                characterStatusEffect.resetStatusEffect();
+            characterStatusEffect = null;
         }
     }
 
@@ -1609,15 +1640,35 @@ class GameView extends SurfaceView implements Runnable {
         initialiseBitmaps();
 
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberryFight", 0);
-        character = new Character(new Weapon(sharedPreferences.getString("characterEquippedWeapon", "Hacke")), sharedPreferences.getInt("characterBaseDamage", 1), sharedPreferences.getInt("characterLife", 25), sharedPreferences.getInt("characterDefense", 1), sharedPreferences.getInt("characterExperience", 0), sharedPreferences.getInt("characterLevel", 1), sharedPreferences.getInt("characterAttackspeed", 2000));
+        character = new Character(new Weapon(sharedPreferences.getString("characterEquippedWeapon", "Hacke")), sharedPreferences.getInt("characterBaseDamage", 1), sharedPreferences.getInt("characterLife", 25), sharedPreferences.getInt("characterMaxLife", 25), sharedPreferences.getInt("characterDefense", 1), sharedPreferences.getInt("characterExperience", 0), sharedPreferences.getInt("characterLevel", 1), sharedPreferences.getInt("characterBaseAttackspeed", 1000));
         enemieSpawnLevel = 1;
         spawnEnemie("Goblin");
-        //getSharedPreferences();
+        getSharedPreferences();
         levelUpPossible = false;
         if (character.canLevelUp() == true) {
             levelUpPossible = true;
         }
         levelUpPossible = character.canLevelUp();
         chooseWeapon = false;
+
+
+    }
+
+    private void statusEffectUpdate() {
+        //enemie status effect
+        if (enemie != null && enemieStatusEffect != null) {
+            if (enemieStatusEffect.getStatusEffectNumber() == 0) { //ignite
+                long test1 = System.currentTimeMillis();
+                long test2 = enemieStatusEffect.getLastTick();
+                long test3 = test1 - test2;
+                if (System.currentTimeMillis() - enemieStatusEffect.getLastTick() >= 1000) {
+                    enemie.trueDamage(1);
+                    enemieStatusEffect.setLastTick();
+                }
+                if (System.currentTimeMillis() - enemieStatusEffect.getStatusEffectNumber() >= 5000) {
+                    enemieStatusEffect.resetStatusEffect();
+                }
+            }
+        }
     }
 }
