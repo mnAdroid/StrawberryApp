@@ -560,6 +560,9 @@ class GameView extends SurfaceView implements Runnable {
         //Hintergrundmusik anschalten
         playSound(0);
 
+        if (enemie != null)
+            enemie.attackRightNowReset();
+
         gameThread = new Thread(this);
         gameThread.start();
     }
@@ -897,6 +900,7 @@ class GameView extends SurfaceView implements Runnable {
                         playSound(4);
                         equippedWeapon = new Weapon("Hacke");
                         character.setEquipedWeapon(equippedWeapon);
+                        chooseWeapon = false;
                         break;
                     }
                     if (touchX1 >= bitmapWaffeHolzschildButtonX && touchX1 < (bitmapWaffeHolzschildButtonX + bitmapWaffeHolzschildButton.getWidth())
@@ -904,6 +908,7 @@ class GameView extends SurfaceView implements Runnable {
                         playSound(4);
                         equippedWeapon = new Weapon("Holzschild");
                         character.setEquipedWeapon(equippedWeapon);
+                        chooseWeapon = false;
                         break;
                     }
                     if (touchX1 >= bitmapWaffeKnueppelButtonX && touchX1 < (bitmapWaffeKnueppelButtonX + bitmapWaffeKnueppelButton.getWidth())
@@ -911,6 +916,7 @@ class GameView extends SurfaceView implements Runnable {
                         playSound(4);
                         equippedWeapon = new Weapon("Knüppel");
                         character.setEquipedWeapon(equippedWeapon);
+                        chooseWeapon = false;
                         break;
                     }
                     if (touchX1 >= bitmapWaffeRiesenschwertButtonX && touchX1 < (bitmapWaffeRiesenschwertButtonX + bitmapWaffeRiesenschwertButton.getWidth())
@@ -918,6 +924,7 @@ class GameView extends SurfaceView implements Runnable {
                         playSound(4);
                         equippedWeapon = new Weapon("Riesenschwert");
                         character.setEquipedWeapon(equippedWeapon);
+                        chooseWeapon = false;
                         break;
                     }
                     if (touchX1 >= bitmapWaffeSchwertButtonX && touchX1 < (bitmapWaffeSchwertButtonX + bitmapWaffeSchwertButton.getWidth())
@@ -925,6 +932,7 @@ class GameView extends SurfaceView implements Runnable {
                         playSound(4);
                         equippedWeapon = new Weapon("Schwert");
                         character.setEquipedWeapon(equippedWeapon);
+                        chooseWeapon = false;
                         break;
                     }
                 }
@@ -1480,13 +1488,17 @@ class GameView extends SurfaceView implements Runnable {
     //AUF ZUM ANGRIFF!! AAAAHHH
     private void attack() {
         if (enemie != null) {
-            enemie.defend(character.getMeleeDamage());
-            if (!enemie.getLifeStatus()) {
-                if (character.setExperience(enemie.getExperience())) {
-                    levelUpPossible = true;
+            if (System.currentTimeMillis() - character.getLastAttackTime() > character.getAttackspeed()) {
+                enemie.defend(character.getMeleeDamage());
+                character.setLastAttackTime();
+                if (!enemie.getLifeStatus()) {
+                    if (character.setExperience(enemie.getExperience())) {
+                        levelUpPossible = true;
+                    }
+                    enemie = null;
+                    defendNecessary = false;
                 }
-                enemie = null;
-        }
+            }
         }
     }
 

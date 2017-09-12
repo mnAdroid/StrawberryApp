@@ -70,6 +70,14 @@ public class Character {
         return attackspeed;
     }
 
+    public long getLastAttackTime() {
+        return lastAttackTime;
+    }
+
+    public void setLastAttackTime() {
+        this.lastAttackTime = System.currentTimeMillis();
+    }
+
     public int getBaseAttackspeed() {
         return baseAttackspeed;
     }

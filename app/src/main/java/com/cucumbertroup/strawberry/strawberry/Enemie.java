@@ -4,6 +4,8 @@ import android.graphics.Bitmap;
 import android.icu.text.SymbolTable;
 import android.icu.util.TimeZone;
 
+import java.util.Random;
+
 /**
  * Created by Max on 07.09.2017.
  */
@@ -24,6 +26,8 @@ public class Enemie {
     private int attackspeed;
     private long lastAttackTime;
     private boolean attackRightNow;
+    private int randomAttackspeedChange = -1; //fcking rng :D
+    private int randomAttackSpeedChangeBoolean = 0;
 
     /*
     //Standardkonstruktor
@@ -45,6 +49,7 @@ public class Enemie {
     */
 
     public Enemie(String name, int level) {
+        Random random = new Random();
         switch (name) {
             case "Goblin":
                 this.weapon = new Weapon("Knüppel");
@@ -59,6 +64,9 @@ public class Enemie {
                 this.attackspeed = weapon.getAttackspeed();
                 this.lastAttackTime = System.currentTimeMillis();
                 this.attackRightNow = false;
+                //Damit der Gegner nicht immer exakt zur gleichen Zeit angreift
+                randomAttackSpeedChangeBoolean = random.nextInt(2);
+                randomAttackspeedChange = random.nextInt(501) + 500; //abweichungen zwischen einer halben bis zu einer Sekunde
                 break;
             case "Ork":
                 this.weapon = new Weapon("Knüppel");
@@ -73,6 +81,9 @@ public class Enemie {
                 this.attackspeed = weapon.getAttackspeed() + 1000;
                 this.lastAttackTime = System.currentTimeMillis();
                 this.attackRightNow = false;
+                //Damit der Gegner nicht immer exakt zur gleichen Zeit angreift
+                randomAttackSpeedChangeBoolean = random.nextInt(2);
+                randomAttackspeedChange = random.nextInt(501) + 500; //abweichungen zwischen einer halben bis zu einer Sekunde
                 break;
             case "Dieb":
                 this.weapon = new Weapon("Schwert");
@@ -87,6 +98,9 @@ public class Enemie {
                 this.attackspeed = weapon.getAttackspeed() - 500;
                 this.lastAttackTime = System.currentTimeMillis();
                 this.attackRightNow = false;
+                //Damit der Gegner nicht immer exakt zur gleichen Zeit angreift
+                randomAttackSpeedChangeBoolean = random.nextInt(2);
+                randomAttackspeedChange = random.nextInt(501) + 500; //abweichungen zwischen einer halben bis zu einer Sekunde
                 break;
             case "Riese":
                 this.weapon = new Weapon("Knüppel");
@@ -101,6 +115,9 @@ public class Enemie {
                 this.attackspeed = weapon.getAttackspeed() + 2000;
                 this.lastAttackTime = System.currentTimeMillis();
                 this.attackRightNow = false;
+                //Damit der Gegner nicht immer exakt zur gleichen Zeit angreift
+                randomAttackSpeedChangeBoolean = random.nextInt(2);
+                randomAttackspeedChange = random.nextInt(501) + 500; //abweichungen zwischen einer halben bis zu einer Sekunde
                 break;
         }
     }
@@ -166,9 +183,26 @@ public class Enemie {
     }
 
     public boolean attackUpdate() {
-        if (System.currentTimeMillis() - lastAttackTime > attackspeed && !attackRightNow) {
-            attackRightNow = true;
-            lastAttackTime = System.currentTimeMillis();
+        if (randomAttackSpeedChangeBoolean == 0) {
+            if (System.currentTimeMillis() - lastAttackTime > attackspeed + randomAttackspeedChange && !attackRightNow) {
+                attackRightNow = true;
+                lastAttackTime = System.currentTimeMillis();
+                //Damit der Gegner nicht immer exakt zur gleichen Zeit angreift
+                Random random = new Random();
+                randomAttackSpeedChangeBoolean = random.nextInt(2);
+                randomAttackspeedChange = random.nextInt(501) + 500; //abweichungen zwischen einer halben bis zu einer Sekunde
+            }
+        }
+        //damit der Gegner auch mal schneller angreifen kann
+        else {
+            if (System.currentTimeMillis() - lastAttackTime > attackspeed - randomAttackspeedChange && !attackRightNow) {
+                attackRightNow = true;
+                lastAttackTime = System.currentTimeMillis();
+                //Damit der Gegner nicht immer exakt zur gleichen Zeit angreift
+                Random random = new Random();
+                randomAttackSpeedChangeBoolean = random.nextInt(2);
+                randomAttackspeedChange = random.nextInt(501) + 500; //abweichungen zwischen einer halben bis zu einer Sekunde
+            }
         }
         return attackRightNow;
     }
@@ -180,6 +214,7 @@ public class Enemie {
     public void attackRightNowReset() {
         attackRightNow = false;
         lastAttackTime = System.currentTimeMillis();
+        randomAttackspeedChange = -1;
     }
 
     public long getLastAttackTime() {
