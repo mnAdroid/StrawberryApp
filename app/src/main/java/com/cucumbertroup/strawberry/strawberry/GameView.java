@@ -170,6 +170,7 @@ class GameView extends SurfaceView implements Runnable {
     private int plop8 = -1;
     private int plop9 = -1;
     private MediaPlayer backgroundloop1; //Farmmusik
+    private MediaPlayer backgroundloop2; //Fightmusik
 
     //Musiksettings
     private boolean musicOn;
@@ -550,8 +551,10 @@ class GameView extends SurfaceView implements Runnable {
         //Speichern der unabhängigen Werte
         setSharedPreferences();
         //Musik pausieren
-        backgroundloop1.pause();
-
+        if (backgroundloop1 != null)
+            backgroundloop1.pause();
+        if (backgroundloop2 != null)
+            backgroundloop2.pause();
         try {
             //GameThread (Endlosloop) beenden
             gameThread.join();
@@ -1015,7 +1018,7 @@ class GameView extends SurfaceView implements Runnable {
         switch (whichOne) {
             case 0:
                 if (musicOn)
-                    backgroundloop1.start();
+                    backgroundMusicPlayer();
                 break;
             case 1:
                 if (soundOn) {
@@ -1194,10 +1197,13 @@ class GameView extends SurfaceView implements Runnable {
             descriptor = assetManager.openFd("plop9.wav");
             plop9 = soundPool.load(descriptor, 0);
 
+            /*
             //Man muss MediaPlayer benutzen um vernünftig Hintergrundmusik abzuspielen...
             backgroundloop1 = MediaPlayer.create(context, R.raw.gameloop1);
             //Hintergrundmusik auf Loop stellen
             backgroundloop1.setLooping(true);
+            */
+            backgroundMusicPlayer();
         } catch (IOException e) {
             //Errormessage
             Log.e("error", "failed to load sound files");
@@ -1652,6 +1658,7 @@ class GameView extends SurfaceView implements Runnable {
             if (characterStatusEffect != null)
                 characterStatusEffect.resetStatusEffect();
             characterStatusEffect = null;
+            backgroundMusicPlayer();
         }
     }
 
@@ -1709,6 +1716,7 @@ class GameView extends SurfaceView implements Runnable {
         chooseWeapon = false;
         alreadyVibrating = false;
         noButtonKlicked = true;
+        backgroundMusicPlayer();
     }
 
     //Statuseffekte abgeben?
@@ -1736,6 +1744,52 @@ class GameView extends SurfaceView implements Runnable {
                     vibrator.vibrate(100);
                     alreadyVibrating = true;
                 }
+            }
+        }
+    }
+
+    //Hintergrundmusikverwaltung
+    private void backgroundMusicPlayer() {
+        //Im Farmmodus
+        if (gameMode == 0) {
+            try {
+                //Falls die Fightmusik an ist machen wir sie mal aus
+                if (backgroundloop2 != null && backgroundloop2.isPlaying()) {
+                    backgroundloop2.pause();
+                }
+                //Beim ersten Start der Farmmusik
+                if (backgroundloop1 == null) {
+                    backgroundloop1 = MediaPlayer.create(getContext(), R.raw.gameloop1);
+                    backgroundloop1.setLooping(true);
+                    backgroundloop1.start();
+                }
+                //Wenn wir nachträglich wieder in den Farmmodus wechseln
+                if (backgroundloop1 != null && !backgroundloop1.isPlaying()) {
+                    backgroundloop1.start();
+                }
+            } catch (IllegalStateException e) {
+                Log.d("gamemode1 Error", e.toString());
+            }
+        }
+        //Im Fightmodus
+        else if (gameMode == 1) {
+            try {
+                //Falls die Farmmusik an ist, machen wir sie aus
+                if (backgroundloop1 != null && backgroundloop1.isPlaying()) {
+                    backgroundloop1.pause();
+                }
+                //Beim ersten Start der Fightmusik
+                if (backgroundloop2 == null) {
+                    backgroundloop2 = MediaPlayer.create(getContext(), R.raw.gameloop2);
+                    backgroundloop2.setLooping(true);
+                    backgroundloop2.start();
+                }
+                //Wenn wir nachträglich wieder in den Fightmodus wechseln
+                if (backgroundloop2 != null && !backgroundloop2.isPlaying()) {
+                    backgroundloop2.start();
+                }
+            } catch (IllegalStateException e) {
+                Log.d("gamemode2 Error", e.toString());
             }
         }
     }
