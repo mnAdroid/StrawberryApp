@@ -148,7 +148,7 @@ public class Enemie {
 
     public boolean getLifeStatus() { return alive; }
 
-    public void defend(int damage) {
+    public void defend(float damage) {
         if (life > 0) {
             //Die ersten 10 Defense Punkte zehlen 1 zu 1 als Abwehr. Danach nur noch zur Hälfte
             if (defense < 10) {

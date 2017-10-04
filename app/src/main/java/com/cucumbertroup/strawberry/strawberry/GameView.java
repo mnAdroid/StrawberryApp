@@ -9,7 +9,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
+import android.graphics.MaskFilter;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Typeface;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -20,8 +23,10 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.ViewDebug;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -64,9 +69,12 @@ class GameView extends SurfaceView implements Runnable {
     private int zustand = 0;
 
     //Ort der letzten Berührung auf dem Bildschirm
-    private float touchX1, touchX1down, touchX2, touchY1, touchXPointer;
+    private float touchX1, touchX1down, touchX2, touchY1, touchXPointer1;
+    private float moveX1 = 0;
+    private float moveY1 = 0;
     private long touchTimer;
-    private boolean touchPointer, actionDown, noButtonKlicked;
+    private boolean actionDown, noButtonKlicked;
+    private boolean touchPointer = false;
     //Abstand der letzten Bewegung auf dem Bildschirm
     private float deltaXmove, deltaXclick;
 
@@ -169,6 +177,17 @@ class GameView extends SurfaceView implements Runnable {
     private int plop7 = -1;
     private int plop8 = -1;
     private int plop9 = -1;
+    private int hit1 = -1;
+    private int hit2 = -1;
+    private int hit3 = -1;
+    private int hit4 = -1;
+    private int hit5 = -1;
+    private int hit6 = -1;
+    private int hit7 = -1;
+    private int hit8 = -1;
+    private int hit9 = -1;
+    private int fireballsound = -1;
+    private int knifesharpener = -1;
     private MediaPlayer backgroundloop1; //Farmmusik
     private MediaPlayer backgroundloop2; //Fightmusik
 
@@ -199,6 +218,22 @@ class GameView extends SurfaceView implements Runnable {
 
     //Verteidige dich gegen die Gegner
     private boolean defendNecessary;
+
+    //Kreisinfos
+    private int circleStrokeWidth;
+    private int circleRadiusMax;
+    private int circleRadiusMin;
+    private int circleRadius;
+    private int circleRadiusAbsoluteMin;
+    private boolean circleInRange;
+    private int outerCircleColor;
+
+    //FingerPath Infos
+    public static final float TOUCH_TOLERANCE = 4;
+    private float mX, mY;
+    private Path mPath;
+    private FingerPath paths;
+
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     public GameView(Context context, int screenX, int screenY) {
@@ -280,7 +315,8 @@ class GameView extends SurfaceView implements Runnable {
             if (defendNecessary)
                 gotAttacked();
             statusEffectUpdate();
-            abilityFeedbackUpdate();
+            //abilityFeedbackUpdate();
+            circleUpdate();
         }
     }
 
@@ -288,8 +324,13 @@ class GameView extends SurfaceView implements Runnable {
     private void drawFarm() {
         //Standardfehlerabfangen
         if(ourHolder.getSurface().isValid()) {
-            //canvas wird das Zeichenobjekt
-            canvas = ourHolder.lockCanvas();
+
+            try {
+                //canvas wird das Zeichenobjekt
+                canvas = ourHolder.lockCanvas();
+            } catch (IllegalArgumentException e) {
+                ourHolder.unlockCanvasAndPost(canvas);
+            }
 
             try {
                 //Hintergrund malen
@@ -299,6 +340,7 @@ class GameView extends SurfaceView implements Runnable {
 
                 //Pinselfarbe wählen(bisher nur für den Text)
                 paint.setColor(Color.argb(255, 249, 129, 0));
+                paint.setStyle(Paint.Style.FILL);
 
                 //Derzeitigen FPS malen
                 canvas.drawText("FPS: " + fps, textX, textY, paint);
@@ -365,12 +407,18 @@ class GameView extends SurfaceView implements Runnable {
     private void drawFight() {
         //Standardfehlerabfangen
         if(ourHolder.getSurface().isValid()) {
-            //canvas wird das Zeichenobjekt
-            canvas = ourHolder.lockCanvas();
+            try {
+                //canvas wird das Zeichenobjekt
+                canvas = ourHolder.lockCanvas();
+            } catch (IllegalArgumentException e) {
+                ourHolder.unlockCanvasAndPost(canvas);
+            }
 
             try {
-                //Hintergrund malen
+                //Textfarbe setzen
                 paint.setColor(Color.argb(255, 255, 255, 0));
+                //Damit wir nicht ausversehen die Texte nur als Rand haben
+                paint.setStyle(Paint.Style.FILL);
 
                 //Hintergrund malen
                 if (bitmapBackgroundFights != null)
@@ -446,6 +494,48 @@ class GameView extends SurfaceView implements Runnable {
                     if (bitmapWaffeSchwertButton != null)
                         canvas.drawBitmap(bitmapWaffeSchwertButton, bitmapWaffeSchwertButtonX, bitmapWaffeSchwertButtonY, paint);
                 }
+
+                //Kreis zeichnen
+                if (actionDown && circleInRange && enemie != null) {
+                    //Nur die Außenlinien
+                    paint.setStyle(Paint.Style.STROKE);
+                    paint.setStrokeWidth(circleStrokeWidth);
+
+                    //Mitbewegender INNERER Kreis
+                    paint.setColor(Color.argb(255, 47, 156, 29));
+                    if (moveX1 != 0)
+                        canvas.drawCircle(moveX1, moveY1, circleRadiusMin, paint);
+                    else
+                        canvas.drawCircle(touchX1, touchY1, circleRadiusMin, paint);
+
+                    //Mitbewegender ÄUSSERER Kreis
+                    paint.setColor(outerCircleColor);
+                    if (moveX1 != 0)
+                        canvas.drawCircle(moveX1, moveY1, circleRadius, paint);
+                    else
+                        canvas.drawCircle(touchX1, touchY1, circleRadius, paint);
+                }
+
+                if (actionDown && enemie != null) {
+                    //Abwehrstrich
+                    //Initialisierung
+                    paint.setAntiAlias(true);
+                    paint.setDither(true);
+                    paint.setColor(Color.argb(255, 47, 156, 29));
+                    paint.setStyle(Paint.Style.STROKE);
+                    paint.setStrokeJoin(Paint.Join.ROUND);
+                    paint.setStrokeCap(Paint.Cap.ROUND);
+                    paint.setXfermode(null);
+                    paint.setAlpha(0xff);
+
+                    //Zeichnen
+                    if (paths != null) {
+                        paint.setStrokeWidth(paths.strokeWidth);
+                        paint.setMaskFilter(null);
+
+                        canvas.drawPath(paths.path, paint);
+                    }
+                }
             } catch (NullPointerException e) {
                 setSharedPreferences();
                 return;
@@ -494,6 +584,7 @@ class GameView extends SurfaceView implements Runnable {
             characterStatusEffect = new StatusEffect(sharedPreferences.getString("characterStatusEffect", "default"));
         }
     }
+
     //SharedPreferences wieder sicher verwahren
     private void setSharedPreferences() {
         if (gameMode == 0) {
@@ -614,10 +705,12 @@ class GameView extends SurfaceView implements Runnable {
                 //acker kaufen Button
                 if (touchX1 >= bitmapAckerKaufenButtonX && touchX1 < (bitmapAckerKaufenButtonX + bitmapAckerKaufenButton.getWidth())
                         && touchY1 >= bitmapAckerKaufenButtonY && touchY1 < (bitmapAckerKaufenButtonY + bitmapAckerKaufenButton.getHeight())) {
-                    playSound(4);
                     if (gold >= (priceAecker + STRAWBERRY_PRICE) && numAecker < AECKER_MAX) {
                         ackerGekauft();
+                        playSound(5);
                     }
+                    else
+                        playSound(4);
                     break;
                 }
                 //fight button
@@ -632,12 +725,14 @@ class GameView extends SurfaceView implements Runnable {
                 //gurke kaufen button
                 if (touchX1 >= bitmapGurkeKaufenButtonX && touchX1 < (bitmapGurkeKaufenButtonX + bitmapGurkeKaufenButton.getWidth())
                         && touchY1 >= bitmapGurkeKaufenButtonY && touchY1 < (bitmapGurkeKaufenButtonY + bitmapGurkeKaufenButton.getHeight())) {
-                    playSound(4);
                     if (gold >= (priceGurken + 1)) {
                         numGurken++;
                         gold -= priceGurken;
                         priceGurken = getPrice(1);
+                        playSound(5);
                     }
+                    else
+                        playSound(4);
                     break;
                 }
                 //musik an aus button
@@ -831,6 +926,9 @@ class GameView extends SurfaceView implements Runnable {
 
     //Was passiert wenn man den Touchscreen im FIGHT Modus berührt
     private boolean onTouchFight(MotionEvent motionEvent) {
+        float x = motionEvent.getX();
+        float y = motionEvent.getY();
+
         //Alle Arten von Bewegung (auf dem Screen) die man bearbeiten will
         switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
@@ -838,7 +936,8 @@ class GameView extends SurfaceView implements Runnable {
                 touchY1 = motionEvent.getY();
                 touchTimer = System.currentTimeMillis();
                 alreadyVibrating = false;
-                actionDown = true;
+                //if (!defendNecessary)
+                    circleInRange = true;
                 noButtonKlicked = false;
 
                 //War da ein Button?
@@ -927,7 +1026,7 @@ class GameView extends SurfaceView implements Runnable {
                 if (chooseWeapon) {
                     if (touchX1 >= bitmapWaffeHackeButtonX && touchX1 < (bitmapWaffeHackeButtonX + bitmapWaffeHackeButton.getWidth())
                             && touchY1 >= bitmapWaffeHackeButtonY && touchY1 < (bitmapWaffeHackeButtonY + bitmapWaffeHackeButton.getHeight())) {
-                        playSound(4);
+                        playSound(8);
                         equippedWeapon = new Weapon("Hacke");
                         character.setEquipedWeapon(equippedWeapon);
                         chooseWeapon = false;
@@ -935,7 +1034,7 @@ class GameView extends SurfaceView implements Runnable {
                     }
                     if (touchX1 >= bitmapWaffeHolzschildButtonX && touchX1 < (bitmapWaffeHolzschildButtonX + bitmapWaffeHolzschildButton.getWidth())
                             && touchY1 >= bitmapWaffeHolzschildButtonY && touchY1 < (bitmapWaffeHolzschildButtonY + bitmapWaffeHolzschildButton.getHeight())) {
-                        playSound(4);
+                        playSound(8);
                         equippedWeapon = new Weapon("Holzschild");
                         character.setEquipedWeapon(equippedWeapon);
                         chooseWeapon = false;
@@ -943,7 +1042,7 @@ class GameView extends SurfaceView implements Runnable {
                     }
                     if (touchX1 >= bitmapWaffeKnueppelButtonX && touchX1 < (bitmapWaffeKnueppelButtonX + bitmapWaffeKnueppelButton.getWidth())
                             && touchY1 >= bitmapWaffeKnueppelButtonY && touchY1 < (bitmapWaffeKnueppelButtonY + bitmapWaffeKnueppelButton.getHeight())) {
-                        playSound(4);
+                        playSound(8);
                         equippedWeapon = new Weapon("Knüppel");
                         character.setEquipedWeapon(equippedWeapon);
                         chooseWeapon = false;
@@ -951,7 +1050,7 @@ class GameView extends SurfaceView implements Runnable {
                     }
                     if (touchX1 >= bitmapWaffeRiesenschwertButtonX && touchX1 < (bitmapWaffeRiesenschwertButtonX + bitmapWaffeRiesenschwertButton.getWidth())
                             && touchY1 >= bitmapWaffeRiesenschwertButtonY && touchY1 < (bitmapWaffeRiesenschwertButtonY + bitmapWaffeRiesenschwertButton.getHeight())) {
-                        playSound(4);
+                        playSound(8);
                         equippedWeapon = new Weapon("Riesenschwert");
                         character.setEquipedWeapon(equippedWeapon);
                         chooseWeapon = false;
@@ -959,43 +1058,83 @@ class GameView extends SurfaceView implements Runnable {
                     }
                     if (touchX1 >= bitmapWaffeSchwertButtonX && touchX1 < (bitmapWaffeSchwertButtonX + bitmapWaffeSchwertButton.getWidth())
                             && touchY1 >= bitmapWaffeSchwertButtonY && touchY1 < (bitmapWaffeSchwertButtonY + bitmapWaffeSchwertButton.getHeight())) {
-                        playSound(4);
+                        playSound(8);
                         equippedWeapon = new Weapon("Schwert");
                         character.setEquipedWeapon(equippedWeapon);
                         chooseWeapon = false;
                         break;
                     }
                 }
+
+                //Abwehrstrich
+                mPath = new Path();
+                FingerPath fp = new FingerPath(20, mPath);
+                paths = fp;
+
+                mPath.reset();
+                mPath.moveTo(x, y);
+                mX = x;
+                mY = y;
+
                 noButtonKlicked = true;
+                actionDown = true;
                 break;
+
             case MotionEvent.ACTION_POINTER_DOWN:
                 int index = (motionEvent.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-                touchXPointer = motionEvent.getX(index);
-                float test = touchXPointer - touchX1;
-                //Auf den linken Teil des Bildschirms wird geklickt
-                if (touchXPointer < screenMitte) {
-                    defend();
-                    break;
-                }
+                touchXPointer1 = motionEvent.getX(index);
                 break;
+
+            case MotionEvent.ACTION_MOVE:
+                moveX1 = motionEvent.getX();
+                moveY1 = motionEvent.getY();
+
+                //Abwehrlinie muss flüssig aussehen
+                float dx = Math.abs(x - mX);
+                float dy = Math.abs(y - mY);
+
+                try {
+                    if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
+                        mPath.quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2);
+                        mX = x;
+                        mY = y;
+                    }
+                } catch (NullPointerException e) {
+                    Log.d("Abwehrstrich zeichnen", e.toString());
+                }
+
+                break;
+
             case MotionEvent.ACTION_UP:
-                actionDown = false;
-                //Fähigkeiten Spells
-                if (noButtonKlicked) { //Solange kein Button benutzt wurde
-                    if (System.currentTimeMillis() - touchTimer >= 1500) {
+                if (actionDown) {
+                    actionDown = false;
+
+                    //Die Linie verschwindet ja wieder nachdem man losgelassen hat
+                    mPath.lineTo(mX, mY);
+                    mPath.reset();
+                    paths = null;
+
+                    //moveKoordinaten resetten
+                    moveX1 = 0;
+                    moveY1 = 0;
+
+                    //Fähigkeiten Spells
+                    if (noButtonKlicked) { //Solange kein Button benutzt wurde
+                    /*if (System.currentTimeMillis() - touchTimer >= 1500) {
                         fireball();
                         alreadyVibrating = false;
                         break;
-                    }
-                    //Auf den rechten Teil des Bildschirms wird geklickt
-                    if (touchX1 >= screenMitte) {
-                        attack();
-                        break;
-                    }
-                    //Auf den linken Teil des Bildschirms wird geklickt
-                    if (touchX1 < screenMitte) {
-                        defend();
-                        break;
+                    }*/
+                        //Angriff
+                        if (circleInRange) {
+                            attack();
+                            break;
+                        }
+                        //Auf den linken Teil des Bildschirms wird geklickt
+                        /*if (!circleInRange && mX - touchX1 > 300) {
+                            defend();
+                            break;
+                        }*/
                     }
                 }
                 break;
@@ -1006,7 +1145,7 @@ class GameView extends SurfaceView implements Runnable {
     //Jede Art von Sound abspielen
     private void playSound(int whichOne) {
         boolean ticktack = true; //für den Uhr Sound
-        //whichone Legende: 0 -> Hintergrundmusik; 1 -> Sähsound; 2 -> Uhr Sound; 3 -> Erntesound; 4 -> Buttonklick; 5 -> Geld
+        //whichone Legende: 0 -> Hintergrundmusik; 1 -> Sähsound; 2 -> Uhr Sound; 3 -> Erntesound; 4 -> Buttonklick; 5 -> Geld; 6 -> hit; 7 -> fireballsound; 8 -> knifesharpener
 
         //Zufallszahl generieren um die aussäh und erntegeräusche abwechslungsreicher zu machen
         Random random = new Random();
@@ -1105,6 +1244,47 @@ class GameView extends SurfaceView implements Runnable {
                 if (soundOn)
                     soundPool.play(gold1, 1, 1, 0, 0, 1);
                 break;
+            case 6:
+                if (soundOn) {
+                    switch (randomInt) {
+                        case 1:
+                            soundPool.play(hit1, 1, 1, 0, 0, 1);
+                            break;
+                        case 2:
+                            soundPool.play(hit2, 1, 1, 0, 0, 1);
+                            break;
+                        case 3:
+                            soundPool.play(hit3, 1, 1, 0, 0, 1);
+                            break;
+                        case 4:
+                            soundPool.play(hit4, 1, 1, 0, 0, 1);
+                            break;
+                        case 5:
+                            soundPool.play(hit5, 1, 1, 0, 0, 1);
+                            break;
+                        case 6:
+                            soundPool.play(hit6, 1, 1, 0, 0, 1);
+                            break;
+                        case 7:
+                            soundPool.play(hit7, 1, 1, 0, 0, 1);
+                            break;
+                        case 8:
+                            soundPool.play(hit8, 1, 1, 0, 0, 1);
+                            break;
+                        case 9:
+                            soundPool.play(hit9, 1, 1, 0, 0, 1);
+                            break;
+                    }
+                }
+                break;
+            case 7:
+                if (soundOn)
+                    soundPool.play(fireballsound, 1, 1, 0, 0, 1);
+                break;
+            case 8:
+                if (soundOn)
+                    soundPool.play(knifesharpener, 1, 1, 0, 0, 1);
+                break;
         }
     }
 
@@ -1182,12 +1362,6 @@ class GameView extends SurfaceView implements Runnable {
             descriptor = assetManager.openFd("plop6.wav");
             plop6 = soundPool.load(descriptor, 0);
 
-            descriptor = assetManager.openFd("dirt5.wav");
-            dirt5 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("dirt6.wav");
-            dirt6 = soundPool.load(descriptor, 0);
-
             descriptor = assetManager.openFd("plop7.wav");
             plop7 = soundPool.load(descriptor, 0);
 
@@ -1196,6 +1370,39 @@ class GameView extends SurfaceView implements Runnable {
 
             descriptor = assetManager.openFd("plop9.wav");
             plop9 = soundPool.load(descriptor, 0);
+
+            descriptor = assetManager.openFd("hit1.wav");
+            hit1 = soundPool.load(descriptor, 0);
+
+            descriptor = assetManager.openFd("hit2.wav");
+            hit2 = soundPool.load(descriptor, 0);
+
+            descriptor = assetManager.openFd("hit3.wav");
+            hit3 = soundPool.load(descriptor, 0);
+
+            descriptor = assetManager.openFd("hit4.wav");
+            hit4 = soundPool.load(descriptor, 0);
+
+            descriptor = assetManager.openFd("hit5.wav");
+            hit5 = soundPool.load(descriptor, 0);
+
+            descriptor = assetManager.openFd("hit6.wav");
+            hit6 = soundPool.load(descriptor, 0);
+
+            descriptor = assetManager.openFd("hit7.wav");
+            hit7 = soundPool.load(descriptor, 0);
+
+            descriptor = assetManager.openFd("hit8.wav");
+            hit8 = soundPool.load(descriptor, 0);
+
+            descriptor = assetManager.openFd("hit9.wav");
+            hit9 = soundPool.load(descriptor, 0);
+
+            descriptor = assetManager.openFd("fireballsound.wav");
+            fireballsound = soundPool.load(descriptor, 0);
+
+            descriptor = assetManager.openFd("knifesharpener.wav");
+            knifesharpener = soundPool.load(descriptor, 0);
 
             /*
             //Man muss MediaPlayer benutzen um vernünftig Hintergrundmusik abzuspielen...
@@ -1552,9 +1759,38 @@ class GameView extends SurfaceView implements Runnable {
     //AUF ZUM ANGRIFF!! AAAAHHH
     private void attack() {
         if (enemie != null && character != null) {
+            //Neue Damage Berechnung
+            //Damage
+            //bis 1000 steigt es, bei 1000 sind es 125% dmg. bis zum Abbruch geht es wieder auf 100% runter. es beginnt bei 33%
+            if (System.currentTimeMillis() - touchTimer <= 1050) {
+                enemie.defend(character.getMeleeDamage()/3 + (character.getMeleeDamage()*(((float)(System.currentTimeMillis() - touchTimer)/1000))));
+            }
+            else {
+                //FEHLER!!!
+                enemie.defend(character.getMeleeDamage()/3 + character.getMeleeDamage() - (character.getMeleeDamage()*(((float)(System.currentTimeMillis() - touchTimer)/1000))));
+            }
+            //enemie.defend(character.getMeleeDamage());
+            playSound(6);
+
+            //Lebt der Gegner noch?
+            if (!enemie.getLifeStatus()) {
+                if (character.setExperience(enemie.getExperience())) {
+                    levelUpPossible = true;
+                }
+                //Zurücksetzen des Gegners und des Charakters
+                enemie = null;
+                defendNecessary = false;
+                if (character != null)
+                    character.setLife();
+                enemieStatusEffect.resetStatusEffect();
+            }
+
+
+            /* Alte Damage Berechnung
             if (System.currentTimeMillis() - character.getLastAttackTime() > character.getAttackspeed()) {
                 enemie.defend(character.getMeleeDamage());
                 character.setLastAttackTime();
+                playSound(6);
                 if (!enemie.getLifeStatus()) {
                     if (character.setExperience(enemie.getExperience())) {
                         levelUpPossible = true;
@@ -1565,7 +1801,7 @@ class GameView extends SurfaceView implements Runnable {
                         character.setLife();
                     enemieStatusEffect.resetStatusEffect();
                 }
-            }
+            } */
         }
     }
 
@@ -1599,6 +1835,8 @@ class GameView extends SurfaceView implements Runnable {
                 }
                 enemie.attackRightNowReset();
                 defendNecessary = false;
+                if (actionDown)
+                    circleInRange = true;
             }
         }
     }
@@ -1667,6 +1905,7 @@ class GameView extends SurfaceView implements Runnable {
         if (enemie != null) {
             enemie.defend(30);
             enemieStatusEffect.setStatusEffect("ignite");
+            playSound(7);
             if (!enemie.getLifeStatus()) {
                 if (character.setExperience(enemie.getExperience())) {
                     levelUpPossible = true;
@@ -1703,11 +1942,18 @@ class GameView extends SurfaceView implements Runnable {
 
         initialiseBitmaps();
 
+        //Character erstellen mit all den gespeicherten Infos
         SharedPreferences sharedPreferences = getContext().getSharedPreferences("StrawberryFight", 0);
         character = new Character(new Weapon(sharedPreferences.getString("characterEquippedWeapon", "Hacke")), sharedPreferences.getInt("characterBaseDamage", 1), sharedPreferences.getInt("characterLife", 25), sharedPreferences.getInt("characterMaxLife", 25), sharedPreferences.getInt("characterDefense", 1), sharedPreferences.getInt("characterExperience", 0), sharedPreferences.getInt("characterLevel", 1), sharedPreferences.getInt("characterBaseAttackspeed", 1000));
+
+        //Gegner Einrichtung
         enemieSpawnLevel = 1;
         spawnEnemie("Goblin");
+
+        //Ein paar andere Sachen auslesen
         getSharedPreferences();
+
+        //Standardvariablenreset
         levelUpPossible = false;
         if (character.canLevelUp() == true) {
             levelUpPossible = true;
@@ -1716,7 +1962,17 @@ class GameView extends SurfaceView implements Runnable {
         chooseWeapon = false;
         alreadyVibrating = false;
         noButtonKlicked = true;
+
+        //Und Musik abspielen
         backgroundMusicPlayer();
+
+        //Kreisinfos berechnen
+        if (circleStrokeWidth == 0) {
+            circleStrokeWidth = getScaledBitmapSize(screenX, 1080, 15);
+            circleRadiusMax = getScaledBitmapSize(screenX, 1080, 250);
+            circleRadiusMin = getScaledBitmapSize(screenX, 1080, 100);
+            circleRadiusAbsoluteMin = getScaledBitmapSize(screenX, 1080, 75);
+        }
     }
 
     //Statuseffekte abgeben?
@@ -1758,13 +2014,13 @@ class GameView extends SurfaceView implements Runnable {
                     backgroundloop2.pause();
                 }
                 //Beim ersten Start der Farmmusik
-                if (backgroundloop1 == null) {
+                if (backgroundloop1 == null && musicOn) {
                     backgroundloop1 = MediaPlayer.create(getContext(), R.raw.gameloop1);
                     backgroundloop1.setLooping(true);
                     backgroundloop1.start();
                 }
                 //Wenn wir nachträglich wieder in den Farmmodus wechseln
-                if (backgroundloop1 != null && !backgroundloop1.isPlaying()) {
+                if (backgroundloop1 != null && !backgroundloop1.isPlaying() && musicOn) {
                     backgroundloop1.start();
                 }
             } catch (IllegalStateException e) {
@@ -1779,18 +2035,35 @@ class GameView extends SurfaceView implements Runnable {
                     backgroundloop1.pause();
                 }
                 //Beim ersten Start der Fightmusik
-                if (backgroundloop2 == null) {
+                if (backgroundloop2 == null && musicOn) {
                     backgroundloop2 = MediaPlayer.create(getContext(), R.raw.gameloop2);
                     backgroundloop2.setLooping(true);
                     backgroundloop2.start();
                 }
                 //Wenn wir nachträglich wieder in den Fightmodus wechseln
-                if (backgroundloop2 != null && !backgroundloop2.isPlaying()) {
+                if (backgroundloop2 != null && !backgroundloop2.isPlaying() && musicOn) {
                     backgroundloop2.start();
                 }
             } catch (IllegalStateException e) {
                 Log.d("gamemode2 Error", e.toString());
             }
+        }
+    }
+
+    private void circleUpdate() {
+        //Wir berechnen nur wenn auch was zu berechnen da ist
+        if (actionDown && circleInRange) {
+            //Der Radius wird kleiner
+            circleRadius = getScaledBitmapSize(screenX, 1080, 200 - (int) (System.currentTimeMillis() - touchTimer)/10);
+            //Aber nie noch kleiner :D
+            if (circleRadius <= circleRadiusAbsoluteMin)
+                circleInRange = false;
+            //Farbe "berechnen"
+            //paint.setColor(Color.argb(255, 31, 44, 167)); -> paint.setColor(Color.argb(255, 47, 156, 29));
+            if (System.currentTimeMillis() - touchTimer <= 1000)
+                outerCircleColor = Color.argb(255, 31 + Math.round((System.currentTimeMillis() - touchTimer)/53), 44 + Math.round((System.currentTimeMillis() - touchTimer)/8), 167 - Math.round((System.currentTimeMillis() - touchTimer)/6));
+            else
+                outerCircleColor = Color.argb(255, 47 - Math.round((System.currentTimeMillis() - touchTimer - 1000)/53), 156 - Math.round((System.currentTimeMillis() - touchTimer - 1000)/8), 29 + Math.round((System.currentTimeMillis() - touchTimer - 1000)/6));
         }
     }
 }
