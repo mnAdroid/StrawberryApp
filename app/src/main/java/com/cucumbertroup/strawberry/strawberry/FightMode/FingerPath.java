@@ -1,4 +1,4 @@
-package com.cucumbertroup.strawberry.strawberry;
+package com.cucumbertroup.strawberry.strawberry.FightMode;
 
 /**
  * Created by Max on 03.10.2017.

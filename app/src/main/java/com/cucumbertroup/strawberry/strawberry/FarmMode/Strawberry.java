@@ -1,4 +1,4 @@
-package com.cucumbertroup.strawberry.strawberry;
+package com.cucumbertroup.strawberry.strawberry.FarmMode;
 
 /**
  * Created by Max on 27.08.2017.

@@ -2,7 +2,6 @@ package com.cucumbertroup.strawberry.strawberry;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.gesture.GestureOverlayView;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
@@ -11,6 +10,9 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.Toast;
+
+import com.cucumbertroup.strawberry.strawberry.FarmMode.FarmMode;
+import com.cucumbertroup.strawberry.strawberry.FightMode.FightMode;
 
 //Die Implementierung von GameView, inkl. SurfaceView (unter anderem um zu malen, vor allem aber um "onTouchEvent" overriden zu können)
 //und Runnable (um den GameLoop einfach hier mit reinzupacken)

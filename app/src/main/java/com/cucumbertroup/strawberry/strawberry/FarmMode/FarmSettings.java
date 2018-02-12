@@ -1,4 +1,4 @@
-package com.cucumbertroup.strawberry.strawberry;
+package com.cucumbertroup.strawberry.strawberry.FarmMode;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -15,6 +15,10 @@ import android.os.Build;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
+
+import com.cucumbertroup.strawberry.strawberry.FarmMode.Strawberry;
+import com.cucumbertroup.strawberry.strawberry.GlobalVariables;
+import com.cucumbertroup.strawberry.strawberry.R;
 
 import java.io.IOException;
 

@@ -1,4 +1,4 @@
-package com.cucumbertroup.strawberry.strawberry;
+package com.cucumbertroup.strawberry.strawberry.FightMode;
 
 import android.graphics.Bitmap;
 

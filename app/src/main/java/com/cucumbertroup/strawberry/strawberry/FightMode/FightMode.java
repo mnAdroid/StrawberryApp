@@ -1,4 +1,4 @@
-package com.cucumbertroup.strawberry.strawberry;
+package com.cucumbertroup.strawberry.strawberry.FightMode;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -19,6 +19,9 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
+import com.cucumbertroup.strawberry.strawberry.GlobalVariables;
+import com.cucumbertroup.strawberry.strawberry.OnlineFeatures;
+import com.cucumbertroup.strawberry.strawberry.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -29,7 +32,7 @@ import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.decodeS
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledBitmapSize;
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledCoordinates;
 
-class FightMode {
+public class FightMode {
     //Der gespeicherte Context
     private Context fullContext;
 
@@ -172,7 +175,7 @@ class FightMode {
     private GlobalVariables globalVariables;
 
     //Konstruktor
-    FightMode(Context context, int screenX, int screenY, GlobalVariables globalVariables) {
+    public FightMode(Context context, int screenX, int screenY, GlobalVariables globalVariables) {
         //Context abspeichern
         fullContext = context;
 
@@ -226,7 +229,7 @@ class FightMode {
     }
 
     //update ist quasi das DENKEN in der App
-    void updateFight() {
+    public void updateFight() {
         //Greift der Gegner an?
         if (enemie != null) {
             defendNecessary = enemie.attackUpdate();
@@ -255,7 +258,7 @@ class FightMode {
     }
 
     //draw ist das ZEICHNEN in der App
-    void drawFight(SurfaceHolder ourHolder, Canvas canvas, Paint paint) {
+    public void drawFight(SurfaceHolder ourHolder, Canvas canvas, Paint paint) {
         //Standardfehlerabfangen
         if(ourHolder.getSurface().isValid()) {
             try {
@@ -431,7 +434,7 @@ class FightMode {
     }
 
     //SharedPreferences auslesen
-    void getSharedPreferences() {
+    public void getSharedPreferences() {
         //Allgemeine Daten die beide Modi brauchen können
         SharedPreferences sharedPreferences = fullContext.getSharedPreferences("StrawberryFight", 0);
         characterStatusEffect = new StatusEffect(sharedPreferences.getString("characterStatusEffect", "default"));
@@ -444,7 +447,7 @@ class FightMode {
     }
 
     //SharedPreferences wieder sicher verwahren
-    void setSharedPreferences() {
+    public void setSharedPreferences() {
         SharedPreferences sharedPreferences = fullContext.getSharedPreferences("StrawberryFight", 0);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         if (character != null) {
@@ -466,7 +469,7 @@ class FightMode {
     }
 
     //Was passiert wenn man den Touchscreen im FIGHT Modus berührt
-    boolean onTouchFight(MotionEvent motionEvent) {
+    public boolean onTouchFight(MotionEvent motionEvent) {
         float x = motionEvent.getX();
         float y = motionEvent.getY();
 
@@ -1260,7 +1263,7 @@ class FightMode {
     }
 
     //Wenn der Zurückbutton gedrücckt wurde
-    GlobalVariables recycle() {
+    public GlobalVariables recycle() {
         loading = true;
 
         runmodeFinished();
@@ -1342,7 +1345,7 @@ class FightMode {
     }
 
     //Fireball
-    void fireball() {
+    public void fireball() {
         if (enemie != null) {
             if (!touchAttack && !touchDefend && !touchGesture && !touchHardAttack) {
                 touchGesture = true;

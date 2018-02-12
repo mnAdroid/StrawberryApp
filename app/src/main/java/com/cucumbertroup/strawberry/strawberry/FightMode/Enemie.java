@@ -1,8 +1,6 @@
-package com.cucumbertroup.strawberry.strawberry;
+package com.cucumbertroup.strawberry.strawberry.FightMode;
 
 import android.graphics.Bitmap;
-import android.icu.text.SymbolTable;
-import android.icu.util.TimeZone;
 
 import java.util.Random;
 

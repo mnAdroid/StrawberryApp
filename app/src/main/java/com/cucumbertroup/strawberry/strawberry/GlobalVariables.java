@@ -23,43 +23,43 @@ public class GlobalVariables {
     }
 
     //Um die Variablen die die anderen Modi brauchen auch zur Verfügung zu stellen
-    int getGold() {
+    public int getGold() {
         return gold;
     }
-    int getClickCount() {
+    public int getClickCount() {
         return clickCount;
     }
-    boolean getMusicOn() {
+    public boolean getMusicOn() {
         return musicOn;
     }
-    boolean getSoundOn() {
+    public boolean getSoundOn() {
         return soundOn;
     }
-    boolean getAlphaTester() {
+    public boolean getAlphaTester() {
         return alphaTester;
     }
-    boolean getBetaTester() {
+    public boolean getBetaTester() {
         return betaTester;
     }
-    int getGameMode() {
+    public int getGameMode() {
         return gameMode;
     }
-    void setGold(int gold) {
+    public void setGold(int gold) {
         this.gold = gold;
     }
-    void incrementClickCount() {
+    public void incrementClickCount() {
         this.clickCount++;
     }
-    void setClickCount(int clickCount) {
+    public void setClickCount(int clickCount) {
         this.clickCount = clickCount;
     }
-    void setMusicOn(boolean musicOn) {
+    public void setMusicOn(boolean musicOn) {
         this.musicOn = musicOn;
     }
-    void setSoundOn(boolean soundOn) {
+    public void setSoundOn(boolean soundOn) {
         this.soundOn = soundOn;
     }
-    void setGameMode(int gameMode) {
+    public void setGameMode(int gameMode) {
         this.gameMode = gameMode;
     }
 }

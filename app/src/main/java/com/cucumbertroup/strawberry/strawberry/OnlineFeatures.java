@@ -27,7 +27,7 @@ import com.rengwuxian.materialedittext.MaterialEditText;
 
 import java.util.LinkedList;
 
-class OnlineFeatures {
+public class OnlineFeatures {
     //Singleton
     private static OnlineFeatures instance;
 
@@ -70,7 +70,7 @@ class OnlineFeatures {
         lBackupDataFarmSaved = false;
         lBackupDataFightSaved = false;
     }
-    static synchronized OnlineFeatures getInstance(GlobalVariables globalVariables, FirebaseAuth auth, FirebaseDatabase database) {
+    public static synchronized OnlineFeatures getInstance(GlobalVariables globalVariables, FirebaseAuth auth, FirebaseDatabase database) {
         if (OnlineFeatures.instance == null) {
             OnlineFeatures.instance = new OnlineFeatures(globalVariables, auth, database);
         }
@@ -78,7 +78,7 @@ class OnlineFeatures {
     }
 
     //Zum Einloggen
-    void showSignInDialog(final Context fullContext) {
+    public void showSignInDialog(final Context fullContext) {
         final AlertDialog alertDialog = new AlertDialog.Builder(fullContext).create();
         alertDialog.setTitle(R.string.sign_in);
         alertDialog.setMessage("");
@@ -245,7 +245,7 @@ class OnlineFeatures {
     }
 
     //Um Spieldaten zu backupen (hochladen)
-    void backupGamedata(final Context fullContext) {
+    public void backupGamedata(final Context fullContext) {
         //Backup Klassen initialisieren
         BackupData_General backupDataGeneral = new BackupData_General(fullContext);
         BackupData_Farm backupDataFarm = new BackupData_Farm(fullContext);
@@ -301,7 +301,7 @@ class OnlineFeatures {
                 });
     }
 
-    void getSavedGamedata(final Context fullContext) {
+    public void getSavedGamedata(final Context fullContext) {
         //backup überprüfen
         if (backup == null)
             backup = database.getReference("backupUserdata/" + auth.getUid());
@@ -344,7 +344,7 @@ class OnlineFeatures {
         });
     }
 
-    synchronized void waitForFirebase(Context fullContext) {
+    public synchronized void waitForFirebase(Context fullContext) {
         if (lBackupDataGeneral.size() == 3) {
             for (int i = 0; lBackupDataGeneral.size() > i; i++) {
                 lBackupDataGeneralSaved = lBackupDataGeneral.get(i).saveBackupData(fullContext);

@@ -22,7 +22,7 @@ public class BitmapCalculations {
 
     //Einlesen der minimalen Bitmaps (vong Google perösnlich der Algorithmus)
     public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
-                                                          int reqWidth, int reqHeight) {
+                                                         int reqWidth, int reqHeight) {
 
         // First decode with inJustDecodeBounds=true to check dimensions
         final BitmapFactory.Options options = new BitmapFactory.Options();
