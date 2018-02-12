@@ -297,4 +297,10 @@ class FarmModeSound {
         plop9 = -1;
         instance = null;
     }
+
+    void pauseMusic() {
+        if (backgroundloop1 != null && backgroundloop1.isPlaying() && !globalVariables.getMusicOn()) {
+            backgroundloop1.pause();
+        }
+    }
 }

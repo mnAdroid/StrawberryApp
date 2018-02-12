@@ -27,15 +27,11 @@ import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScal
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledCoordinates;
 
 class FarmSettings {
-
     //Der gespeicherte Context
     private Context fullContext;
 
     //Bildschirmkoordinaten
     private int screenX, screenY;
-
-    //Erdbeerkosten
-    private final int STRAWBERRY_PRICE = 1;
 
     //Testbuttons FARM erstellen
     private Bitmap bitmapFightButton;
@@ -72,7 +68,7 @@ class FarmSettings {
     }
 
     //ZEICHNEN
-    void drawFarmSettings(SurfaceHolder ourHolder, Canvas canvas, Paint paint) {
+    void drawFarmSettings(Canvas canvas, Paint paint) {
         try {
             canvas.drawColor(Color.BLACK);
             //Pinselfarbe wählen (bisher nur für den Text)
@@ -81,7 +77,7 @@ class FarmSettings {
             paint.setTextSize(textSize);
 
             //Klickcounter malen
-            canvas.drawText("Clicks: " + globalVariables.getClickCount(), textX, textY, paint);
+            canvas.drawText("Clicks: " + globalVariables.getClickCount(), textX, 2* textY, paint);
 
             //Test Button malen
             if (bitmapFightButton != null)
@@ -96,7 +92,7 @@ class FarmSettings {
     }
 
     //Was passiert wenn man den Touchscreen im FARM Modus berührt
-    boolean onTouchFarmSettings(MotionEvent motionEvent) {
+    void onTouchFarmSettings(MotionEvent motionEvent) {
         //Alle Arten von Bewegung (auf dem Screen) die man bearbeiten will
         switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
             //Spieler berührt den Bildschirm
@@ -118,9 +114,11 @@ class FarmSettings {
                     if (globalVariables.getSoundOn()) {
                         globalVariables.setMusicOn(false);
                         //Musik pausieren muss noch rein
+                        farmModeSound.pauseMusic();
                         globalVariables.setSoundOn(false);
                     } else {
                         globalVariables.setMusicOn(true);
+                        farmModeSound.playSound(0, fullContext);
                         globalVariables.setSoundOn(true);
                     }
                     break;
@@ -136,7 +134,6 @@ class FarmSettings {
                 }
                 break;
         }
-        return false;
     }
 
     private void resetGame() {
@@ -169,7 +166,6 @@ class FarmSettings {
         editor.putString("strawberryStatus", strawberryStatus.toString());
 
         editor.apply();
-
 
         //Fight Mode resetten
         sharedPreferences = fullContext.getSharedPreferences("StrawberryFight", 0);
@@ -221,15 +217,15 @@ class FarmSettings {
         //Feste Werte setzen
 
         bitmapFightButtonX = getScaledCoordinates(screenX, 1080, 270);
-        bitmapFightButtonY = getScaledCoordinates(screenY, 1920, 400);
-        bitmapMusikAnAusButtonX = getScaledCoordinates(screenX, 1080, 770);
-        bitmapMusikAnAusButtonY = getScaledCoordinates(screenY, 1920, 400);
-        bitmapResetButtonX = getScaledCoordinates(screenX, 1080, 20);
-        bitmapResetButtonY = getScaledCoordinates(screenY, 1920, 550);
+        bitmapFightButtonY = 4 * textY;
+        bitmapMusikAnAusButtonX = getScaledCoordinates(screenX, 1080, 20);
+        bitmapMusikAnAusButtonY = 4 * textY;
+        bitmapResetButtonX = getScaledCoordinates(screenX, 1080, 520);
+        bitmapResetButtonY = 4 * textY;
     }
 
     //Wenn wir den Modus verlassen
-    GlobalVariables recycle() {
+    void recycle() {
         //Bitmaps Recyclen
         bitmapFightButton.recycle();
         bitmapFightButton = null;
@@ -237,8 +233,6 @@ class FarmSettings {
         bitmapMusikAnAusButton = null;
         bitmapResetButton.recycle();
         bitmapResetButton = null;
-
-        return globalVariables;
     }
 }
 

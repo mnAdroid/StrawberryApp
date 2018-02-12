@@ -1,7 +1,6 @@
 package com.cucumbertroup.strawberry.strawberry.FarmMode;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -38,36 +37,19 @@ public class FarmMode {
     private float backgroundOverlayX1;
     private float backgroundLandY1;
 
-    //Erdbeeren Array
-    private Strawberry[] strawberries;
-    private int numStrawberries = 0;
-    //Anzahl und Preis der Farmfläche
-    private int numAecker;
-    private int priceAecker;
-    private final int AECKER_MAX = 32;
-    //Anzahl und Preis der Länderein
-    private int numLand;
-    private int priceLand;
-    //Anzahl und Preis der arbeitenden Gurken
-    private int numGurken;
-    private int priceGurken;
-
-    //Erdbeerkosten
-    private final int STRAWBERRY_PRICE = 1;
-
     //Bilder initialisieren
     private Bitmap bitmapBackgroundOverlay;
     private Bitmap bitmapBackgroundLoading;
     private Bitmap bitmapBackgroundLand;
 
-    //Farm Buttons
-    private Bitmap bitmapShopButton;
-    private Bitmap bitmapSettingButton;
-
-    //Wo kommen die Buttons hin?
+    //Textgroesse
     private int textSize, textX, textY;
-    private int bitmapShopButtonX, bitmapShopButtonY;
-    private int bitmapSettingButtonX, bitmapSettingButtonY;
+
+    //Wo befinden sich die virtuellen Button und wie gross sind sie
+    private int shopButtonX, shopButtonY;
+    private int shopButtonHeight, shopButtonWidth;
+    private int settingButtonX, settingButtonY;
+    private int settingButtonHeight, settingButtonWidth;
 
     private FarmSettings farmSettings;
     private FarmShop farmShop;
@@ -77,14 +59,15 @@ public class FarmMode {
 
     //Laden wir gerade
     private boolean loading;
-    //Laden wir das erste mal
-    private boolean initialsed;
 
     //Globale Variablenübertragungsklasse ;)
     private GlobalVariables globalVariables;
 
     //Musikabspielklasse
     private FarmModeSound farmModeSound;
+
+    //Backend des Farmmodus
+    private FarmModeBackend farmModeBackend;
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     public FarmMode(Context context, int screenX, int screenY, GlobalVariables globalVariables) {
@@ -93,7 +76,6 @@ public class FarmMode {
 
         //Ladebildschirm anzeigen?
         loading = true;
-        initialsed = false;
 
         //Bildschirmgröße abspeichern
         this.screenX = screenX;
@@ -110,18 +92,13 @@ public class FarmMode {
         //Musik einlesen
         farmModeSound = FarmModeSound.getInstance(globalVariables, context);
 
-        //Daten einlesen
-        getSharedPreferences();
-
-        globalVariables.setSoundOn(true);
+        //Backend einlesen
+        farmModeBackend = FarmModeBackend.getInstance(globalVariables, context);
     }
 
     //update ist quasi das DENKEN in der App
     public void updateFarm() {
-        //Erdbeeren wachsen hier automatisch durch Zeit
-        for(int i = 0; i < numStrawberries; i++) {
-            strawberries[i].update();
-        }
+        farmModeBackend.strawberriesUpdate();
         farmModeSound.playSound(0, fullContext);
     }
 
@@ -143,9 +120,9 @@ public class FarmMode {
                         canvas.drawBitmap(bitmapBackgroundLoading, 0, 0, paint);
                     }
                 } else if (farmSettings != null) {
-                    farmSettings.drawFarmSettings(ourHolder, canvas, paint);
+                    farmSettings.drawFarmSettings(canvas, paint);
                 } else if (farmShop != null) {
-                    farmShop.drawFarmShop(ourHolder, canvas, paint);
+                    farmShop.drawFarmShop(canvas, paint);
                 } else {
                     if (bitmapBackgroundLand != null)
                         canvas.drawBitmap(bitmapBackgroundLand, 0, backgroundLandY1, paint);
@@ -158,121 +135,26 @@ public class FarmMode {
                     paint.setStyle(Paint.Style.FILL);
                     paint.setTextSize(textSize);
 
-                    //Klickcounter malen
-                    canvas.drawText("Clicks: " + globalVariables.getClickCount(), textX, textY, paint);
-
-                    //Zustand als Text ausgeben
-                    switch (zustand) {
-                        case 0:
-                            canvas.drawText("Zustand: Aussähen", textX, 2 * textY, paint);
-                            break;
-                        case 1:
-                            canvas.drawText("Zustand: Wachsen", textX, 2 * textY, paint);
-                            break;
-                        case 2:
-                            canvas.drawText("Zustand: Ernten", textX, 2 * textY, paint);
-                            break;
-                        default:
-                            canvas.drawText("Something went wrong :D", textX, 2 * textY, paint);
-                            break;
-                    }
-
                     //Anzahl der Erdbeeren
-                    canvas.drawText("Erdbeeren: " + numStrawberries, textX, 3 * textY, paint);
+                    canvas.drawText("Erdbeeren: " + farmModeBackend.getNumStrawberries(), 3 * textX, 11 * textY, paint);
 
                     //Anzahl Gurken
-                    canvas.drawText("Gurken: " + numGurken + " | Kosten: " + priceGurken + " Gold", textX, 4 * textY, paint);
+                    canvas.drawText("Gurken: " + farmModeBackend.getNumGurken(), 3 * textX, 12 * textY, paint);
 
-                    //Anzahl Land
-                    if ((numAecker / 4) >= numLand)
-                        canvas.drawText("Land: " + numLand + " | Kosten: " + priceLand + " Gold", textX, 5 * textY, paint);
-                        //Anzahl Aecker
-                    else
-                        canvas.drawText("Äcker: " + numAecker + " | Kosten: " + priceAecker + " Gold", textX, 5 * textY, paint);
+                    //Anzahl Aecker
+                    canvas.drawText("Äcker: " + farmModeBackend.getNumAecker(), 3 * textX, 13 * textY, paint);
 
                     //Wie viel Gold haben wir eigentlich?
-                    canvas.drawText("Gold: " + globalVariables.getGold(), textX, 6 * textY, paint);
-
-                    //Test Wachsstatus Erdbeere 1
-                    if (numStrawberries > 0)
-                        canvas.drawText("Alter Erdbeere 1: " + strawberries[0].getWachsStatus(), textX, 7 * textY, paint);
-
-                    //Test Button malen
-                    if (bitmapSettingButton != null)
-                        canvas.drawBitmap(bitmapSettingButton, bitmapSettingButtonX, bitmapSettingButtonY, paint);
-                    if (bitmapShopButton != null)
-                        canvas.drawBitmap(bitmapShopButton, bitmapShopButtonX, bitmapShopButtonY, paint);
+                    canvas.drawText("Gold: " + globalVariables.getGold(), 3 * textX, 14 * textY, paint);
                 }
             } catch (NullPointerException e) {
-                setSharedPreferences();
+                farmModeBackend.setSharedPreferences();
                 return;
             }
             //Alles auf den Bildschirm malen
             //Und Canvas wieder freilassen (um Fehler zu minimieren(das könnte sogar der Fehler meiner ersten App gewesen sein))
             ourHolder.unlockCanvasAndPost(canvas);
         }
-    }
-
-    //SharedPreferences auslesen
-    public void getSharedPreferences() {
-        SharedPreferences sharedPreferences = fullContext.getSharedPreferences("StrawberrySettings", 0);
-        numStrawberries = sharedPreferences.getInt("numStrawberries", 0);
-        numAecker = sharedPreferences.getInt("numAecker", 1);
-        numLand = sharedPreferences.getInt("numLand", 1);
-        String strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
-        numGurken = sharedPreferences.getInt("numGurken", 1);
-        //Initialisierung der gespeicherten Erdbeeren
-        strawberries = new Strawberry[numAecker * AECKER_MAX];
-
-        //um keine IndexoutofBoundException zu bekommen
-        if (!(strawberryStatus.equals(""))) {
-            //1. String auseinander nehmen, 2. aus den Daten auslesen
-            //Der erste Teil: wachsstatus, der zweite: Ackernummer, der dritte: Zeit
-            String[] strawberryStatusStrings = strawberryStatus.split("a");
-            int stringsCounter = 0;
-            for (int i = 0; i < (numAecker * 16); i++) {
-                strawberries[i] = new Strawberry(Integer.parseInt(strawberryStatusStrings[stringsCounter]), Integer.parseInt(strawberryStatusStrings[stringsCounter + 1]), Long.parseLong(strawberryStatusStrings[stringsCounter + 2]));
-                stringsCounter += 3;
-            }
-        } else {
-            for (int i = 0; i < (numAecker * 16); i++) {
-                strawberries[i] = new Strawberry((i / 16) + 1);
-            }
-        }
-
-        //Bei der ersten Initialisierung müssen wir noch die Preise einlesen
-        if (!initialsed) {
-            //Preise initialisieren
-            priceAecker = getPrice(0);
-            priceGurken = getPrice(1);
-            priceLand = getPrice(2);
-            initialsed = true;
-        }
-    }
-
-    //SharedPreferences wieder sicher verwahren
-    public void setSharedPreferences() {
-        SharedPreferences sharedPreferences = fullContext.getSharedPreferences("StrawberrySettings", 0);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt("numStrawberries", numStrawberries);
-        editor.putInt("numAecker", numAecker);
-        editor.putInt("numLand", numLand);
-        editor.putInt("numGurken", numGurken);
-
-        //Hier kommen alle derzeitigen Erdbeeren rein um gespeichert zu werden
-        StringBuilder strawberryStatus = new StringBuilder();
-        //Der erste Teil: wachsstatus, der zweite: Ackernummer, der dritte: Zeit
-        for (int i = 0; i < (numAecker * 16); i++) {
-            strawberryStatus.append(strawberries[i].getWachsStatus());
-            strawberryStatus.append("a");
-            strawberryStatus.append(strawberries[i].getAcker());
-            strawberryStatus.append("a");
-            strawberryStatus.append(strawberries[i].getTimeThisFruit());
-            strawberryStatus.append("a");
-        }
-        editor.putString("strawberryStatus", strawberryStatus.toString());
-
-        editor.apply();
     }
 
     //Was passiert wenn man den Touchscreen im FARM Modus berührt
@@ -297,22 +179,22 @@ public class FarmMode {
                         farmSettings.onTouchFarmSettings(motionEvent);
                     }
                     //War da ein Button?
-                    //fight button
-                    if (touchX1 >= bitmapSettingButtonX && touchX1 < (bitmapSettingButtonX + bitmapSettingButton.getWidth())
-                            && touchY1 >= bitmapSettingButtonY && touchY1 < (bitmapSettingButtonY + bitmapSettingButton.getHeight())) {
+                    //Settings Button
+                    if (touchX1 >= settingButtonX && touchX1 < (settingButtonX + settingButtonWidth)
+                            && touchY1 >= settingButtonY && touchY1 < (settingButtonY + settingButtonHeight)) {
                         farmModeSound.playSound(4, fullContext);
                         farmSettings = new FarmSettings(fullContext, screenX, screenY, globalVariables);
                         break;
                     }
-                    //gurke kaufen button
-                    if (touchX1 >= bitmapShopButtonX && touchX1 < (bitmapShopButtonX + bitmapShopButton.getWidth())
-                            && touchY1 >= bitmapShopButtonY && touchY1 < (bitmapShopButtonY + bitmapShopButton.getHeight())) {
+                    //Shop Button
+                    if (touchX1 >= shopButtonX && touchX1 < (shopButtonX + shopButtonWidth)
+                            && touchY1 >= shopButtonY && touchY1 < (shopButtonY + shopButtonHeight)) {
                         farmModeSound.playSound(4, fullContext);
                         farmShop = new FarmShop(fullContext, screenX, screenY, globalVariables);
                         break;
                     }
                     //Wir haben geklickt, in einem Klickergame müssen wir doch mit der Info irgendwas machen oder? :D
-                    gotClickedFarm();
+                    farmModeBackend.gotClickedFarm(zustand);
                 }
                 break;
 
@@ -390,56 +272,6 @@ public class FarmMode {
         return true;
     }
 
-    //Was passiert wenn der Spieler im FARM Modus klickt?
-    private void gotClickedFarm() {
-        globalVariables.incrementClickCount();
-        switch(zustand) {
-            case 0:
-                //Aussähen: Prüfen ob noch Platz ist, wenn ja: Aussähen.
-                for(int j = 1; j <= numGurken; j++) {
-                    if (numStrawberries < (numAecker * 16)) {
-                        for (int i = 0; i < numAecker * 16; i++) {
-                            if (globalVariables.getGold() >= STRAWBERRY_PRICE && strawberries[i].getWachsStatus() <= -1) {
-                                strawberries[i].setStrawberry();
-                                numStrawberries++;
-                                globalVariables.setGold(globalVariables.getGold() - STRAWBERRY_PRICE);
-                                if(j == 1) {
-                                    farmModeSound.playSound(1, fullContext);
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-                break;
-            case 1:
-                //Wachsen: Alles wächst viel schneller, aber es wächst auch schon so langsam.
-                if (numStrawberries > 0) {
-                    for (int i = 0; i < numAecker * 16; i++) {
-                        strawberries[i].incrWachsStatus(1);
-                    }
-                }
-                farmModeSound.playSound(2, fullContext);
-                break;
-            case 2:
-                //Ernten: Prüfen ob Erdbeeren fertig, wenn ja: Gold bekommen und Platz machen zum Aussähen
-                for(int j = 1; j <= numGurken; j++) {
-                    for (int i = 0; i < numAecker * 16; i++) {
-                        if (strawberries[i].getWachsStatus() >= 5) {
-                            strawberries[i].resetStrawberry();
-                            numStrawberries--;
-                            globalVariables.setGold(globalVariables.getGold() + 10);
-                            if (j == 1) {
-                                farmModeSound.playSound(3, fullContext);
-                            }
-                            break;
-                        }
-                    }
-                }
-                break;
-        }
-    }
-
     //Alle Bilder einlesen
     private void initialiseGrafics() {
         //Textposition setzen
@@ -482,52 +314,26 @@ public class FarmMode {
         bitmapBackgroundLoading = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.loadingscreen, 250, 250);
         bitmapBackgroundLoading = Bitmap.createScaledBitmap(bitmapBackgroundLoading, screenX, screenY, false);
 
-        //Buttons initialisieren
-
         //Einstellungen Öffnen Button
-        options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        bitmapSettingButton = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.button_setting, options);
-        //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
-        bitmapSettingButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.button_setting, 100, 100);
-        bitmapSettingButton = Bitmap.createScaledBitmap(bitmapSettingButton, getScaledBitmapSize(screenX, 1080, 276), getScaledBitmapSize(screenY, 1920, 289), false);
+        settingButtonWidth = getScaledBitmapSize(screenX, 1080, 276);
+        settingButtonHeight = getScaledBitmapSize(screenY, 1920, 186);
+        settingButtonX = getScaledCoordinates(screenX, 1080, 814);
+        settingButtonY = getScaledCoordinates(screenY, 1920, 156);
 
         //Shop Öffnen Button
-        options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        bitmapShopButton = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.button_shop, options);
-        bitmapShopButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.button_shop, 100, 100);
-        bitmapShopButton = Bitmap.createScaledBitmap(bitmapShopButton, getScaledBitmapSize(screenX, 1080, 211), getScaledBitmapSize(screenY, 1920, 289), false);
-
-        bitmapSettingButtonX = getScaledCoordinates(screenX, 1080, 814);
-        bitmapSettingButtonY = getScaledCoordinates(screenY, 1920, 156);
-        bitmapShopButtonX = getScaledCoordinates(screenX, 1080, 603);
-        bitmapShopButtonY = getScaledCoordinates(screenY, 1920, 158);
+        shopButtonWidth = getScaledBitmapSize(screenX, 1080, 211);
+        shopButtonHeight = getScaledBitmapSize(screenY, 1920, 162);
+        shopButtonX = getScaledCoordinates(screenX, 1080, 603);
+        shopButtonY = getScaledCoordinates(screenY, 1920, 220);
 
         //Wir haben alles geladen
         loading = false;
     }
 
-    //Gibt den Preis der Elemente aus dem Shop aus
-    private int getPrice(int whichOne) {
-        //whichOne Legende: 0: Acker, 1: Gurke, 2: Land, 3: Werkzeug
-        switch (whichOne) {
-            case 0:
-                return (int) (50*Math.pow((double) numAecker, 1.7));
-            case 1:
-                return (int) (500*Math.pow((double) numGurken, 1.5));
-            case 2:
-                return (int) (50*Math.pow((double) (numLand*8), 1.7));
-            case 3:
-                return 42;
-        }
-        return -1;
-    }
-
     //Wenn wir den Modus verlassen
     public GlobalVariables recycle() {
         loading = true;
-        setSharedPreferences();
+        farmModeBackend.setSharedPreferences();
 
         //Sound recyclen
         farmModeSound.recycle();
@@ -536,13 +342,25 @@ public class FarmMode {
         bitmapBackgroundLand = null;
         bitmapBackgroundOverlay.recycle();
         bitmapBackgroundOverlay = null;
-        bitmapShopButton.recycle();
-        bitmapShopButton = null;
-        bitmapSettingButton.recycle();
-        bitmapSettingButton = null;
-
         return globalVariables;
     }
+
+    public void onBackPressed() {
+        if (farmShop != null) {
+            farmShop.recycle();
+            farmShop = null;
+        }
+        if (farmSettings != null) {
+            farmSettings.recycle();
+            farmSettings = null;
+        }
+    }
+
+    public void getSharedPreferences() {
+        farmModeBackend.getSharedPreferences();
+    }
+
+    public void setSharedPreferences() {
+        farmModeBackend.setSharedPreferences();
+    }
 }
-
-

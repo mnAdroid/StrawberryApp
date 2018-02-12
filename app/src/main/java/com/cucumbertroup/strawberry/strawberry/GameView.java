@@ -351,7 +351,10 @@ class GameView extends SurfaceView implements Runnable {
     }
     public void onBackPressed()
     {
-        globalVariables.setGameMode(0);
+        if (globalVariables.getGameMode() == 1)
+            globalVariables.setGameMode(0);
+        if (globalVariables.getGameMode() == 0 && farmMode != null)
+            farmMode.onBackPressed();
     }
 
     private void showToast(String text) {
