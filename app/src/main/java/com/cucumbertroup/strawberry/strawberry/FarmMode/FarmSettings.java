@@ -26,7 +26,7 @@ import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.decodeS
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledBitmapSize;
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledCoordinates;
 
-public class FarmSettings {
+class FarmSettings {
 
     //Der gespeicherte Context
     private Context fullContext;
@@ -48,12 +48,9 @@ public class FarmSettings {
     private int bitmapMusikAnAusButtonX, bitmapMusikAnAusButtonY;
     private int bitmapResetButtonX, bitmapResetButtonY;
 
-    //Musik initialisieren
-    private SoundPool soundPool;
-    private int click1 = -1;
-
     //Globale Variablenübertragungsklasse ;)
     private GlobalVariables globalVariables;
+    private FarmModeSound farmModeSound;
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     FarmSettings(Context context, int screenX, int screenY, GlobalVariables globalVariables) {
@@ -71,7 +68,7 @@ public class FarmSettings {
         initialiseGrafics();
 
         //Musik einlesen
-        initialiseSound(fullContext);
+        farmModeSound = FarmModeSound.getInstance(globalVariables, context);
     }
 
     //ZEICHNEN
@@ -110,14 +107,14 @@ public class FarmSettings {
                 //fight button
                 if (touchX1 >= bitmapFightButtonX && touchX1 < (bitmapFightButtonX + bitmapFightButton.getWidth())
                         && touchY1 >= bitmapFightButtonY && touchY1 < (bitmapFightButtonY + bitmapFightButton.getHeight())) {
-                    playSound();
+                    farmModeSound.playSound(4, fullContext);
                     globalVariables.setGameMode(1);
                     break;
                 }
                 //musik an aus button
                 if (touchX1 >= bitmapMusikAnAusButtonX && touchX1 < (bitmapMusikAnAusButtonX + bitmapMusikAnAusButton.getWidth())
                         && touchY1 >= bitmapMusikAnAusButtonY && touchY1 < (bitmapMusikAnAusButtonY + bitmapMusikAnAusButton.getHeight())) {
-                    playSound();
+                    farmModeSound.playSound(4, fullContext);
                     if (globalVariables.getSoundOn()) {
                         globalVariables.setMusicOn(false);
                         //Musik pausieren muss noch rein
@@ -133,7 +130,7 @@ public class FarmSettings {
                 if (touchX1 >= bitmapResetButtonX && touchX1 < (bitmapResetButtonX + bitmapMusikAnAusButton.getWidth())
                         && touchY1 >= bitmapResetButtonY && touchY1 < (bitmapResetButtonY + bitmapMusikAnAusButton.getHeight())) {
                     //Buttonsound
-                    playSound();
+                    farmModeSound.playSound(4, fullContext);
                     resetGame();
                     break;
                 }
@@ -191,39 +188,6 @@ public class FarmSettings {
         editor.apply();
     }
 
-    //Jede Art von Sound abspielen
-    private void playSound() {
-        //Buttonklick
-        if (globalVariables.getSoundOn()) {
-            soundPool.play(click1, 1, 1, 0, 0, 1);
-        }
-    }
-
-    //Musik einlesen
-    private void initialiseSound(Context context) {
-        //In neuen Versionen soll man das halt jetzt so machen
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            soundPool = new SoundPool.Builder()
-                    .setMaxStreams(10)
-                    .build();
-        } else {
-            //Aber ich will die alten Versionen trz nicht verlieren deshalb lassen wir das mal drin
-            soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
-        }
-
-        try {
-            AssetManager assetManager = context.getAssets();
-            AssetFileDescriptor descriptor;
-
-            //Musik tatsächlich einladen
-            descriptor = assetManager.openFd("click1.wav");
-            click1 = soundPool.load(descriptor, 0);
-        } catch (IOException e) {
-            //Errormessage
-            Log.e("error", "failed to load sound files");
-        }
-    }
-
     //Alle Bilder einlesen
     private void initialiseGrafics() {
         //Textposition setzen
@@ -266,9 +230,6 @@ public class FarmSettings {
 
     //Wenn wir den Modus verlassen
     GlobalVariables recycle() {
-        soundPool.release();
-        click1 = -1;
-
         //Bitmaps Recyclen
         bitmapFightButton.recycle();
         bitmapFightButton = null;

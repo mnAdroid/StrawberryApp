@@ -2,26 +2,16 @@ package com.cucumbertroup.strawberry.strawberry.FarmMode;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.AssetFileDescriptor;
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.media.SoundPool;
-import android.os.Build;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
 import com.cucumbertroup.strawberry.strawberry.GlobalVariables;
 import com.cucumbertroup.strawberry.strawberry.R;
-
-import java.io.IOException;
-import java.util.Random;
 
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.decodeSampledBitmapFromResource;
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledBitmapSize;
@@ -58,7 +48,6 @@ public class FarmMode {
     //Anzahl und Preis der Länderein
     private int numLand;
     private int priceLand;
-    private final int LAND_MAX = 8;
     //Anzahl und Preis der arbeitenden Gurken
     private int numGurken;
     private int priceGurken;
@@ -86,33 +75,6 @@ public class FarmMode {
     //Qualität: 250 - 1000
     private int bitmapMainQuality;
 
-    //Musik initialisieren
-    private SoundPool soundPool;
-    private int click1 = -1;
-    private int clock1 = -1;
-    private int clock2 = -1;
-    private int dirt1 = -1;
-    private int dirt2 = -1;
-    private int dirt3 = -1;
-    private int dirt4 = -1;
-    private int dirt5 = -1;
-    private int dirt6 = -1;
-    private int dirt7 = -1;
-    private int dirt8 = -1;
-    private int dirt9 = -1;
-    private int gold1 = -1;
-    private int plop1 = -1;
-    private int plop2 = -1;
-    private int plop3 = -1;
-    private int plop4 = -1;
-    private int plop5 = -1;
-    private int plop6 = -1;
-    private int plop7 = -1;
-    private int plop8 = -1;
-    private int plop9 = -1;
-    private MediaPlayer backgroundloop1; //Farmmusik
-    private boolean ticktack = true; //für den Uhr Sound
-
     //Laden wir gerade
     private boolean loading;
     //Laden wir das erste mal
@@ -120,6 +82,9 @@ public class FarmMode {
 
     //Globale Variablenübertragungsklasse ;)
     private GlobalVariables globalVariables;
+
+    //Musikabspielklasse
+    private FarmModeSound farmModeSound;
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     public FarmMode(Context context, int screenX, int screenY, GlobalVariables globalVariables) {
@@ -143,7 +108,7 @@ public class FarmMode {
         initialiseGrafics();
 
         //Musik einlesen
-        initialiseSound(fullContext);
+        farmModeSound = FarmModeSound.getInstance(globalVariables, context);
 
         //Daten einlesen
         getSharedPreferences();
@@ -157,7 +122,7 @@ public class FarmMode {
         for(int i = 0; i < numStrawberries; i++) {
             strawberries[i].update();
         }
-        playSound(0);
+        farmModeSound.playSound(0, fullContext);
     }
 
     //ZEICHNEN
@@ -335,14 +300,14 @@ public class FarmMode {
                     //fight button
                     if (touchX1 >= bitmapSettingButtonX && touchX1 < (bitmapSettingButtonX + bitmapSettingButton.getWidth())
                             && touchY1 >= bitmapSettingButtonY && touchY1 < (bitmapSettingButtonY + bitmapSettingButton.getHeight())) {
-                        playSound(4);
+                        farmModeSound.playSound(4, fullContext);
                         farmSettings = new FarmSettings(fullContext, screenX, screenY, globalVariables);
                         break;
                     }
                     //gurke kaufen button
                     if (touchX1 >= bitmapShopButtonX && touchX1 < (bitmapShopButtonX + bitmapShopButton.getWidth())
                             && touchY1 >= bitmapShopButtonY && touchY1 < (bitmapShopButtonY + bitmapShopButton.getHeight())) {
-                        playSound(4);
+                        farmModeSound.playSound(4, fullContext);
                         farmShop = new FarmShop(fullContext, screenX, screenY, globalVariables);
                         break;
                     }
@@ -439,7 +404,7 @@ public class FarmMode {
                                 numStrawberries++;
                                 globalVariables.setGold(globalVariables.getGold() - STRAWBERRY_PRICE);
                                 if(j == 1) {
-                                    playSound(1);
+                                    farmModeSound.playSound(1, fullContext);
                                 }
                                 break;
                             }
@@ -454,7 +419,7 @@ public class FarmMode {
                         strawberries[i].incrWachsStatus(1);
                     }
                 }
-                playSound(2);
+                farmModeSound.playSound(2, fullContext);
                 break;
             case 2:
                 //Ernten: Prüfen ob Erdbeeren fertig, wenn ja: Gold bekommen und Platz machen zum Aussähen
@@ -465,205 +430,13 @@ public class FarmMode {
                             numStrawberries--;
                             globalVariables.setGold(globalVariables.getGold() + 10);
                             if (j == 1) {
-                                playSound(3);
+                                farmModeSound.playSound(3, fullContext);
                             }
                             break;
                         }
                     }
                 }
                 break;
-        }
-    }
-
-    //Jede Art von Sound abspielen
-    private void playSound(int whichOne) {
-        //whichone Legende: 0 -> Hintergrundmusik; 1 -> Sähsound; 2 -> Uhr Sound; 3 -> Erntesound; 4 -> Buttonklick; 5 -> Geld; 6 -> hit; 7 -> fireballsound; 8 -> knifesharpener
-
-        //Zufallszahl generieren um die aussäh und erntegeräusche abwechslungsreicher zu machen
-        Random random = new Random();
-        int randomInt = 1;
-
-        for (int i = 1; i <= 9; i++) {
-            randomInt = random.nextInt(10);
-        }
-        switch (whichOne) {
-            case 0:
-                if (globalVariables.getMusicOn())
-                    backgroundMusicPlayer();
-                break;
-            case 1:
-                if (globalVariables.getSoundOn()) {
-                    switch (randomInt) {
-                        case 1:
-                            soundPool.play(dirt1, 1, 1, 0, 0, 1);
-                            break;
-                        case 2:
-                            soundPool.play(dirt2, 1, 1, 0, 0, 1);
-                            break;
-                        case 3:
-                            soundPool.play(dirt3, 1, 1, 0, 0, 1);
-                            break;
-                        case 4:
-                            soundPool.play(dirt4, 1, 1, 0, 0, 1);
-                            break;
-                        case 5:
-                            soundPool.play(dirt5, 1, 1, 0, 0, 1);
-                            break;
-                        case 6:
-                            soundPool.play(dirt6, 1, 1, 0, 0, 1);
-                            break;
-                        case 7:
-                            soundPool.play(dirt7, 1, 1, 0, 0, 1);
-                            break;
-                        case 8:
-                            soundPool.play(dirt8, 1, 1, 0, 0, 1);
-                            break;
-                        case 9:
-                            soundPool.play(dirt9, 1, 1, 0, 0, 1);
-                            break;
-                    }
-                }
-                break;
-            case 2:
-                if (globalVariables.getSoundOn()) {
-                    if (ticktack) {
-                        soundPool.play(clock1, 1, 1, 0, 0, 1);
-                        ticktack = false;
-                    } else {
-                        soundPool.play(clock2, 1, 1, 0, 0, 1);
-                        ticktack = true;
-                    }
-                }
-                break;
-            case 3:
-                if (globalVariables.getSoundOn()) {
-                    switch (randomInt) {
-                        case 1:
-                            soundPool.play(plop1, 1, 1, 0, 0, 1);
-                            break;
-                        case 2:
-                            soundPool.play(plop2, 1, 1, 0, 0, 1);
-                            break;
-                        case 3:
-                            soundPool.play(plop3, 1, 1, 0, 0, 1);
-                            break;
-                        case 4:
-                            soundPool.play(plop4, 1, 1, 0, 0, 1);
-                            break;
-                        case 5:
-                            soundPool.play(plop5, 1, 1, 0, 0, 1);
-                            break;
-                        case 6:
-                            soundPool.play(plop6, 1, 1, 0, 0, 1);
-                            break;
-                        case 7:
-                            soundPool.play(plop7, 1, 1, 0, 0, 1);
-                            break;
-                        case 8:
-                            soundPool.play(plop8, 1, 1, 0, 0, 1);
-                            break;
-                        case 9:
-                            soundPool.play(plop9, 1, 1, 0, 0, 1);
-                            break;
-                    }
-                }
-                break;
-            case 4:
-                if (globalVariables.getSoundOn())
-                    soundPool.play(click1, 1, 1, 0, 0, 1);
-                break;
-            case 5:
-                if (globalVariables.getSoundOn())
-                    soundPool.play(gold1, 1, 1, 0, 0, 1);
-                break;
-        }
-    }
-
-    //Musik einlesen
-    private void initialiseSound(Context context) {
-        //In neuen Versionen soll man das halt jetzt so machen
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            soundPool = new SoundPool.Builder()
-                    .setMaxStreams(10)
-                    .build();
-        } else {
-            //Aber ich will die alten Versionen trz nicht verlieren deshalb lassen wir das mal drin
-            soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
-        }
-
-        try {
-            AssetManager assetManager = context.getAssets();
-            AssetFileDescriptor descriptor;
-
-            //Musik tatsächlich einladen
-            descriptor = assetManager.openFd("click1.wav");
-            click1 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("clock1.wav");
-            clock1 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("clock2.wav");
-            clock2 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("dirt1.wav");
-            dirt1 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("dirt2.wav");
-            dirt2 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("dirt3.wav");
-            dirt3 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("dirt4.wav");
-            dirt4 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("dirt5.wav");
-            dirt5 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("dirt6.wav");
-            dirt6 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("dirt7.wav");
-            dirt7 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("dirt8.wav");
-            dirt8 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("dirt9.wav");
-            dirt9 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("gold1.wav");
-            gold1 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("plop1.wav");
-            plop1 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("plop2.wav");
-            plop2 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("plop3.wav");
-            plop3 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("plop4.wav");
-            plop4 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("plop5.wav");
-            plop5 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("plop6.wav");
-            plop6 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("plop7.wav");
-            plop7 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("plop8.wav");
-            plop8 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("plop9.wav");
-            plop9 = soundPool.load(descriptor, 0);
-        } catch (IOException e) {
-            //Errormessage
-            Log.e("error", "failed to load sound files");
         }
     }
 
@@ -751,55 +524,13 @@ public class FarmMode {
         return -1;
     }
 
-    //Hintergrundmusikverwaltung
-    private void backgroundMusicPlayer() {
-        try {
-            //Beim ersten Start der Farmmusik
-            if (backgroundloop1 == null && globalVariables.getMusicOn()) {
-                backgroundloop1 = MediaPlayer.create(fullContext, R.raw.gameloop1);
-                backgroundloop1.setLooping(true);
-                backgroundloop1.start();
-            }
-            //Wenn wir nachträglich wieder in den Farmmodus wechseln
-            if (backgroundloop1 != null && !backgroundloop1.isPlaying() && globalVariables.getMusicOn()) {
-                backgroundloop1.start();
-            }
-        } catch (IllegalStateException e) {
-            Log.d("gamemode1 Error", e.toString());
-        }
-    }
-
     //Wenn wir den Modus verlassen
     public GlobalVariables recycle() {
         loading = true;
         setSharedPreferences();
-        //Audio releasen
-        if (backgroundloop1 != null)
-            backgroundloop1.pause();
-        soundPool.release();
-        click1 = -1;
-        clock1 = -1;
-        clock2 = -1;
-        dirt1 = -1;
-        dirt2 = -1;
-        dirt3 = -1;
-        dirt4 = -1;
-        dirt5 = -1;
-        dirt6 = -1;
-        dirt7 = -1;
-        dirt8 = -1;
-        dirt9 = -1;
-        gold1 = -1;
-        plop1 = -1;
-        plop2 = -1;
-        plop3 = -1;
-        plop4 = -1;
-        plop5 = -1;
-        plop6 = -1;
-        plop7 = -1;
-        plop8 = -1;
-        plop9 = -1;
 
+        //Sound recyclen
+        farmModeSound.recycle();
         //Bitmaps Recyclen
         bitmapBackgroundLand.recycle();
         bitmapBackgroundLand = null;

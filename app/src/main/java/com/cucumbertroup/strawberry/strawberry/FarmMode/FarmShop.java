@@ -23,7 +23,7 @@ import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.decodeS
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledBitmapSize;
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledCoordinates;
 
-public class FarmShop {
+class FarmShop {
     //Der gespeicherte Context
     private Context fullContext;
 
@@ -63,13 +63,9 @@ public class FarmShop {
     private int bitmapLandKaufenButtonX, bitmapLandKaufenButtonY;
     private int bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY;
 
-    //Musik initialisieren
-    private SoundPool soundPool;
-    private int click1 = -1;
-    private int gold1 = -1;
-
     //Globale Variablenübertragungsklasse ;)
     private GlobalVariables globalVariables;
+    private FarmModeSound farmModeSound;
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     FarmShop(Context context, int screenX, int screenY, GlobalVariables globalVariables) {
@@ -87,7 +83,7 @@ public class FarmShop {
         initialiseGrafics();
 
         //Musik einlesen
-        initialiseSound(fullContext);
+        farmModeSound = FarmModeSound.getInstance(globalVariables, context);
 
         //Daten einlesen
         getSharedPreferences();
@@ -170,9 +166,9 @@ public class FarmShop {
                         && touchY1 >= bitmapAckerKaufenButtonY && touchY1 < (bitmapAckerKaufenButtonY + bitmapAckerKaufenButton.getHeight())) {
                     if (globalVariables.getGold() >= (priceAecker + STRAWBERRY_PRICE) && numAecker < AECKER_MAX) {
                         ackerGekauft();
-                        playSound(5);
+                        farmModeSound.playSound(5, fullContext);
                     } else
-                        playSound(4);
+                        farmModeSound.playSound(4, fullContext);
                     break;
                 }
                 //land kaufen Button
@@ -182,9 +178,9 @@ public class FarmShop {
                         numLand++;
                         globalVariables.setGold(globalVariables.getGold() - priceLand);
                         priceLand = getPrice(2);
-                        playSound(5);
+                        farmModeSound.playSound(5, fullContext);
                     } else
-                        playSound(4);
+                        farmModeSound.playSound(4, fullContext);
                     break;
                 }
                 //gurke kaufen button
@@ -194,9 +190,9 @@ public class FarmShop {
                         numGurken++;
                         globalVariables.setGold(globalVariables.getGold() - priceGurken);
                         priceGurken = getPrice(1);
-                        playSound(5);
+                        farmModeSound.playSound(5, fullContext);
                     } else
-                        playSound(4);
+                        farmModeSound.playSound(4, fullContext);
                     break;
                 }
 
@@ -205,39 +201,6 @@ public class FarmShop {
                 break;
         }
         return false;
-    }
-
-    //Jede Art von Sound abspielen
-    private void playSound(int whichOne) {
-        //whichone Legende: 4 -> Buttonklick; 5 -> Geld
-        switch (whichOne) {
-            case 4:
-                if (globalVariables.getSoundOn())
-                    soundPool.play(click1, 1, 1, 0, 0, 1);
-                break;
-            case 5:
-                if (globalVariables.getSoundOn())
-                    soundPool.play(gold1, 1, 1, 0, 0, 1);
-                break;
-        }
-    }
-
-    //Musik einlesen
-    private void initialiseSound(Context context) {
-        try {
-            AssetManager assetManager = context.getAssets();
-            AssetFileDescriptor descriptor;
-
-            //Musik tatsächlich einladen
-            descriptor = assetManager.openFd("click1.wav");
-            click1 = soundPool.load(descriptor, 0);
-
-            descriptor = assetManager.openFd("gold1.wav");
-            gold1 = soundPool.load(descriptor, 0);
-        } catch (Exception e) {
-            //Errormessage
-            Log.e("error", "failed to load sound files: " + e.toString());
-        }
     }
 
     //Wenn ein Acker gekauft wurde
@@ -307,10 +270,6 @@ public class FarmShop {
 
     //Wenn wir den Modus verlassen
     GlobalVariables recycle() {
-        soundPool.release();
-        click1 = -1;
-        gold1 = -1;
-
         //Bitmaps Recyclen
         bitmapAckerKaufenButton.recycle();
         bitmapAckerKaufenButton = null;

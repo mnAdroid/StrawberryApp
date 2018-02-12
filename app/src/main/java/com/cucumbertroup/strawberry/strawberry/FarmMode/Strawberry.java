@@ -4,7 +4,7 @@ package com.cucumbertroup.strawberry.strawberry.FarmMode;
  * Created by Max on 27.08.2017.
  */
 
-public class Strawberry {
+class Strawberry {
     private int wachsStatus;
     //-1: nicht gesäht, 0: ausgesäht, 1-4: Wachstumsphasen, 5: Ausgewachsen
     //wächst automatisch um 0.1 pro adc
