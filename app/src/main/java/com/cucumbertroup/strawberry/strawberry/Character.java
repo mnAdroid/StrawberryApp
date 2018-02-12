@@ -12,12 +12,10 @@ public class Character {
     private int defense;
     private int experience;
     private int level;
-    private long lastAttackTime;
-    private int baseAttackspeed;
-    private int attackspeed;
-    private final int ATTACKSPEED_CAP = 500;
+    private int maxMana;
+    private int mana;
 
-    public Character(Weapon equipedWeapon, int baseDamage, int life, int maxLife, int defense, int experience, int level, int baseAttackspeed) {
+    Character(Weapon equipedWeapon, int baseDamage, int life, int maxLife, int defense, int experience, int level, int maxMana, int mana) {
         this.equipedWeapon = equipedWeapon;
         this.baseDamage = baseDamage;
         this.life = life;
@@ -25,94 +23,63 @@ public class Character {
         this.defense = defense;
         this.experience = experience;
         this.level = level;
-        this.baseAttackspeed = baseAttackspeed;
-        this.attackspeed = baseAttackspeed + equipedWeapon.getAttackspeed();
+        this.maxMana = maxMana;
+        this.mana = mana;
     }
 
-    public Weapon getEquipedWeapon() {
+    Weapon getEquipedWeapon() {
         return equipedWeapon;
     }
 
-    public int getMeleeDamage() {
+    int getMeleeDamage() {
         return baseDamage + equipedWeapon.getDamage();
     }
 
-    public int getBaseDamage() {
+    int getBaseDamage() {
         return baseDamage;
     }
 
-    public int getLife() {
+    int getLife() {
         return life;
     }
 
     //reset des Lebens nach einem Kampf
-    public void setLife() { life = maxLife; }
+    void setLife() { life = maxLife; }
 
-    public int getBaseDefense() {
+    int getBaseDefense() {
         return defense;
     }
 
-    public int getExperience() {
+    int getExperience() {
         return experience;
     }
 
-    public int getLevel() {
+    int getLevel() {
         return level;
     }
 
-    public int getAttackspeed() {
-        return attackspeed;
-    }
+    int getMaxLife() { return maxLife; }
 
-    public long getLastAttackTime() {
-        return lastAttackTime;
-    }
-
-    public void setLastAttackTime() {
-        lastAttackTime = System.currentTimeMillis();
-    }
-
-    public void resetLastAttackTime() {
-        lastAttackTime = 0;
-    }
-
-    public int getBaseAttackspeed() {
-        return baseAttackspeed;
-    }
-
-    public boolean setExperience(int experience) {
+    boolean setExperience(int experience) {
         this.experience += experience;
         return canLevelUp();
     }
 
-    public boolean canLevelUp() {
-        if (level <= 15 && experience >= (10 * level + 7) &&  (10 * level + 7) > 0) {
-            return true;
-        }
-        if (level <= 30 && level > 15 && experience >= (25 * level - 38) && (25 * level - 38) > 0) {
-            return true;
-        }
-        if (level <= 60 && level > 30 && experience >= (45 * level - 158) && (45 * level - 158) > 0) {
-            return true;
-        }
-        return false;
+    boolean canLevelUp() {
+        return experience >= getExperiencedNeeded() && getExperiencedNeeded() > 0;
     }
 
-    public void setEquipedWeapon(Weapon weapon) {
+    void setEquipedWeapon(Weapon weapon) {
         equipedWeapon = weapon;
-        attackspeedUpdate();
     }
 
-    public void levelUp(int baseDamagePlus, int lifePlus, int defensePlus, int attackspeedPlus) {
-        if (canLevelUp() == true) {
+    void levelUp(int baseDamagePlus, int lifePlus, int defensePlus, int manaPlus) {
+        if (canLevelUp()) {
             baseDamage += baseDamagePlus;
             maxLife += lifePlus;
             defense += defensePlus;
-            //Vorerst ist das Attackspeedcap 2x pro Sekunde
-            if (attackspeed >= ATTACKSPEED_CAP + 100) {
-                baseAttackspeed -= attackspeedPlus;
-                attackspeedUpdate();
-            }
+            if (maxMana <= 100)
+                maxMana += manaPlus;
 
             if (level <= 15) {
                 experience -= 10*level + 7;
@@ -127,12 +94,45 @@ public class Character {
         }
     }
 
-    public void gotAttacked(int damage) {
-        life -= damage;
+    boolean gotAttacked(int damage) {
+        if (life - damage < 0) {
+            life = 0;
+            return false;
+        }
+        else
+            life -= damage;
+        return true;
+        //return true = alive; false = dead;
     }
 
-    private void attackspeedUpdate() {
-        attackspeed = baseAttackspeed + equipedWeapon.getAttackspeed();
+    int getExperiencedNeeded() {
+        if (level <= 15)
+            return (10 * level + 7);
+        if (level <= 30)
+            return (25 * level - 38);
+        if (level <= 60)
+            return (45 * level - 158);
+        return -1;
     }
 
+    int getMaxMana() {
+        return maxMana;
+    }
+
+    int getMana() {
+        return mana;
+    }
+
+    public void useMana(int mana) {
+        this.mana -= mana;
+    }
+
+    void recoverMana(int mana) {
+        if (this.mana + mana < maxMana) {
+            this.mana += mana;
+        }
+        else {
+            this.mana = maxMana;
+        }
+    }
 }

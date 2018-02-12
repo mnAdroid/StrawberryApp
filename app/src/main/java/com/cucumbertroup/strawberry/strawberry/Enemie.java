@@ -48,7 +48,7 @@ public class Enemie {
     }
     */
 
-    public Enemie(String name, int level) {
+    Enemie(String name, int level) {
         Random random = new Random();
         switch (name) {
             case "Goblin":
@@ -61,7 +61,7 @@ public class Enemie {
                 this.experience = 5 + Math.abs(level/4);
                 this.lootLevel = 0;
                 this.alive = true;
-                this.attackspeed = weapon.getAttackspeed();
+                this.attackspeed = 1000;
                 this.lastAttackTime = System.currentTimeMillis();
                 this.attackRightNow = false;
                 //Damit der Gegner nicht immer exakt zur gleichen Zeit angreift
@@ -78,7 +78,7 @@ public class Enemie {
                 this.experience = 15 + Math.abs(level/4);
                 this.lootLevel = 1;
                 this.alive = true;
-                this.attackspeed = weapon.getAttackspeed() + 1000;
+                this.attackspeed = 1000;
                 this.lastAttackTime = System.currentTimeMillis();
                 this.attackRightNow = false;
                 //Damit der Gegner nicht immer exakt zur gleichen Zeit angreift
@@ -95,7 +95,7 @@ public class Enemie {
                 this.experience = 20 + Math.abs(level/4);
                 this.lootLevel = 1;
                 this.alive = true;
-                this.attackspeed = weapon.getAttackspeed() - 500;
+                this.attackspeed = 1000;
                 this.lastAttackTime = System.currentTimeMillis();
                 this.attackRightNow = false;
                 //Damit der Gegner nicht immer exakt zur gleichen Zeit angreift
@@ -112,7 +112,7 @@ public class Enemie {
                 this.experience = 20 + Math.abs(level/4);
                 this.lootLevel = 2;
                 this.alive = true;
-                this.attackspeed = weapon.getAttackspeed() + 2000;
+                this.attackspeed = 1000;
                 this.lastAttackTime = System.currentTimeMillis();
                 this.attackRightNow = false;
                 //Damit der Gegner nicht immer exakt zur gleichen Zeit angreift
@@ -122,7 +122,7 @@ public class Enemie {
         }
     }
 
-    public int getDamage() {
+    int getDamage() {
         return damage;
     }
 
@@ -130,7 +130,7 @@ public class Enemie {
         return name;
     }
 
-    public int getLife() {
+    int getLife() {
         return life;
     }
 
@@ -142,13 +142,13 @@ public class Enemie {
         return positionY;
     }
 
-    public int getExperience() {
+    int getExperience() {
         return experience;
     }
 
-    public boolean getLifeStatus() { return alive; }
+    boolean getLifeStatus() { return alive; }
 
-    public void defend(float damage) {
+    void defend(float damage) {
         if (life > 0) {
             //Die ersten 10 Defense Punkte zehlen 1 zu 1 als Abwehr. Danach nur noch zur Hälfte
             if (defense < 10) {
@@ -166,7 +166,7 @@ public class Enemie {
         }
     }
 
-    public boolean attackUpdate() {
+    boolean attackUpdate() {
         if (randomAttackSpeedChangeBoolean == 0) {
             if (System.currentTimeMillis() - lastAttackTime > attackspeed + randomAttackspeedChange && !attackRightNow) {
                 attackRightNow = true;
@@ -191,21 +191,21 @@ public class Enemie {
         return attackRightNow;
     }
 
-    public boolean getAttackRightNow() {
+    boolean getAttackRightNow() {
         return attackRightNow;
     }
 
-    public void attackRightNowReset() {
+    void attackRightNowReset() {
         attackRightNow = false;
         lastAttackTime = System.currentTimeMillis();
         randomAttackspeedChange = -1;
     }
 
-    public long getLastAttackTime() {
+    long getLastAttackTime() {
         return lastAttackTime;
     }
 
-    public void trueDamage(int trueDamage) {
+    void trueDamage(int trueDamage) {
         if (life > 0)
             life -= trueDamage;
         if (life <= 0)

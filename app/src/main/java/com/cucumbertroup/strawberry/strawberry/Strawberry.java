@@ -15,52 +15,54 @@ public class Strawberry {
     //Um zu wissen welche Erdbeere (auf welchem Acker, welche Zahl)
     private int acker;
 
-    public Strawberry(int acker) {
+    Strawberry(int acker) {
         wachsStatus = -1;
         this.acker = acker;
     }
 
-    public Strawberry(int wachsStatus, int acker, long timeThisFruit) {
+    Strawberry(int wachsStatus, int acker, long timeThisFruit) {
         this.wachsStatus = wachsStatus;
         this.acker = acker;
         this.timeThisFruit = timeThisFruit;
     }
 
-    public void incrWachsStatus(int setz) {
+    void incrWachsStatus(int setz) {
         //wir wollen ja keine Erdbeeren wachsen lassen die nicht gesäht oder schon ausgewachsen sind
         if (wachsStatus < 5 && wachsStatus >= 0) {
             wachsStatus += setz;
         }
     }
     //um Bedingungen beim Denken zu finden
-    public int getWachsStatus() {
+    int getWachsStatus() {
         return wachsStatus;
     }
 
     //zum Zeichnen
-    public int getAcker() {
+    int getAcker() {
         return acker;
     }
 
     //zum einlesen gespeicherter Daten
-    public long getTimeThisFruit() { return timeThisFruit; }
+    long getTimeThisFruit() { return timeThisFruit; }
 
     //Erdbeere wird gesäht
-    public void setStrawberry() {
+    void setStrawberry() {
         wachsStatus = 0;
         timeThisFruit = System.currentTimeMillis();
     }
 
     //Erdbeere wird geerntet
-    public void resetStrawberry() {
+    void resetStrawberry() {
         wachsStatus = -1;
     }
 
-    public void update() {
+    boolean update() {
         //Zeit seit Erstellung / letztem wachsStatus-Update der Erdbeere überprüfen und möglicherweise wachsStatus erhöhen
         if (System.currentTimeMillis() - timeThisFruit > 10000 && wachsStatus <5 && wachsStatus >= 0) {
             timeThisFruit += 10000;
             wachsStatus++;
+            return true;
         }
+        return false;
     }
 }

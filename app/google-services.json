@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "541344101799",
+    "firebase_url": "https://strawberryfarm-e6c61.firebaseio.com",
+    "project_id": "strawberryfarm-e6c61",
+    "storage_bucket": "strawberryfarm-e6c61.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:541344101799:android:3b611f7ad70c2134",
+        "android_client_info": {
+          "package_name": "com.cucumbertroup.strawberry.strawberry"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "541344101799-dod69vcjrm72j1afit940eb8f0991phd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cucumbertroup.strawberry.strawberry",
+            "certificate_hash": "3a4dd7fbb9d70b42a8feab073f67c68e32eab74c"
+          }
+        },
+        {
+          "client_id": "541344101799-kqhl3mh5i0fkb71qka5bprgloucvcnaa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBegc4JD0ILfWLUpWV4ZSEnSxjJwj87Z74"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "541344101799-kqhl3mh5i0fkb71qka5bprgloucvcnaa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

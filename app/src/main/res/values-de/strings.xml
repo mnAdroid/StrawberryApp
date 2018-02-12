@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Strawberry</string>
+    <string name="user_name">Benutzername</string>
+    <string name="password">Passwort</string>
+    <string name="mail">E-Mail</string>
+    <string name="sign_up">Registrieren</string>
+    <string name="sign_in">Anmelden</string>
+    <string name="user_exists">Dieser Benutzer existiert bereits!</string>
+</resources>

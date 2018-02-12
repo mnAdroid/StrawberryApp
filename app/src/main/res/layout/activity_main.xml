@@ -6,4 +6,11 @@
     android:layout_height="match_parent"
     tools:context="com.cucumbertroup.strawberry.strawberry.MainActivity">
 
+    <android.gesture.GestureOverlayView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/gOverlay"
+        android:layout_gravity="center_horizontal">
+    </android.gesture.GestureOverlayView>
+
 </android.support.constraint.ConstraintLayout>
