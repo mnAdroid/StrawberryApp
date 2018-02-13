@@ -56,8 +56,8 @@ public class OnlineFeatures {
     private boolean userChanged;
     private final LinkedList<String> lUserInfos = new LinkedList<>();
 
-    private OnlineFeatures(GlobalVariables globalVariables, FirebaseAuth auth, FirebaseDatabase database) {
-        this.globalVariables = globalVariables;
+    private OnlineFeatures(FirebaseAuth auth, FirebaseDatabase database) {
+        globalVariables = GlobalVariables.getInstance();
         this.auth = auth;
         users = database.getReference("users");
         this.database = database;
@@ -70,9 +70,9 @@ public class OnlineFeatures {
         lBackupDataFarmSaved = false;
         lBackupDataFightSaved = false;
     }
-    public static synchronized OnlineFeatures getInstance(GlobalVariables globalVariables, FirebaseAuth auth, FirebaseDatabase database) {
+    public static synchronized OnlineFeatures getInstance(FirebaseAuth auth, FirebaseDatabase database) {
         if (OnlineFeatures.instance == null) {
-            OnlineFeatures.instance = new OnlineFeatures(globalVariables, auth, database);
+            OnlineFeatures.instance = new OnlineFeatures(auth, database);
         }
         return OnlineFeatures.instance;
     }

@@ -48,13 +48,13 @@ class FarmModeSound {
     private MediaPlayer backgroundloop1; //Farmmusik
     private boolean ticktack = true; //für den Uhr Sound
 
-    private FarmModeSound(GlobalVariables globalVariables, Context context) {
-        this.globalVariables = globalVariables;
+    private FarmModeSound(Context context) {
+        globalVariables = GlobalVariables.getInstance();
         initialiseSound(context);
     }
-    static synchronized FarmModeSound getInstance(GlobalVariables globalVariables, Context context) {
+    static synchronized FarmModeSound getInstance(Context context) {
         if (FarmModeSound.instance == null) {
-            FarmModeSound.instance = new FarmModeSound(globalVariables, context);
+            FarmModeSound.instance = new FarmModeSound(context);
         }
         return FarmModeSound.instance;
     }

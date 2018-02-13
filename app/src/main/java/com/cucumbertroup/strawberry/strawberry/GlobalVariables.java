@@ -5,6 +5,9 @@ package com.cucumbertroup.strawberry.strawberry;
  */
 
 public class GlobalVariables {
+    //Singleton
+    private static GlobalVariables instance;
+
     private int gold;
     private int clickCount;
     private boolean musicOn;
@@ -13,13 +16,24 @@ public class GlobalVariables {
     private boolean betaTester;
     private int gameMode;
 
-    GlobalVariables(int gold, int clickCount, boolean musicOn, boolean soundOn, boolean alphaTester, boolean betaTester){
+    private GlobalVariables(int gold, int clickCount, boolean musicOn, boolean soundOn, boolean alphaTester, boolean betaTester){
         this.alphaTester = alphaTester;
         this.betaTester = betaTester;
         this.clickCount = clickCount;
         this.gold = gold;
         this.musicOn = musicOn;
         this.soundOn = soundOn;
+    }
+
+    public static synchronized GlobalVariables getInstance(int gold, int clickCount, boolean musicOn, boolean soundOn, boolean alphaTester, boolean betaTester) {
+        if (GlobalVariables.instance == null) {
+            GlobalVariables.instance = new GlobalVariables(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
+        }
+        return GlobalVariables.instance;
+    }
+
+    public static synchronized GlobalVariables getInstance() {
+        return GlobalVariables.instance;
     }
 
     //Um die Variablen die die anderen Modi brauchen auch zur Verfügung zu stellen

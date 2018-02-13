@@ -70,7 +70,7 @@ public class FarmMode {
     private FarmModeBackend farmModeBackend;
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
-    public FarmMode(Context context, int screenX, int screenY, GlobalVariables globalVariables) {
+    public FarmMode(Context context, int screenX, int screenY) {
         //Auf den Context können alle FarmMode Funktionen zugreifen
         fullContext = context;
 
@@ -82,7 +82,7 @@ public class FarmMode {
         this.screenY = screenY;
 
         //Globale Infos laden
-        this.globalVariables = globalVariables;
+        globalVariables = GlobalVariables.getInstance();
 
         bitmapMainQuality = 500;
 
@@ -90,10 +90,10 @@ public class FarmMode {
         initialiseGrafics();
 
         //Musik einlesen
-        farmModeSound = FarmModeSound.getInstance(globalVariables, context);
+        farmModeSound = FarmModeSound.getInstance(context);
 
         //Backend einlesen
-        farmModeBackend = FarmModeBackend.getInstance(globalVariables, context);
+        farmModeBackend = FarmModeBackend.getInstance(context);
     }
 
     //update ist quasi das DENKEN in der App
@@ -148,7 +148,7 @@ public class FarmMode {
                     canvas.drawText("Gold: " + globalVariables.getGold(), 3 * textX, 14 * textY, paint);
                 }
             } catch (NullPointerException e) {
-                farmModeBackend.setSharedPreferences();
+                farmModeBackend.setSharedPreferences(fullContext);
                 return;
             }
             //Alles auf den Bildschirm malen
@@ -183,18 +183,18 @@ public class FarmMode {
                     if (touchX1 >= settingButtonX && touchX1 < (settingButtonX + settingButtonWidth)
                             && touchY1 >= settingButtonY && touchY1 < (settingButtonY + settingButtonHeight)) {
                         farmModeSound.playSound(4, fullContext);
-                        farmSettings = new FarmSettings(fullContext, screenX, screenY, globalVariables);
+                        farmSettings = new FarmSettings(fullContext, screenX, screenY);
                         break;
                     }
                     //Shop Button
                     if (touchX1 >= shopButtonX && touchX1 < (shopButtonX + shopButtonWidth)
                             && touchY1 >= shopButtonY && touchY1 < (shopButtonY + shopButtonHeight)) {
                         farmModeSound.playSound(4, fullContext);
-                        farmShop = new FarmShop(fullContext, screenX, screenY, globalVariables);
+                        farmShop = new FarmShop(fullContext, screenX, screenY);
                         break;
                     }
                     //Wir haben geklickt, in einem Klickergame müssen wir doch mit der Info irgendwas machen oder? :D
-                    farmModeBackend.gotClickedFarm(zustand);
+                    farmModeBackend.gotClickedFarm(zustand, fullContext);
                 }
                 break;
 
@@ -333,7 +333,7 @@ public class FarmMode {
     //Wenn wir den Modus verlassen
     public GlobalVariables recycle() {
         loading = true;
-        farmModeBackend.setSharedPreferences();
+        farmModeBackend.setSharedPreferences(fullContext);
 
         //Sound recyclen
         farmModeSound.recycle();
@@ -357,10 +357,10 @@ public class FarmMode {
     }
 
     public void getSharedPreferences() {
-        farmModeBackend.getSharedPreferences();
+        farmModeBackend.getSharedPreferences(fullContext);
     }
 
     public void setSharedPreferences() {
-        farmModeBackend.setSharedPreferences();
+        farmModeBackend.setSharedPreferences(fullContext);
     }
 }

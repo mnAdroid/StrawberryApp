@@ -11,7 +11,6 @@ class FarmModeBackend {
     //Singleton
     private static FarmModeBackend instance;
     private GlobalVariables globalVariables;
-    private Context fullContext;
     private FarmModeSound farmModeSound;
 
     //Erdbeeren Array
@@ -32,20 +31,19 @@ class FarmModeBackend {
     //Erdbeerkosten
     private final int STRAWBERRY_PRICE = 1;
 
-    private FarmModeBackend(GlobalVariables globalVariables, Context context) {
-        this.globalVariables = globalVariables;
-        fullContext = context;
-        getSharedPreferences();
-        farmModeSound = FarmModeSound.getInstance(globalVariables, context);
+    private FarmModeBackend(Context context) {
+        globalVariables = GlobalVariables.getInstance();
+        getSharedPreferences(context);
+        farmModeSound = FarmModeSound.getInstance(context);
 
         //Preise initialisieren
         priceAecker = getPrice(0);
         priceGurken = getPrice(1);
         priceLand = getPrice(2);
     }
-    static synchronized FarmModeBackend getInstance(GlobalVariables globalVariables, Context context) {
+    static synchronized FarmModeBackend getInstance(Context context) {
         if (FarmModeBackend.instance == null) {
-            FarmModeBackend.instance = new FarmModeBackend(globalVariables, context);
+            FarmModeBackend.instance = new FarmModeBackend(context);
         }
         return FarmModeBackend.instance;
     }
@@ -58,7 +56,7 @@ class FarmModeBackend {
     }
 
     //Was passiert wenn der Spieler im FARM Modus klickt?
-    void gotClickedFarm(int zustand) {
+    void gotClickedFarm(int zustand, Context fullContext) {
         globalVariables.incrementClickCount();
         switch(zustand) {
             case 0:
@@ -108,7 +106,7 @@ class FarmModeBackend {
     }
 
     //SharedPreferences auslesen
-    void getSharedPreferences() {
+    void getSharedPreferences(Context fullContext) {
         SharedPreferences sharedPreferences = fullContext.getSharedPreferences("StrawberrySettings", 0);
         numStrawberries = sharedPreferences.getInt("numStrawberries", 0);
         numAecker = sharedPreferences.getInt("numAecker", 1);
@@ -136,7 +134,7 @@ class FarmModeBackend {
     }
 
     //SharedPreferences wieder sicher verwahren
-    void setSharedPreferences() {
+    void setSharedPreferences(Context fullContext) {
         SharedPreferences sharedPreferences = fullContext.getSharedPreferences("StrawberrySettings", 0);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("numStrawberries", numStrawberries);

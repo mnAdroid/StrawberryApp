@@ -87,8 +87,8 @@ class GameView extends SurfaceView implements Runnable {
 
         getSharedPreferences();
 
-        globalVariables = new GlobalVariables(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
-        farmMode = new FarmMode(context, screenX, screenY, globalVariables);
+        globalVariables = GlobalVariables.getInstance(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
+        farmMode = new FarmMode(context, screenX, screenY);
     }
     //Der vermutlich wichtigste (und in der letzten App fehleranfälligste) Teil der Gameview
     //run() ist quasi eine Endlosschleife (solange das Game läuft) in dem alles passiert
@@ -146,10 +146,10 @@ class GameView extends SurfaceView implements Runnable {
             //Die Allgemeinen Daten abspeichern
             setSharedPreferences();
             if (globalVariables != null)
-                fightMode = new FightMode(fullContext, screenX, screenY, globalVariables);
+                fightMode = new FightMode(fullContext, screenX, screenY);
             else {
-                globalVariables = new GlobalVariables(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
-                fightMode = new FightMode(fullContext, screenX, screenY, globalVariables);
+                globalVariables = GlobalVariables.getInstance(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
+                fightMode = new FightMode(fullContext, screenX, screenY);
             }
             //Auf Fightmode umstellen
             gameMode = 1;
@@ -168,10 +168,10 @@ class GameView extends SurfaceView implements Runnable {
             //Die Allgemeinen Daten abspeichern
             setSharedPreferences();
             if (globalVariables != null)
-                farmMode = new FarmMode(fullContext, screenX, screenY, globalVariables);
+                farmMode = new FarmMode(fullContext, screenX, screenY);
             else {
-                globalVariables = new GlobalVariables(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
-                farmMode = new FarmMode(fullContext, screenX, screenY, globalVariables);
+                globalVariables = GlobalVariables.getInstance(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
+                farmMode = new FarmMode(fullContext, screenX, screenY);
             }
             //Auf Farmmode umstellen
             gameMode = 0;
@@ -192,8 +192,8 @@ class GameView extends SurfaceView implements Runnable {
             farmMode = null;
             getSharedPreferences();
 
-            globalVariables = new GlobalVariables(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
-            farmMode = new FarmMode(fullContext, screenX, screenY, globalVariables);
+            globalVariables = GlobalVariables.getInstance(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
+            farmMode = new FarmMode(fullContext, screenX, screenY);
 
             gameMode = 0;
             globalVariables.setGameMode(0);
@@ -216,8 +216,8 @@ class GameView extends SurfaceView implements Runnable {
             fightMode = null;
             getSharedPreferences();
 
-            globalVariables = new GlobalVariables(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
-            fightMode = new FightMode(fullContext, screenX, screenY, globalVariables);
+            globalVariables = GlobalVariables.getInstance(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
+            fightMode = new FightMode(fullContext, screenX, screenY);
 
             gameMode = 1;
             globalVariables.setGameMode(1);
@@ -300,7 +300,7 @@ class GameView extends SurfaceView implements Runnable {
                 farmMode.getSharedPreferences();
             else {
                 if (globalVariables == null)
-                    globalVariables = new GlobalVariables(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
+                    globalVariables = GlobalVariables.getInstance(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
                 else {
                     globalVariables.setGold(gold);
                     globalVariables.setClickCount(clickCount);
@@ -308,7 +308,7 @@ class GameView extends SurfaceView implements Runnable {
                     globalVariables.setSoundOn(soundOn);
                     globalVariables.setGameMode(gameMode);
                 }
-                farmMode = new FarmMode(fullContext, screenX, screenY, globalVariables);
+                farmMode = new FarmMode(fullContext, screenX, screenY);
             }
         }
         if (gameMode == 1) {
@@ -316,7 +316,7 @@ class GameView extends SurfaceView implements Runnable {
                 fightMode.getSharedPreferences();
             else {
                 if (globalVariables == null)
-                    globalVariables = new GlobalVariables(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
+                    globalVariables = GlobalVariables.getInstance(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
                 else {
                     globalVariables.setGold(gold);
                     globalVariables.setClickCount(clickCount);
@@ -324,7 +324,7 @@ class GameView extends SurfaceView implements Runnable {
                     globalVariables.setSoundOn(soundOn);
                     globalVariables.setGameMode(gameMode);
                 }
-                fightMode = new FightMode(fullContext, screenX, screenY, globalVariables);
+                fightMode = new FightMode(fullContext, screenX, screenY);
             }
         }
 

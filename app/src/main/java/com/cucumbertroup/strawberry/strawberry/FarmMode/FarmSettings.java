@@ -2,25 +2,15 @@ package com.cucumbertroup.strawberry.strawberry.FarmMode;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.AssetFileDescriptor;
-import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.media.AudioManager;
-import android.media.SoundPool;
-import android.os.Build;
-import android.util.Log;
 import android.view.MotionEvent;
-import android.view.SurfaceHolder;
 
-import com.cucumbertroup.strawberry.strawberry.FarmMode.Strawberry;
 import com.cucumbertroup.strawberry.strawberry.GlobalVariables;
 import com.cucumbertroup.strawberry.strawberry.R;
-
-import java.io.IOException;
 
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.decodeSampledBitmapFromResource;
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledBitmapSize;
@@ -49,7 +39,7 @@ class FarmSettings {
     private FarmModeSound farmModeSound;
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
-    FarmSettings(Context context, int screenX, int screenY, GlobalVariables globalVariables) {
+    FarmSettings(Context context, int screenX, int screenY) {
         //Auf den Context können alle FarmMode Funktionen zugreifen
         fullContext = context;
 
@@ -58,13 +48,13 @@ class FarmSettings {
         this.screenY = screenY;
 
         //Globale Infos laden
-        this.globalVariables = globalVariables;
+        globalVariables = GlobalVariables.getInstance();
 
         //Alle Grafiken einlesen
         initialiseGrafics();
 
         //Musik einlesen
-        farmModeSound = FarmModeSound.getInstance(globalVariables, context);
+        farmModeSound = FarmModeSound.getInstance(context);
     }
 
     //ZEICHNEN

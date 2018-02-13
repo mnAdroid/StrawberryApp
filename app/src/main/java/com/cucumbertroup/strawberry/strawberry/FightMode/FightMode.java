@@ -175,7 +175,7 @@ public class FightMode {
     private GlobalVariables globalVariables;
 
     //Konstruktor
-    public FightMode(Context context, int screenX, int screenY, GlobalVariables globalVariables) {
+    public FightMode(Context context, int screenX, int screenY) {
         //Context abspeichern
         fullContext = context;
 
@@ -191,10 +191,10 @@ public class FightMode {
         this.screenY = screenY;
 
         //Um auf die Variablen die man übergeben bekommt zuzugreifen
-        this.globalVariables = globalVariables;
+        globalVariables = GlobalVariables.getInstance();
 
         //Um auf die Online Features zugreifen zu können
-        onlineFeatures = OnlineFeatures.getInstance(globalVariables, auth, database);
+        onlineFeatures = OnlineFeatures.getInstance(auth, database);
 
         //Alle Bilder einlesen
         initialiseGrafics();

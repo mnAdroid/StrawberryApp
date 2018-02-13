@@ -40,7 +40,7 @@ class FarmShop {
     private FarmModeBackend farmModeBackend;
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
-    FarmShop(Context context, int screenX, int screenY, GlobalVariables globalVariables) {
+    FarmShop(Context context, int screenX, int screenY) {
         //Auf den Context können alle FarmMode Funktionen zugreifen
         fullContext = context;
 
@@ -49,16 +49,16 @@ class FarmShop {
         this.screenY = screenY;
 
         //Globale Infos laden
-        this.globalVariables = globalVariables;
+        globalVariables = GlobalVariables.getInstance();
 
         //Alle Grafiken einlesen
         initialiseGrafics();
 
         //Musik einlesen
-        farmModeSound = FarmModeSound.getInstance(globalVariables, context);
+        farmModeSound = FarmModeSound.getInstance(context);
 
         //Backend Instance bekommen
-        farmModeBackend = FarmModeBackend.getInstance(globalVariables, context);
+        farmModeBackend = FarmModeBackend.getInstance(context);
     }
 
     //ZEICHNEN
@@ -94,7 +94,7 @@ class FarmShop {
             if (bitmapGurkeKaufenButton != null)
                 canvas.drawBitmap(bitmapGurkeKaufenButton, bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY, paint);
         } catch (NullPointerException e) {
-            farmModeBackend.setSharedPreferences();
+            farmModeBackend.setSharedPreferences(fullContext);
         }
     }
 
