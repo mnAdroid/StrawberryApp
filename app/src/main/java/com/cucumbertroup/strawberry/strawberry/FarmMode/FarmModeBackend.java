@@ -28,6 +28,9 @@ class FarmModeBackend {
     private int numGurken;
     private int priceGurken;
 
+    //Qualität: 250 - 1000
+    private int bitmapMainQuality;
+
     //Erdbeerkosten
     private final int STRAWBERRY_PRICE = 1;
 
@@ -231,5 +234,14 @@ class FarmModeBackend {
         numGurken++;
         globalVariables.setGold(globalVariables.getGold() - priceGurken);
         priceGurken = getPrice(1);
+    }
+
+    int getBitmapMainQuality() {
+        return bitmapMainQuality;
+    }
+
+    void setBitmapMainQuality(int bitmapMainQuality) {
+        if (bitmapMainQuality >= 250 && bitmapMainQuality <= 1000)
+            this.bitmapMainQuality = bitmapMainQuality;
     }
 }

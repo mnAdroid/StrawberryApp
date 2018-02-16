@@ -16,7 +16,7 @@ import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.decodeS
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledBitmapSize;
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledCoordinates;
 
-class FarmShop {
+class FarmModeShop {
     //Der gespeicherte Context
     private Context fullContext;
 
@@ -40,7 +40,7 @@ class FarmShop {
     private FarmModeBackend farmModeBackend;
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
-    FarmShop(Context context, int screenX, int screenY) {
+    FarmModeShop(Context context, int screenX, int screenY) {
         //Auf den Context können alle FarmMode Funktionen zugreifen
         fullContext = context;
 

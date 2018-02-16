@@ -51,11 +51,8 @@ public class FarmMode {
     private int settingButtonX, settingButtonY;
     private int settingButtonHeight, settingButtonWidth;
 
-    private FarmSettings farmSettings;
-    private FarmShop farmShop;
-
-    //Qualität: 250 - 1000
-    private int bitmapMainQuality;
+    private FarmModeSettings farmModeSettings;
+    private FarmModeShop farmModeShop;
 
     //Laden wir gerade
     private boolean loading;
@@ -68,6 +65,9 @@ public class FarmMode {
 
     //Backend des Farmmodus
     private FarmModeBackend farmModeBackend;
+
+    //Acker und Erdbeeren malen
+    private FarmModeList farmModeList;
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     public FarmMode(Context context, int screenX, int screenY) {
@@ -84,8 +84,6 @@ public class FarmMode {
         //Globale Infos laden
         globalVariables = GlobalVariables.getInstance();
 
-        bitmapMainQuality = 500;
-
         //Alle Grafiken einlesen
         initialiseGrafics();
 
@@ -94,6 +92,9 @@ public class FarmMode {
 
         //Backend einlesen
         farmModeBackend = FarmModeBackend.getInstance(context);
+
+        //Bildqualitaet einstellen
+        farmModeBackend.setBitmapMainQuality(500);
     }
 
     //update ist quasi das DENKEN in der App
@@ -119,16 +120,20 @@ public class FarmMode {
                     if (bitmapBackgroundLoading != null) {
                         canvas.drawBitmap(bitmapBackgroundLoading, 0, 0, paint);
                     }
-                } else if (farmSettings != null) {
-                    farmSettings.drawFarmSettings(canvas, paint);
-                } else if (farmShop != null) {
-                    farmShop.drawFarmShop(canvas, paint);
+                } else if (farmModeSettings != null) {
+                    farmModeSettings.drawFarmSettings(canvas, paint);
+                } else if (farmModeShop != null) {
+                    farmModeShop.drawFarmShop(canvas, paint);
                 } else {
                     if (bitmapBackgroundLand != null)
                         canvas.drawBitmap(bitmapBackgroundLand, 0, backgroundLandY1, paint);
                     //Hintergrund Overlay
                     if (bitmapBackgroundOverlay != null)
                         canvas.drawBitmap(bitmapBackgroundOverlay, backgroundOverlayX1, 0, paint);
+
+                    //Acker und Erdbeeren malen
+                    if (farmModeList != null)
+                        farmModeList.drawFarmList(canvas, paint);
 
                     //Pinselfarbe wählen (bisher nur für den Text)
                     paint.setColor(Color.argb(255, 249, 129, 0));
@@ -171,26 +176,26 @@ public class FarmMode {
 
                 //Wir erlauben keine Buttonklicks wenn wir gerade laden
                 if (!loading) {
-                    if (farmShop != null) {
-                        farmShop.onTouchFarm(motionEvent);
+                    if (farmModeShop != null) {
+                        farmModeShop.onTouchFarm(motionEvent);
                         break;
                     }
-                    if (farmSettings != null) {
-                        farmSettings.onTouchFarmSettings(motionEvent);
+                    if (farmModeSettings != null) {
+                        farmModeSettings.onTouchFarmSettings(motionEvent);
                     }
                     //War da ein Button?
                     //Settings Button
                     if (touchX1 >= settingButtonX && touchX1 < (settingButtonX + settingButtonWidth)
                             && touchY1 >= settingButtonY && touchY1 < (settingButtonY + settingButtonHeight)) {
                         farmModeSound.playSound(4, fullContext);
-                        farmSettings = new FarmSettings(fullContext, screenX, screenY);
+                        farmModeSettings = new FarmModeSettings(fullContext, screenX, screenY);
                         break;
                     }
                     //Shop Button
                     if (touchX1 >= shopButtonX && touchX1 < (shopButtonX + shopButtonWidth)
                             && touchY1 >= shopButtonY && touchY1 < (shopButtonY + shopButtonHeight)) {
                         farmModeSound.playSound(4, fullContext);
-                        farmShop = new FarmShop(fullContext, screenX, screenY);
+                        farmModeShop = new FarmModeShop(fullContext, screenX, screenY);
                         break;
                     }
                     //Wir haben geklickt, in einem Klickergame müssen wir doch mit der Info irgendwas machen oder? :D
@@ -293,7 +298,7 @@ public class FarmMode {
         bitmapBackgroundOverlay = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.background_farm1, options);
         //Dadurch, dass wir nur die Ränder haben wird nicht so viel RAM verbraucht und wir können trz die Größe erfahren und rescalen
         //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
-        bitmapBackgroundOverlay = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.background_farm1, bitmapMainQuality, bitmapMainQuality);
+        bitmapBackgroundOverlay = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.background_farm1, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
         bitmapBackgroundOverlay = Bitmap.createScaledBitmap(bitmapBackgroundOverlay, screenX * 3, screenY, false);
 
         //Hintergrundland Bild:
@@ -302,7 +307,7 @@ public class FarmMode {
         //Hintergrundbild einfügen
         bitmapBackgroundLand = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.background_farm2, options);
         //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
-        bitmapBackgroundLand = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.background_farm2, bitmapMainQuality, bitmapMainQuality);
+        bitmapBackgroundLand = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.background_farm2, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
         bitmapBackgroundLand = Bitmap.createScaledBitmap(bitmapBackgroundLand, screenX, screenY, false);
 
         //Loadingscreen Bild:
@@ -346,13 +351,13 @@ public class FarmMode {
     }
 
     public void onBackPressed() {
-        if (farmShop != null) {
-            farmShop.recycle();
-            farmShop = null;
+        if (farmModeShop != null) {
+            farmModeShop.recycle();
+            farmModeShop = null;
         }
-        if (farmSettings != null) {
-            farmSettings.recycle();
-            farmSettings = null;
+        if (farmModeSettings != null) {
+            farmModeSettings.recycle();
+            farmModeSettings = null;
         }
     }
 
