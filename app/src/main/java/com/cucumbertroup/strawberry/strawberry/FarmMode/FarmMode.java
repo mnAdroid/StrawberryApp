@@ -84,17 +84,20 @@ public class FarmMode {
         //Globale Infos laden
         globalVariables = GlobalVariables.getInstance();
 
-        //Alle Grafiken einlesen
-        initialiseGrafics();
-
         //Musik einlesen
         farmModeSound = FarmModeSound.getInstance(context);
 
         //Backend einlesen
         farmModeBackend = FarmModeBackend.getInstance(context);
 
+        //Farmliste einlesen
+        farmModeList = new FarmModeList(context, screenX, screenY);
+
         //Bildqualitaet einstellen
         farmModeBackend.setBitmapMainQuality(500);
+
+        //Alle Grafiken einlesen
+        initialiseGrafics();
     }
 
     //update ist quasi das DENKEN in der App

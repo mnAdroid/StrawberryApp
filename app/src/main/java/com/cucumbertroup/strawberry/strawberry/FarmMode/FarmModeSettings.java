@@ -50,11 +50,11 @@ class FarmModeSettings {
         //Globale Infos laden
         globalVariables = GlobalVariables.getInstance();
 
-        //Alle Grafiken einlesen
-        initialiseGrafics();
-
         //Musik einlesen
         farmModeSound = FarmModeSound.getInstance(context);
+
+        //Alle Grafiken einlesen
+        initialiseGrafics();
     }
 
     //ZEICHNEN
@@ -139,7 +139,7 @@ class FarmModeSettings {
 
         Strawberry[] strawberries = new Strawberry[32];
         for (int i = 0; i < 16; i++) {
-            strawberries[i] = new Strawberry((i / 16) + 1);
+            strawberries[i] = new Strawberry((i / 16) + 1, 0, 0);
         }
 
         //Hier kommen alle derzeitigen Erdbeeren rein um gespeichert zu werden

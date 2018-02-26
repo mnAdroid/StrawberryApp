@@ -14,16 +14,21 @@ class Strawberry {
 
     //Um zu wissen welche Erdbeere (auf welchem Acker, welche Zahl)
     private int acker;
+    private int coordinateX, coordinateY;
 
-    Strawberry(int acker) {
+    Strawberry(int acker, int x, int y) {
         wachsStatus = -1;
         this.acker = acker;
+        coordinateX = x;
+        coordinateY = y;
     }
 
-    Strawberry(int wachsStatus, int acker, long timeThisFruit) {
+    Strawberry(int wachsStatus, int acker, long timeThisFruit, int x, int y) {
         this.wachsStatus = wachsStatus;
         this.acker = acker;
         this.timeThisFruit = timeThisFruit;
+        coordinateX = x;
+        coordinateY = y;
     }
 
     void incrWachsStatus(int setz) {
@@ -64,5 +69,17 @@ class Strawberry {
             return true;
         }
         return false;
+    }
+
+    public int getCoordinateX() {
+        return coordinateX;
+    }
+
+    public void setCoordinateX(int coordinateX) {
+        this.coordinateX = coordinateX;
+    }
+
+    public int getCoordinateY() {
+        return coordinateY;
     }
 }

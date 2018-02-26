@@ -51,14 +51,14 @@ class FarmModeShop {
         //Globale Infos laden
         globalVariables = GlobalVariables.getInstance();
 
-        //Alle Grafiken einlesen
-        initialiseGrafics();
-
         //Musik einlesen
         farmModeSound = FarmModeSound.getInstance(context);
 
         //Backend Instance bekommen
         farmModeBackend = FarmModeBackend.getInstance(context);
+
+        //Alle Grafiken einlesen
+        initialiseGrafics();
     }
 
     //ZEICHNEN

@@ -44,6 +44,7 @@ class FarmModeBackend {
         priceGurken = getPrice(1);
         priceLand = getPrice(2);
     }
+
     static synchronized FarmModeBackend getInstance(Context context) {
         if (FarmModeBackend.instance == null) {
             FarmModeBackend.instance = new FarmModeBackend(context);
@@ -126,12 +127,12 @@ class FarmModeBackend {
             String[] strawberryStatusStrings = strawberryStatus.split("a");
             int stringsCounter = 0;
             for (int i = 0; i < (numAecker * 16); i++) {
-                strawberries[i] = new Strawberry(Integer.parseInt(strawberryStatusStrings[stringsCounter]), Integer.parseInt(strawberryStatusStrings[stringsCounter + 1]), Long.parseLong(strawberryStatusStrings[stringsCounter + 2]));
-                stringsCounter += 3;
+                strawberries[i] = new Strawberry(Integer.parseInt(strawberryStatusStrings[stringsCounter]), Integer.parseInt(strawberryStatusStrings[stringsCounter + 1]), Long.parseLong(strawberryStatusStrings[stringsCounter + 2]), Integer.parseInt(strawberryStatusStrings[stringsCounter + 3]), Integer.parseInt(strawberryStatusStrings[stringsCounter + 4]));
+                stringsCounter += 5;
             }
         } else {
             for (int i = 0; i < (numAecker * 16); i++) {
-                strawberries[i] = new Strawberry((i / 16) + 1);
+                strawberries[i] = new Strawberry((i / 16) + 1, 10, 10);
             }
         }
     }
@@ -148,12 +149,18 @@ class FarmModeBackend {
         //Hier kommen alle derzeitigen Erdbeeren rein um gespeichert zu werden
         StringBuilder strawberryStatus = new StringBuilder();
         //Der erste Teil: wachsstatus, der zweite: Ackernummer, der dritte: Zeit
+        //der vierte: X Koordinate
+        //der fuenfte: Y Koordinate
         for (int i = 0; i < (numAecker * 16); i++) {
             strawberryStatus.append(strawberries[i].getWachsStatus());
             strawberryStatus.append("a");
             strawberryStatus.append(strawberries[i].getAcker());
             strawberryStatus.append("a");
             strawberryStatus.append(strawberries[i].getTimeThisFruit());
+            strawberryStatus.append("a");
+            strawberryStatus.append(strawberries[i].getCoordinateX());
+            strawberryStatus.append("a");
+            strawberryStatus.append(strawberries[i].getCoordinateY());
             strawberryStatus.append("a");
         }
         editor.putString("strawberryStatus", strawberryStatus.toString());
@@ -187,7 +194,7 @@ class FarmModeBackend {
         //Neues Strawberry Array erstellen
         Strawberry[] strawberriesTemp = Arrays.copyOf(strawberries, numAecker*16);
         for (int i = ((numAecker-1) * 16); i < (numAecker * 16); i++) {
-            strawberriesTemp[i] = new Strawberry((i/16) + 1);
+            strawberriesTemp[i] = new Strawberry((i/16) + 1, 0, 0);
         }
         strawberries = strawberriesTemp;
     }

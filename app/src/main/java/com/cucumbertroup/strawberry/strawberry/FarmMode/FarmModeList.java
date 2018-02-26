@@ -11,6 +11,7 @@ import com.cucumbertroup.strawberry.strawberry.R;
 
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.decodeSampledBitmapFromResource;
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledBitmapSize;
+import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledCoordinates;
 
 class FarmModeList {
     //Application Context
@@ -47,9 +48,6 @@ class FarmModeList {
         //Globale Infos laden
         globalVariables = GlobalVariables.getInstance();
 
-        //Alle Grafiken einlesen
-        initialiseGrafics();
-
         //Musik einlesen
         farmModeSound = FarmModeSound.getInstance(context);
 
@@ -58,6 +56,9 @@ class FarmModeList {
 
         //Bildqualitaet einstellen
         farmModeBackend.setBitmapMainQuality(500);
+
+        //Alle Grafiken einlesen
+        initialiseGrafics();
     }
 
     //Erdbeeren- und Ackerbilder einlesen
@@ -104,9 +105,18 @@ class FarmModeList {
         bitmapErdbeere5 = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.erdbeere5, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
         bitmapErdbeere5 = Bitmap.createScaledBitmap(bitmapErdbeere1, getScaledBitmapSize(screenX, 1080, 271), getScaledBitmapSize(screenY, 1920, 268), false);
 
+        bitmapAcker1X = getScaledCoordinates(screenX, 1080, 50);
+        bitmapAcker1Y = getScaledCoordinates(screenY, 1920, 500);
+
+        bitmapAcker2X = getScaledCoordinates(screenX, 1080, 50);
+        bitmapAcker2Y = getScaledCoordinates(screenY, 1920, 1050);
     }
 
     void drawFarmList(Canvas canvas, Paint paint) {
-
+        //Test Acker 1 malen
+        if (bitmapAcker != null) {
+            canvas.drawBitmap(bitmapAcker, bitmapAcker1X, bitmapAcker1Y, paint);
+            canvas.drawBitmap(bitmapAcker, bitmapAcker2X, bitmapAcker2Y, paint);
+        }
     }
 }
