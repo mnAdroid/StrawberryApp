@@ -5,9 +5,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.util.Log;
 
-import com.cucumbertroup.strawberry.strawberry.GlobalVariables;
 import com.cucumbertroup.strawberry.strawberry.R;
+
+import java.util.LinkedList;
 
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.decodeSampledBitmapFromResource;
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledBitmapSize;
@@ -19,8 +21,6 @@ class FarmModeList {
 
     //outgesourcte Funktionen
     private FarmModeBackend farmModeBackend;
-    private FarmModeSound farmModeSound;
-    private GlobalVariables globalVariables;
 
     //Bildschirmgroesse
     private int screenX;
@@ -34,9 +34,12 @@ class FarmModeList {
     private Bitmap bitmapErdbeere4;
     private Bitmap bitmapErdbeere5;
 
-    //Zunaechst noch feste Werte fuer die Acker
-    private int bitmapAcker1X, bitmapAcker1Y;
-    private int bitmapAcker2X, bitmapAcker2Y;
+    //Der X Wert der Acker ist ja immer gleich
+    private int bitmapAckerX;
+    //Die Y Werte speicher ich in einer Liste
+    private LinkedList<Integer> bitmapAckerY;
+    //Abstand zwischen Aeckern ist immer gleich
+    private int bitmapAckerAbstand;
 
     FarmModeList(Context context, int screenX, int screenY) {
         fullContext = context;
@@ -45,17 +48,15 @@ class FarmModeList {
         this.screenX = screenX;
         this.screenY = screenY;
 
-        //Globale Infos laden
-        globalVariables = GlobalVariables.getInstance();
+        //Initialisierung der Liste
+        bitmapAckerY = new LinkedList<>();
 
-        //Musik einlesen
-        farmModeSound = FarmModeSound.getInstance(context);
+        //Standard Ackerkoordinaten
+        bitmapAckerX = getScaledCoordinates(screenX, 1080, 50);
+        bitmapAckerAbstand = getScaledCoordinates(screenY, 1920, 550);
 
         //Backend einlesen
         farmModeBackend = FarmModeBackend.getInstance(context);
-
-        //Bildqualitaet einstellen
-        farmModeBackend.setBitmapMainQuality(500);
 
         //Alle Grafiken einlesen
         initialiseGrafics();
@@ -104,19 +105,26 @@ class FarmModeList {
         bitmapErdbeere5 = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.erdbeere5, options);
         bitmapErdbeere5 = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.erdbeere5, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
         bitmapErdbeere5 = Bitmap.createScaledBitmap(bitmapErdbeere1, getScaledBitmapSize(screenX, 1080, 271), getScaledBitmapSize(screenY, 1920, 268), false);
-
-        bitmapAcker1X = getScaledCoordinates(screenX, 1080, 50);
-        bitmapAcker1Y = getScaledCoordinates(screenY, 1920, 500);
-
-        bitmapAcker2X = getScaledCoordinates(screenX, 1080, 50);
-        bitmapAcker2Y = getScaledCoordinates(screenY, 1920, 1050);
     }
 
     void drawFarmList(Canvas canvas, Paint paint) {
-        //Test Acker 1 malen
-        if (bitmapAcker != null) {
-            canvas.drawBitmap(bitmapAcker, bitmapAcker1X, bitmapAcker1Y, paint);
-            canvas.drawBitmap(bitmapAcker, bitmapAcker2X, bitmapAcker2Y, paint);
+        //Acker malen
+        if (bitmapAcker != null && bitmapAckerY.size() > 0) {
+            //alle Aecker durchgehen und testen ob er auf dem Screen waere, wenn ja malen
+            for (int i = 0; i < bitmapAckerY.size(); i++)
+                if (bitmapAckerY.get(i) >=  0 && bitmapAckerY.get(i) <= screenY)
+                    canvas.drawBitmap(bitmapAcker, bitmapAckerX, bitmapAckerY.get(i), paint);
+        }
+    }
+
+    //regelmaessiges checken ob neuer Acker hinzugefuegt werden muss
+    void updateAcker() {
+       while (bitmapAckerY.size() != farmModeBackend.getNumAecker()) {
+           if (bitmapAckerY.size() == 0)
+               bitmapAckerY.add(getScaledCoordinates(screenY, 1920, 500));
+           else {
+               bitmapAckerY.add(bitmapAckerY.getLast() + bitmapAckerAbstand);
+           }
         }
     }
 }

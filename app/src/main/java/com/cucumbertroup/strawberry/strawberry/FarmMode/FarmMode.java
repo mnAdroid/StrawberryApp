@@ -87,11 +87,11 @@ public class FarmMode {
         //Musik einlesen
         farmModeSound = FarmModeSound.getInstance(context);
 
-        //Backend einlesen
-        farmModeBackend = FarmModeBackend.getInstance(context);
-
         //Farmliste einlesen
         farmModeList = new FarmModeList(context, screenX, screenY);
+
+        //Backend einlesen
+        farmModeBackend = FarmModeBackend.getInstance(context);
 
         //Bildqualitaet einstellen
         farmModeBackend.setBitmapMainQuality(500);
@@ -102,8 +102,12 @@ public class FarmMode {
 
     //update ist quasi das DENKEN in der App
     public void updateFarm() {
-        farmModeBackend.strawberriesUpdate();
-        farmModeSound.playSound(0, fullContext);
+        if (farmModeBackend != null)
+            farmModeBackend.strawberriesUpdate();
+        if (farmModeSound != null)
+            farmModeSound.playSound(0, fullContext);
+        if (farmModeList != null)
+            farmModeList.updateAcker();
     }
 
     //ZEICHNEN
@@ -128,15 +132,17 @@ public class FarmMode {
                 } else if (farmModeShop != null) {
                     farmModeShop.drawFarmShop(canvas, paint);
                 } else {
+                    //Absoluter Hintergrund
                     if (bitmapBackgroundLand != null)
                         canvas.drawBitmap(bitmapBackgroundLand, 0, backgroundLandY1, paint);
-                    //Hintergrund Overlay
-                    if (bitmapBackgroundOverlay != null)
-                        canvas.drawBitmap(bitmapBackgroundOverlay, backgroundOverlayX1, 0, paint);
 
                     //Acker und Erdbeeren malen
                     if (farmModeList != null)
                         farmModeList.drawFarmList(canvas, paint);
+
+                    //Hintergrund Overlay
+                    if (bitmapBackgroundOverlay != null)
+                        canvas.drawBitmap(bitmapBackgroundOverlay, backgroundOverlayX1, 0, paint);
 
                     //Pinselfarbe wählen (bisher nur für den Text)
                     paint.setColor(Color.argb(255, 249, 129, 0));

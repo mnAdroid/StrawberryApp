@@ -36,8 +36,11 @@ class FarmModeBackend {
 
     private FarmModeBackend(Context context) {
         globalVariables = GlobalVariables.getInstance();
-        getSharedPreferences(context);
         farmModeSound = FarmModeSound.getInstance(context);
+
+        setBitmapMainQuality(500);
+
+        getSharedPreferences(context);
 
         //Preise initialisieren
         priceAecker = getPrice(0);
@@ -124,6 +127,7 @@ class FarmModeBackend {
         if (!(strawberryStatus.equals(""))) {
             //1. String auseinander nehmen, 2. aus den Daten auslesen
             //Der erste Teil: wachsstatus, der zweite: Ackernummer, der dritte: Zeit
+            //vierte: x wert fuenfte: y wert
             String[] strawberryStatusStrings = strawberryStatus.split("a");
             int stringsCounter = 0;
             for (int i = 0; i < (numAecker * 16); i++) {
