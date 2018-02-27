@@ -1,9 +1,5 @@
 package com.cucumbertroup.strawberry.strawberry.FarmMode;
 
-/**
- * Created by Max on 27.08.2017.
- */
-
 class Strawberry {
     private int wachsStatus;
     //-1: nicht gesäht, 0: ausgesäht, 1-4: Wachstumsphasen, 5: Ausgewachsen
@@ -14,11 +10,14 @@ class Strawberry {
 
     //Um zu wissen welche Erdbeere (auf welchem Acker, welche Zahl)
     private int acker;
+    private int initialX, initialY;
     private int coordinateX, coordinateY;
 
     Strawberry(int acker, int x, int y) {
         wachsStatus = -1;
         this.acker = acker;
+        initialX = x;
+        initialY = y;
         coordinateX = x;
         coordinateY = y;
     }
@@ -71,15 +70,23 @@ class Strawberry {
         return false;
     }
 
-    public int getCoordinateX() {
+    int getCoordinateX() {
         return coordinateX;
     }
 
-    public void setCoordinateX(int coordinateX) {
-        this.coordinateX = coordinateX;
+    int getCoordinateY() {
+        return coordinateY;
     }
 
-    public int getCoordinateY() {
-        return coordinateY;
+    void setCoordinateY(int coordinateY) {
+        this.coordinateY = coordinateY;
+    }
+
+    public int getInitialX() {
+        return initialX;
+    }
+
+    public int getInitialY() {
+        return initialY;
     }
 }

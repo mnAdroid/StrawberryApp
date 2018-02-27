@@ -9,7 +9,7 @@ import android.util.Log;
 
 import com.cucumbertroup.strawberry.strawberry.R;
 
-import java.util.LinkedList;
+import java.util.Arrays;
 
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.decodeSampledBitmapFromResource;
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledBitmapSize;
@@ -37,9 +37,11 @@ class FarmModeList {
     //Der X Wert der Acker ist ja immer gleich
     private int bitmapAckerX;
     //Die Y Werte speicher ich in einer Liste
-    private LinkedList<Integer> bitmapAckerY;
+    private Float[] bitmapAckerY;
     //Abstand zwischen Aeckern ist immer gleich
     private int bitmapAckerAbstand;
+    //Wie weit kann man maximal scrollen
+    private float completeAckerHeight;
 
     FarmModeList(Context context, int screenX, int screenY) {
         fullContext = context;
@@ -48,8 +50,7 @@ class FarmModeList {
         this.screenX = screenX;
         this.screenY = screenY;
 
-        //Initialisierung der Liste
-        bitmapAckerY = new LinkedList<>();
+        bitmapAckerY = new Float[0];
 
         //Standard Ackerkoordinaten
         bitmapAckerX = getScaledCoordinates(screenX, 1080, 50);
@@ -109,22 +110,57 @@ class FarmModeList {
 
     void drawFarmList(Canvas canvas, Paint paint) {
         //Acker malen
-        if (bitmapAcker != null && bitmapAckerY.size() > 0) {
+        if (bitmapAcker != null && bitmapAckerY.length > 0) {
             //alle Aecker durchgehen und testen ob er auf dem Screen waere, wenn ja malen
-            for (int i = 0; i < bitmapAckerY.size(); i++)
-                if (bitmapAckerY.get(i) >=  0 && bitmapAckerY.get(i) <= screenY)
-                    canvas.drawBitmap(bitmapAcker, bitmapAckerX, bitmapAckerY.get(i), paint);
+            for (Float aBitmapAckerY : bitmapAckerY)
+                if (aBitmapAckerY >= 0 && aBitmapAckerY <= screenY)
+                    canvas.drawBitmap(bitmapAcker, bitmapAckerX, aBitmapAckerY, paint);
         }
     }
 
     //regelmaessiges checken ob neuer Acker hinzugefuegt werden muss
     void updateAcker() {
-       while (bitmapAckerY.size() != farmModeBackend.getNumAecker()) {
-           if (bitmapAckerY.size() == 0)
-               bitmapAckerY.add(getScaledCoordinates(screenY, 1920, 500));
-           else {
-               bitmapAckerY.add(bitmapAckerY.getLast() + bitmapAckerAbstand);
+       while (bitmapAckerY.length != farmModeBackend.getNumAecker()) {
+           Float[] bitmapAckerYTemp = Arrays.copyOf(bitmapAckerY, bitmapAckerY.length + 1);
+           if (bitmapAckerY.length == 0) {
+               bitmapAckerYTemp[0] = (float) getScaledCoordinates(screenY, 1920, 500);
+               bitmapAckerY = bitmapAckerYTemp;
+
+               completeAckerHeight = 0;
            }
+           else{
+               bitmapAckerYTemp[bitmapAckerYTemp.length - 1] = (bitmapAckerY[bitmapAckerY.length - 1] + bitmapAckerAbstand);
+               bitmapAckerY = bitmapAckerYTemp;
+           }
+        }
+    }
+
+    void scroll(float difference) {
+        if (farmModeBackend.getNumAecker() > 2) {
+            //wir scrollen nicht nach oben zu viel
+            if (completeAckerHeight + difference < 0) {
+                if (((bitmapAckerY.length - 2) * bitmapAckerAbstand) > Math.abs(completeAckerHeight + difference)) {
+                    for (int i = 0; i < bitmapAckerY.length; i++) {
+                        bitmapAckerY[i] += difference;
+                    }
+                    completeAckerHeight += difference;
+                }
+                //falls wir unten an die Grenze stossen
+                else {
+                    float tmp = ((bitmapAckerY.length - 2) * bitmapAckerAbstand) - Math.abs(completeAckerHeight);
+                    for (int i = 0; i < bitmapAckerY.length; i++) {
+                        bitmapAckerY[i] -= tmp;
+                    }
+                    completeAckerHeight -= tmp;
+                }
+            }
+            //falls wir oben an die Grenze stossen
+            else {
+                for (int i = 0; i < bitmapAckerY.length; i++) {
+                    bitmapAckerY[i] -= completeAckerHeight;
+                }
+                completeAckerHeight -= completeAckerHeight;
+            }
         }
     }
 }

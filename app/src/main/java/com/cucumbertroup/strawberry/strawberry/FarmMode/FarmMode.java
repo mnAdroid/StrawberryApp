@@ -29,9 +29,12 @@ public class FarmMode {
     //Ort der letzten Berührung auf dem Bildschirm
     private float touchX1;
     private float touchX1down;
+    private float touchY1;
+    //Berühren wir den Bildschirm mit mehr als einem Finger?
     private boolean touchPointer = false;
     //Abstand der letzten Bewegung auf dem Bildschirm
     private float deltaXMove;
+    private float deltaYMove;
 
     //Ort des Hintergrundbildes
     private float backgroundOverlayX1;
@@ -179,18 +182,20 @@ public class FarmMode {
             case MotionEvent.ACTION_DOWN:
                 //Wo befanden wir uns am Anfang?
                 touchX1down = motionEvent.getX();
+                //Wo befinden wir uns gerade? (Hier noch identisch mit touchX1down)
                 touchX1 = motionEvent.getX();
-                float touchY1 = motionEvent.getY();
+                touchY1 = motionEvent.getY();
                 touchPointer = false;
 
                 //Wir erlauben keine Buttonklicks wenn wir gerade laden
                 if (!loading) {
                     if (farmModeShop != null) {
                         farmModeShop.onTouchFarm(motionEvent);
-                        break;
+                        return true;
                     }
                     if (farmModeSettings != null) {
                         farmModeSettings.onTouchFarmSettings(motionEvent);
+                        return true;
                     }
                     //War da ein Button?
                     //Settings Button
@@ -198,39 +203,46 @@ public class FarmMode {
                             && touchY1 >= settingButtonY && touchY1 < (settingButtonY + settingButtonHeight)) {
                         farmModeSound.playSound(4, fullContext);
                         farmModeSettings = new FarmModeSettings(fullContext, screenX, screenY);
-                        break;
+                        return true;
                     }
                     //Shop Button
                     if (touchX1 >= shopButtonX && touchX1 < (shopButtonX + shopButtonWidth)
                             && touchY1 >= shopButtonY && touchY1 < (shopButtonY + shopButtonHeight)) {
                         farmModeSound.playSound(4, fullContext);
                         farmModeShop = new FarmModeShop(fullContext, screenX, screenY);
-                        break;
+                        return true;
                     }
                     //Wir haben geklickt, in einem Klickergame müssen wir doch mit der Info irgendwas machen oder? :D
                     farmModeBackend.gotClickedFarm(zustand, fullContext);
                 }
-                break;
+                return true;
 
             //Spieler bewegt den Finger auf dem Bildschirm
             case MotionEvent.ACTION_MOVE:
                 if (!touchPointer && !loading) {
                     //In welche Richtung hat sich der Finger bewegt? | Differenz der beiden Werte
                     deltaXMove = motionEvent.getX() - touchX1;
+                    deltaYMove = motionEvent.getY() - touchY1;
                     //wo befinden wir uns in diesem Schritt
                     touchX1 = motionEvent.getX();
+                    touchY1 = motionEvent.getY();
 
-                    //Bedingung für die Äußeren Grenzen
-                    if (((backgroundOverlayX1 + deltaXMove) < 0) && ((backgroundOverlayX1 + deltaXMove) > (-2 * screenX))) {
-                        //Standardmovement (Folge dem Finger)
-                        backgroundOverlayX1 += deltaXMove;
+                    if (Math.abs(deltaXMove) > Math.abs(deltaYMove)) {
+                        //Bedingung für die Äußeren Grenzen
+                        if (((backgroundOverlayX1 + deltaXMove) < 0) && ((backgroundOverlayX1 + deltaXMove) > (-2 * screenX))) {
+                            //Standardmovement (Folge dem Finger)
+                            backgroundOverlayX1 += deltaXMove;
+                        }
+                    }
+                    else {
+                        farmModeList.scroll(deltaYMove);
                     }
                 }
-                break;
+                return true;
             //Zweiter Finger kommt dazu:
             case MotionEvent.ACTION_POINTER_DOWN:
                 touchPointer = true;
-                break;
+                return true;
             case MotionEvent.ACTION_UP:
                 //Wie weit hat sich der Finger insgesamt bewegt? | Differenz der beiden Werte
                 float deltaXClick = motionEvent.getX() - touchX1down;
@@ -243,13 +255,13 @@ public class FarmMode {
                     if ((backgroundOverlayX1 + deltaXClick) < 0) {
                         backgroundOverlayX1 = -2 * screenX;
                         zustand = 2;
-                        break;
+                        return true;
                     }
                     //Links
                     if ((backgroundOverlayX1 + deltaXClick) > (-2 * screenX)) {
                         backgroundOverlayX1 = 0;
                         zustand = 0;
-                        break;
+                        return true;
                     }
                 }
                 //Zurückswapen nach Links, Rechts, Mitte wenn nach Stillstand Bedingungen zutreffen
@@ -258,32 +270,32 @@ public class FarmMode {
                 if (backgroundOverlayX1 + deltaXMove > (-0.3 * screenX) && zustand == 0) {
                     backgroundOverlayX1 = 0;
                     zustand = 0;
-                    break;
+                    return true;
                 }
                 //wenn wir von der mitte nach links kommen
                 if (backgroundOverlayX1 + deltaXMove > (-0.7 * screenX) && zustand == 1) {
                     backgroundOverlayX1 = 0;
                     zustand = 0;
-                    break;
+                    return true;
                 }
                 //wenn wir von rechts nach rechts kommen
                 if (backgroundOverlayX1 + deltaXMove < (-1.7 * screenX) && zustand == 2) {
                     backgroundOverlayX1 = -2 * screenX;
                     zustand = 2;
-                    break;
+                    return true;
                 }
                 //von rechts zur mitte kommen
                 if (backgroundOverlayX1 + deltaXMove < (-1.3 * screenX) && zustand == 1) {
                     backgroundOverlayX1 = -2 * screenX;
                     zustand = 2;
-                    break;
+                    return true;
                 }
                 //Mitte
                 backgroundOverlayX1 = (-1 * screenX);
                 zustand = 1;
-                break;
+                return true;
         }
-        return true;
+        return false;
     }
 
     //Alle Bilder einlesen

@@ -338,17 +338,16 @@ class GameView extends SurfaceView implements Runnable {
     @Override
     public boolean onTouchEvent(MotionEvent motionEvent) {
         //Wenn wir im Farmmodus sind
-        if (gameMode == 0) {
-            if (farmMode != null)
+        if (gameMode == 0 && farmMode != null) {
                 return farmMode.onTouchFarm(motionEvent);
         }
         //Wenn wir im Fightmodus sind
-        if (gameMode == 1) {
-            if (fightMode != null)
+        if (gameMode == 1 && fightMode != null) {
                 return fightMode.onTouchFight(motionEvent);
         }
         return false;
     }
+
     public void onBackPressed()
     {
         if (globalVariables.getGameMode() == 1)

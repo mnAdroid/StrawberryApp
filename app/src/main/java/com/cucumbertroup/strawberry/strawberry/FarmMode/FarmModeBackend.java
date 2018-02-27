@@ -162,9 +162,9 @@ class FarmModeBackend {
             strawberryStatus.append("a");
             strawberryStatus.append(strawberries[i].getTimeThisFruit());
             strawberryStatus.append("a");
-            strawberryStatus.append(strawberries[i].getCoordinateX());
+            strawberryStatus.append(strawberries[i].getInitialX());
             strawberryStatus.append("a");
-            strawberryStatus.append(strawberries[i].getCoordinateY());
+            strawberryStatus.append(strawberries[i].getInitialY());
             strawberryStatus.append("a");
         }
         editor.putString("strawberryStatus", strawberryStatus.toString());

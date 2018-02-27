@@ -51,6 +51,8 @@ class FarmModeShop {
         //Globale Infos laden
         globalVariables = GlobalVariables.getInstance();
 
+        globalVariables.setGold(10000);
+
         //Musik einlesen
         farmModeSound = FarmModeSound.getInstance(context);
 
