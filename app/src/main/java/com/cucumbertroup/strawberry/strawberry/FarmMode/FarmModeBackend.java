@@ -2,7 +2,6 @@ package com.cucumbertroup.strawberry.strawberry.FarmMode;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.cucumbertroup.strawberry.strawberry.GlobalVariables;
@@ -23,11 +22,6 @@ class FarmModeBackend {
     //Anzahl und Preis der Farmfläche
     private int numAecker;
     private int priceAecker;
-    private final int AECKER_MAX = 32;
-    //Anzahl und Preis der Länderein
-    private int numLand;
-    private int priceLand;
-    private final int LAND_MAX = 8;
     //Anzahl und Preis der arbeitenden Gurken
     private int numGurken;
     private int priceGurken;
@@ -46,12 +40,11 @@ class FarmModeBackend {
 
         setBitmapMainQuality(500);
 
-        getSharedPreferences(context);
+        //getSharedPreferences(context);
 
         //Preise initialisieren
         priceAecker = getPrice(0);
         priceGurken = getPrice(1);
-        priceLand = getPrice(2);
 
         //Standard Erdbeerkoordinaten
         bitmapStrawberryX1 = getScaledCoordinates(screenX, 1080, 50);
@@ -125,22 +118,21 @@ class FarmModeBackend {
     }
 
     //SharedPreferences auslesen
-    void getSharedPreferences(Context fullContext) {
+    void getSharedPreferences(final Context fullContext) {
         SharedPreferences sharedPreferences = fullContext.getSharedPreferences("StrawberrySettings", 0);
         numStrawberries = sharedPreferences.getInt("numStrawberries", 0);
         numAecker = sharedPreferences.getInt("numAecker", 1);
-        numLand = sharedPreferences.getInt("numLand", 1);
         String strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
         numGurken = sharedPreferences.getInt("numGurken", 1);
         //Initialisierung der gespeicherten Erdbeeren
-        strawberries = new Strawberry[numAecker * AECKER_MAX];
+        strawberries = new Strawberry[numAecker * 8];
 
         //um keine IndexoutofBoundException zu bekommen
         if (!(strawberryStatus.equals(""))) {
             //1. String auseinander nehmen, 2. aus den Daten auslesen
             //Der erste Teil: wachsstatus, der zweite: Ackernummer, der dritte: Zeit
             //vierte: x wert fuenfte: y wert
-            String[] strawberryStatusStrings = strawberryStatus.split("a");
+            String[] strawberryStatusStrings = strawberryStatus.split("@");
             int stringsCounter = 0;
             try {
                 for (int i = 0; i < (numAecker * 8); i++) {
@@ -148,40 +140,50 @@ class FarmModeBackend {
                     stringsCounter += 5;
                 }
             }
+            //Wenn das Einlesen des Strings nicht geklappt hat
             catch (NumberFormatException e) {
-                newStrawberrieArray();
-                Toast.makeText(fullContext, "Erdbeeren sind leider verloren gegangen.", Toast.LENGTH_SHORT).show();
+                try {
+                    Toast.makeText(fullContext, "Leider sind die Erdbeeren verloren gegangen.", Toast.LENGTH_SHORT).show();
+                } catch (RuntimeException runtimeException) {
+                    //unlucky
+                    //eine eigene Klasse um Messages anzuzeigen könnte hier genutzt werden?
+                }
+                //Neues StrawberryArray erstellen
+                strawberries = newStrawberrieArray(strawberries, 0, (numAecker * 8));
+                numStrawberries = 0;
             }
         } else {
-            newStrawberrieArray();
+            //Neues StrawberryArray erstellen
+            strawberries = newStrawberrieArray(strawberries, 0, (numAecker * 8));
         }
     }
 
-    private void newStrawberrieArray() {
+
+    //Das StrawberryArray an einer Stelle vergrößern oder (bei erstem Start) erstellen
+    private Strawberry[] newStrawberrieArray(Strawberry[] strawberry, int range1, int range2) {
         boolean reihe1 = false;
-        for (int i = 0, j = 0; i < (numAecker * 8); i++) {
-            if (j%4 == 0 ) {
+        for (int i = range1; i < range2; i++) {
+            //In welcher Zeile (pro Acker) existiert die Erdbeere?
+            if (i%4 == 0 ) {
                     reihe1 = !reihe1;
             }
+            //In welcher Spalte wird die Erdbeere eingefügt?
             switch (i % 4) {
                 case 0:
-                    strawberries[i] = new Strawberry((i / 8) + 1, bitmapStrawberryX1,  reihe1);
-                    j++;
+                    strawberry[i] = new Strawberry((i / 8) + 1, bitmapStrawberryX1,  reihe1);
                     break;
                 case 1:
-                    strawberries[i] = new Strawberry((i / 8) + 1, bitmapStrawberryX2,  reihe1);
-                    j++;
+                    strawberry[i] = new Strawberry((i / 8) + 1, bitmapStrawberryX2,  reihe1);
                     break;
                 case 2:
-                    strawberries[i] = new Strawberry((i / 8) + 1, bitmapStrawberryX3,  reihe1);
-                    j++;
+                    strawberry[i] = new Strawberry((i / 8) + 1, bitmapStrawberryX3,  reihe1);
                     break;
                 case 3:
-                    strawberries[i] = new Strawberry((i / 8) + 1, bitmapStrawberryX4,  reihe1);
-                    j++;
+                    strawberry[i] = new Strawberry((i / 8) + 1, bitmapStrawberryX4,  reihe1);
                     break;
             }
         }
+        return strawberry;
     }
 
     //SharedPreferences wieder sicher verwahren
@@ -190,7 +192,6 @@ class FarmModeBackend {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt("numStrawberries", numStrawberries);
         editor.putInt("numAecker", numAecker);
-        editor.putInt("numLand", numLand);
         editor.putInt("numGurken", numGurken);
 
         //Hier kommen alle derzeitigen Erdbeeren rein um gespeichert zu werden
@@ -200,15 +201,15 @@ class FarmModeBackend {
         //der fuenfte: Y Koordinate
         for (int i = 0; i < (numAecker * 8); i++) {
             strawberryStatus.append(strawberries[i].getWachsStatus());
-            strawberryStatus.append("a");
+            strawberryStatus.append("@");
             strawberryStatus.append(strawberries[i].getAcker());
-            strawberryStatus.append("a");
+            strawberryStatus.append("@");
             strawberryStatus.append(strawberries[i].getTimeThisFruit());
-            strawberryStatus.append("a");
+            strawberryStatus.append("@");
             strawberryStatus.append(strawberries[i].getCoordinateX());
-            strawberryStatus.append("a");
+            strawberryStatus.append("@");
             strawberryStatus.append(strawberries[i].isReihe1());
-            strawberryStatus.append("a");
+            strawberryStatus.append("@");
         }
         editor.putString("strawberryStatus", strawberryStatus.toString());
 
@@ -217,14 +218,12 @@ class FarmModeBackend {
 
     //Gibt den Preis der Elemente aus dem Shop aus
     private int getPrice(int whichOne) {
-        //whichOne Legende: 0: Acker, 1: Gurke, 2: Land, 3: Werkzeug
+        //whichOne Legende: 0: Acker, 1: Gurke, 2: früher Land, 3: Werkzeug
         switch (whichOne) {
             case 0:
                 return (int) (50*Math.pow((double) numAecker, 1.7));
             case 1:
                 return (int) (500*Math.pow((double) numGurken, 1.5));
-            case 2:
-                return (int) (50*Math.pow((double) (numLand*8), 1.7));
             case 3:
                 return 42;
         }
@@ -240,50 +239,20 @@ class FarmModeBackend {
 
         //Neues Strawberry Array erstellen
         Strawberry[] strawberriesTemp = Arrays.copyOf(strawberries, numAecker*8);
-        boolean reihe1 = false;
-        for (int i = ((numAecker-1) * 8); i < (numAecker * 8); i++) {
-            if (i%4 == 0 ) {
-                reihe1 = !reihe1;
-            }
-            switch (i % 4) {
-                case 0:
-                    strawberriesTemp[i] = new Strawberry((i / 8) + 1, bitmapStrawberryX1,  reihe1);
-                    break;
-                case 1:
-                    strawberriesTemp[i] = new Strawberry((i / 8) + 1, bitmapStrawberryX2,  reihe1);
-                    break;
-                case 2:
-                    strawberriesTemp[i] = new Strawberry((i / 8) + 1, bitmapStrawberryX3,  reihe1);
-                    break;
-                case 3:
-                    strawberriesTemp[i] = new Strawberry((i / 8) + 1, bitmapStrawberryX4,  reihe1);
-                    break;
-            }        }
-        strawberries = strawberriesTemp;
+        //Das Strawberry Array wird in extra Funktion gefüllt
+        strawberries = newStrawberrieArray(strawberriesTemp, ((numAecker-1) * 8), (numAecker * 8));
     }
 
     int getNumAecker() {
         return numAecker;
     }
 
-    int getNumLand() {
-        return numLand;
-    }
-
     int getNumGurken() {
         return numGurken;
     }
 
-    int getNumStrawberries() {
-        return numStrawberries;
-    }
-
     int getPriceAecker() {
         return priceAecker;
-    }
-
-    int getPriceLand() {
-        return priceLand;
     }
 
     int getPriceGurken() {
@@ -299,11 +268,6 @@ class FarmModeBackend {
             return strawberries[index];
         }
         return null;
-    }
-    void landGekauft() {
-        numLand++;
-        globalVariables.setGold(globalVariables.getGold() - priceLand);
-        priceLand = getPrice(2);
     }
 
     void gurkeGekauft() {

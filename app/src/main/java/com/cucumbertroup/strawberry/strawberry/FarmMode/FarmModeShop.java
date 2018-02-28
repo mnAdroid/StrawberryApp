@@ -25,13 +25,11 @@ class FarmModeShop {
 
     //Testbuttons FARM erstellen
     private Bitmap bitmapAckerKaufenButton;
-    private Bitmap bitmapLandKaufenButton;
     private Bitmap bitmapGurkeKaufenButton;
 
     //Wo kommen die Buttons hin?
     private int textSize, textX, textY;
     private int bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY;
-    private int bitmapLandKaufenButtonX, bitmapLandKaufenButtonY;
     private int bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY;
 
     //Globale Variablenübertragungsklasse ;)
@@ -51,7 +49,7 @@ class FarmModeShop {
         //Globale Infos laden
         globalVariables = GlobalVariables.getInstance();
 
-        globalVariables.setGold(10000);
+        globalVariables.setGold(10000000);
 
         //Musik einlesen
         farmModeSound = FarmModeSound.getInstance(context);
@@ -78,12 +76,8 @@ class FarmModeShop {
             //Anzahl Gurken
             canvas.drawText("Gurken: " + farmModeBackend.getNumGurken() + " | Kosten: " + farmModeBackend.getPriceGurken() + " Gold", textX, 2 * textY, paint);
 
-            //Anzahl Land
-            if ((farmModeBackend.getNumAecker() / 4) >= farmModeBackend.getNumLand())
-                canvas.drawText("Land: " + farmModeBackend.getNumLand() + " | Kosten: " + farmModeBackend.getPriceLand() + " Gold", textX, 4 * textY, paint);
-                //Anzahl Aecker
-            else
-                canvas.drawText("Äcker: " + farmModeBackend.getNumAecker() + " | Kosten: " + farmModeBackend.getPriceAecker() + " Gold", textX, 4 * textY, paint);
+            //Anzahl Äcker
+            canvas.drawText("Äcker: " + farmModeBackend.getNumAecker() + " | Kosten: " + farmModeBackend.getPriceAecker() + " Gold", textX, 4 * textY, paint);
 
             //Wie viel Gold haben wir eigentlich?
             canvas.drawText("Gold: " + globalVariables.getGold(), textX, 6 * textY, paint);
@@ -91,8 +85,6 @@ class FarmModeShop {
             //Button malen
             if (bitmapAckerKaufenButton != null)
                 canvas.drawBitmap(bitmapAckerKaufenButton, bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY, paint);
-            if (bitmapLandKaufenButton != null && (farmModeBackend.getNumAecker() / 4) >= farmModeBackend.getNumLand())
-                canvas.drawBitmap(bitmapLandKaufenButton, bitmapLandKaufenButtonX, bitmapLandKaufenButtonY, paint);
             if (bitmapGurkeKaufenButton != null)
                 canvas.drawBitmap(bitmapGurkeKaufenButton, bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY, paint);
         } catch (NullPointerException e) {
@@ -110,20 +102,10 @@ class FarmModeShop {
                 float touchX1 = motionEvent.getX();
                 float touchY1 = motionEvent.getY();
 
-                if ((farmModeBackend.getNumAecker() / 4) < farmModeBackend.getNumLand() && touchX1 >= bitmapAckerKaufenButtonX && touchX1 < (bitmapAckerKaufenButtonX + bitmapAckerKaufenButton.getWidth())
+                if (touchX1 >= bitmapAckerKaufenButtonX && touchX1 < (bitmapAckerKaufenButtonX + bitmapAckerKaufenButton.getWidth())
                         && touchY1 >= bitmapAckerKaufenButtonY && touchY1 < (bitmapAckerKaufenButtonY + bitmapAckerKaufenButton.getHeight())) {
-                    if (globalVariables.getGold() >= (farmModeBackend.getPriceAecker() + farmModeBackend.getSTRAWBERRY_PRICE()) && farmModeBackend.getNumAecker() < 32) {
+                    if (globalVariables.getGold() >= (farmModeBackend.getPriceAecker() + farmModeBackend.getSTRAWBERRY_PRICE())) {
                         farmModeBackend.ackerGekauft();
-                        farmModeSound.playSound(5, fullContext);
-                    } else
-                        farmModeSound.playSound(4, fullContext);
-                    break;
-                }
-                //land kaufen Button
-                if ((farmModeBackend.getNumAecker() / 4) >= farmModeBackend.getNumLand() && touchX1 >= bitmapLandKaufenButtonX && touchX1 < (bitmapLandKaufenButtonX + bitmapLandKaufenButton.getWidth())
-                        && touchY1 >= bitmapLandKaufenButtonY && touchY1 < (bitmapLandKaufenButtonY + bitmapLandKaufenButton.getHeight())) {
-                    if (globalVariables.getGold() >= (farmModeBackend.getPriceLand() + farmModeBackend.getSTRAWBERRY_PRICE()) && farmModeBackend.getNumLand() < 8) {
-                        farmModeBackend.landGekauft();
                         farmModeSound.playSound(5, fullContext);
                     } else
                         farmModeSound.playSound(4, fullContext);
@@ -164,13 +146,6 @@ class FarmModeShop {
         bitmapAckerKaufenButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.ackerkaufen_button, 100, 100);
         bitmapAckerKaufenButton = Bitmap.createScaledBitmap(bitmapAckerKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
-        //Land Kaufen Button
-        options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        bitmapLandKaufenButton = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.landkaufen_button, options);
-        bitmapLandKaufenButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.landkaufen_button, 100, 100);
-        bitmapLandKaufenButton = Bitmap.createScaledBitmap(bitmapLandKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
-
         //Gurke Kaufen Button
         options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
@@ -181,8 +156,6 @@ class FarmModeShop {
         //Feste Werte setzen
         bitmapAckerKaufenButtonX = getScaledCoordinates(screenX, 1080, 20);
         bitmapAckerKaufenButtonY = getScaledCoordinates(screenY, 1920, 400);
-        bitmapLandKaufenButtonX = bitmapAckerKaufenButtonX;
-        bitmapLandKaufenButtonY = bitmapAckerKaufenButtonY;
         bitmapGurkeKaufenButtonX = getScaledCoordinates(screenX, 1080, 270);
         bitmapGurkeKaufenButtonY = bitmapAckerKaufenButtonY;
     }
@@ -192,8 +165,6 @@ class FarmModeShop {
         //Bitmaps Recyclen
         bitmapAckerKaufenButton.recycle();
         bitmapAckerKaufenButton = null;
-        bitmapLandKaufenButton.recycle();
-        bitmapLandKaufenButton = null;
         bitmapGurkeKaufenButton.recycle();
         bitmapGurkeKaufenButton = null;
     }

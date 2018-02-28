@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.util.Log;
 
 import com.cucumbertroup.strawberry.strawberry.R;
 
@@ -128,7 +127,6 @@ class FarmModeList {
                     for (int i = 0; i < bitmapAckerY.length*8; i++) {
                         Strawberry tmp = farmModeBackend.getSpecificStrawberry(i);
                         if (tmp != null && tmp.getWachsStatus() != -1) {
-                            Log.d("Ackerauswahl", "tmp.getAcker() " + tmp.getAcker() + "i/8 + 1 " + (i/8 + 1));
                             if (tmp.getAcker() == (i/8 + 1) && tmp.getAcker() == ( j + 1)) {
                                 if (tmp.isReihe1())
                                     canvas.drawBitmap(getCorrectStrawberryImage(tmp.getWachsStatus()), tmp.getCoordinateX(), bitmapAckerY[j], paint);

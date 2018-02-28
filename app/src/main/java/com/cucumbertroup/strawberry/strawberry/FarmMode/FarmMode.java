@@ -152,17 +152,8 @@ public class FarmMode {
                     paint.setStyle(Paint.Style.FILL);
                     paint.setTextSize(textSize);
 
-                    //Anzahl der Erdbeeren
-                    canvas.drawText("Erdbeeren: " + farmModeBackend.getNumStrawberries(), 3 * textX, 11 * textY, paint);
-
-                    //Anzahl Gurken
-                    canvas.drawText("Gurken: " + farmModeBackend.getNumGurken(), 3 * textX, 12 * textY, paint);
-
-                    //Anzahl Aecker
-                    canvas.drawText("Äcker: " + farmModeBackend.getNumAecker(), 3 * textX, 13 * textY, paint);
-
-                    //Wie viel Gold haben wir eigentlich?
-                    canvas.drawText("Gold: " + globalVariables.getGold(), 3 * textX, 14 * textY, paint);
+                    //Wie viel Gold haben wir?
+                    canvas.drawText("Gold: " + globalVariables.getGold(), 3 * textX, 2 * textY, paint);
                 }
             } catch (NullPointerException e) {
                 farmModeBackend.setSharedPreferences(fullContext);

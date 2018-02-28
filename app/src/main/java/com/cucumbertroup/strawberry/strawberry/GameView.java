@@ -64,12 +64,18 @@ class GameView extends SurfaceView implements Runnable {
     //Damit nicht ausversehen nicht mehr zwischen Modi gewechselt werden kann
     private boolean modeChanging;
 
+    //Ist das der Start der App oder nur ein resume
+    private boolean start;
+
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     public GameView(Context context, int screenX, int screenY) {
         super(context);
 
         //Context für GameView abspeichern und zugänglich machen
         fullContext = context;
+
+        //erster start
+        start = true;
 
         //Bildschirmkoordinaten
         this.screenX = screenX;
@@ -296,7 +302,7 @@ class GameView extends SurfaceView implements Runnable {
         getSharedPreferences();
         //Modus starten
         if (gameMode == 0) {
-            if (farmMode != null)
+            if (farmMode != null && !start)
                 farmMode.getSharedPreferences();
             else {
                 if (globalVariables == null)
@@ -329,6 +335,7 @@ class GameView extends SurfaceView implements Runnable {
         }
 
         modeChanging = false;
+        start = true;
         //Gamethread starten
         gameThread = new Thread(this);
         gameThread.start();

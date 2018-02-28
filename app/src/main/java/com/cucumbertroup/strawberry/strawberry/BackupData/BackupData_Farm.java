@@ -3,15 +3,10 @@ package com.cucumbertroup.strawberry.strawberry.BackupData;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-/**
- * Created by Max on 18.01.2018.
- */
-
 public class BackupData_Farm {
     //Farmdaten
     private int numStrawberries;
     private int numAecker;
-    private int numLand;
     private String strawberryStatus;
     private int numGurken;
 
@@ -27,7 +22,6 @@ public class BackupData_Farm {
         SharedPreferences sharedPreferences = fullContext.getSharedPreferences("StrawberrySettings", 0);
         numStrawberries = sharedPreferences.getInt("numStrawberries", 0);
         numAecker = sharedPreferences.getInt("numAecker", 1);
-        numLand = sharedPreferences.getInt("numLand", 1);
         strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
         numGurken = sharedPreferences.getInt("numGurken", 1);
     }
@@ -39,7 +33,6 @@ public class BackupData_Farm {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putInt("numStrawberries", numStrawberries);
                 editor.putInt("numAecker", numAecker);
-                editor.putInt("numLand", numLand);
                 editor.putInt("numGurken", numGurken);
                 editor.putString("strawberryStatus", strawberryStatus);
                 editor.apply();
@@ -59,10 +52,6 @@ public class BackupData_Farm {
 
     public int getNumAecker() {
         return numAecker;
-    }
-
-    public int getNumLand() {
-        return numLand;
     }
 
     public String getStrawberryStatus() {
