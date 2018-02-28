@@ -2,7 +2,7 @@ package com.cucumbertroup.strawberry.strawberry.FarmMode;
 
 class Strawberry {
     private int wachsStatus;
-    //-1: nicht gesäht, 0: ausgesäht, 1-4: Wachstumsphasen, 5: Ausgewachsen
+    //-1: nicht gesäht, 0: ausgesäht, 1-3: Wachstumsphasen, 4: Ausgewachsen
     //wächst automatisch um 0.1 pro adc
 
     //Wann wurde das Ding erstellt?
@@ -10,29 +10,27 @@ class Strawberry {
 
     //Um zu wissen welche Erdbeere (auf welchem Acker, welche Zahl)
     private int acker;
-    private int initialX, initialY;
-    private int coordinateX, coordinateY;
+    private int coordinateX;
+    private boolean reihe1;
 
-    Strawberry(int acker, int x, int y) {
+    Strawberry(int acker, int x, boolean reihe1) {
         wachsStatus = -1;
         this.acker = acker;
-        initialX = x;
-        initialY = y;
         coordinateX = x;
-        coordinateY = y;
+        this.reihe1 = reihe1;
     }
 
-    Strawberry(int wachsStatus, int acker, long timeThisFruit, int x, int y) {
+    Strawberry(int wachsStatus, int acker, long timeThisFruit, int x, boolean reihe1) {
         this.wachsStatus = wachsStatus;
         this.acker = acker;
         this.timeThisFruit = timeThisFruit;
         coordinateX = x;
-        coordinateY = y;
+        this.reihe1 = reihe1;
     }
 
     void incrWachsStatus(int setz) {
         //wir wollen ja keine Erdbeeren wachsen lassen die nicht gesäht oder schon ausgewachsen sind
-        if (wachsStatus < 5 && wachsStatus >= 0) {
+        if (wachsStatus < 4 && wachsStatus >= 0) {
             wachsStatus += setz;
         }
     }
@@ -62,7 +60,7 @@ class Strawberry {
 
     boolean update() {
         //Zeit seit Erstellung / letztem wachsStatus-Update der Erdbeere überprüfen und möglicherweise wachsStatus erhöhen
-        if (System.currentTimeMillis() - timeThisFruit > 10000 && wachsStatus <5 && wachsStatus >= 0) {
+        if (System.currentTimeMillis() - timeThisFruit > 10000 && wachsStatus <4 && wachsStatus >= 0) {
             timeThisFruit += 10000;
             wachsStatus++;
             return true;
@@ -74,19 +72,7 @@ class Strawberry {
         return coordinateX;
     }
 
-    int getCoordinateY() {
-        return coordinateY;
-    }
-
-    void setCoordinateY(int coordinateY) {
-        this.coordinateY = coordinateY;
-    }
-
-    public int getInitialX() {
-        return initialX;
-    }
-
-    public int getInitialY() {
-        return initialY;
+    boolean isReihe1() {
+        return reihe1;
     }
 }

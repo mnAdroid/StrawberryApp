@@ -94,7 +94,7 @@ public class FarmMode {
         farmModeList = new FarmModeList(context, screenX, screenY);
 
         //Backend einlesen
-        farmModeBackend = FarmModeBackend.getInstance(context);
+        farmModeBackend = FarmModeBackend.getInstance(context, screenX);
 
         //Bildqualitaet einstellen
         farmModeBackend.setBitmapMainQuality(500);

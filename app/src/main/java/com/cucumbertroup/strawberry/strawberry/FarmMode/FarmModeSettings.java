@@ -139,7 +139,7 @@ class FarmModeSettings {
 
         Strawberry[] strawberries = new Strawberry[32];
         for (int i = 0; i < 16; i++) {
-            strawberries[i] = new Strawberry((i / 16) + 1, 0, 0);
+            strawberries[i] = new Strawberry((i / 16) + 1, 0, true);
         }
 
         //Hier kommen alle derzeitigen Erdbeeren rein um gespeichert zu werden

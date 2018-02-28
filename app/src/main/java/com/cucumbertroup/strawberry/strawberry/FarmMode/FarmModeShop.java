@@ -57,7 +57,7 @@ class FarmModeShop {
         farmModeSound = FarmModeSound.getInstance(context);
 
         //Backend Instance bekommen
-        farmModeBackend = FarmModeBackend.getInstance(context);
+        farmModeBackend = FarmModeBackend.getInstance(context, screenX);
 
         //Alle Grafiken einlesen
         initialiseGrafics();
