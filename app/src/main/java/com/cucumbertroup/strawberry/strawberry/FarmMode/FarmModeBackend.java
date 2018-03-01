@@ -34,9 +34,9 @@ class FarmModeBackend {
     //Erdbeerkosten
     private final int STRAWBERRY_PRICE = 1;
 
-    private FarmModeBackend(Context context, int screenX) {
+    private FarmModeBackend(int screenX) {
         globalVariables = GlobalVariables.getInstance();
-        farmModeSound = FarmModeSound.getInstance(context);
+        farmModeSound = FarmModeSound.getInstance();
 
         setBitmapMainQuality(500);
 
@@ -53,9 +53,9 @@ class FarmModeBackend {
         bitmapStrawberryX4 = getScaledCoordinates(screenX, 1080, 770);
     }
 
-    static synchronized FarmModeBackend getInstance(Context context, int screenX) {
+    static synchronized FarmModeBackend getInstance(int screenX) {
         if (FarmModeBackend.instance == null) {
-            FarmModeBackend.instance = new FarmModeBackend(context, screenX);
+            FarmModeBackend.instance = new FarmModeBackend(screenX);
         }
         return FarmModeBackend.instance;
     }

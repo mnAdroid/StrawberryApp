@@ -65,7 +65,7 @@ class FarmModeList {
         bitmapStrawberryYAbstand = getScaledCoordinates(screenY, 1920, 200);
 
         //Backend einlesen
-        farmModeBackend = FarmModeBackend.getInstance(context, screenX);
+        farmModeBackend = FarmModeBackend.getInstance(screenX);
 
         //Alle Grafiken einlesen
         initialiseGrafics();

@@ -47,14 +47,14 @@ class FarmModeSound {
     private int gold1 = -1;
     private MediaPlayer backgroundloop1; //Farmmusik
     private boolean ticktack = true; //für den Uhr Sound
+    private boolean loaded = false; //ist der soundPool fertig
 
-    private FarmModeSound(Context context) {
+    private FarmModeSound() {
         globalVariables = GlobalVariables.getInstance();
-        initialiseSound(context);
     }
-    static synchronized FarmModeSound getInstance(Context context) {
+    static synchronized FarmModeSound getInstance() {
         if (FarmModeSound.instance == null) {
-            FarmModeSound.instance = new FarmModeSound(context);
+            FarmModeSound.instance = new FarmModeSound();
         }
         return FarmModeSound.instance;
     }
@@ -64,91 +64,99 @@ class FarmModeSound {
         //In neuen Versionen soll man das halt jetzt so machen
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             soundPool = new SoundPool.Builder()
-                    .setMaxStreams(10)
+                    .setMaxStreams(3)
                     .build();
         } else {
             //Aber ich will die alten Versionen trz nicht verlieren deshalb lassen wir das mal drin
-            soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
+            soundPool = new SoundPool(3, AudioManager.STREAM_MUSIC, 0);
         }
+
+        //Ist der SoundPool fertig geladen
+        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int i, int i1) {
+                loaded = true;
+            }
+        });
 
         try {
             AssetManager assetManager = fullContext.getAssets();
             AssetFileDescriptor descriptor;
 
-            //Musik tatsächlich einladen
+            //Musik tatsächlich einlesen
             descriptor = assetManager.openFd("click1.wav");
-            click1 = soundPool.load(descriptor, 0);
+            click1 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("clock1.wav");
-            clock1 = soundPool.load(descriptor, 0);
+            clock1 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("clock2.wav");
-            clock2 = soundPool.load(descriptor, 0);
+            clock2 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("dirt1.wav");
-            dirt1 = soundPool.load(descriptor, 0);
+            dirt1 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("dirt2.wav");
-            dirt2 = soundPool.load(descriptor, 0);
+            dirt2 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("dirt3.wav");
-            dirt3 = soundPool.load(descriptor, 0);
+            dirt3 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("dirt4.wav");
-            dirt4 = soundPool.load(descriptor, 0);
+            dirt4 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("dirt5.wav");
-            dirt5 = soundPool.load(descriptor, 0);
+            dirt5 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("dirt6.wav");
-            dirt6 = soundPool.load(descriptor, 0);
+            dirt6 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("dirt7.wav");
-            dirt7 = soundPool.load(descriptor, 0);
+            dirt7 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("dirt8.wav");
-            dirt8 = soundPool.load(descriptor, 0);
+            dirt8 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("dirt9.wav");
-            dirt9 = soundPool.load(descriptor, 0);
+            dirt9 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("plop1.wav");
-            plop1 = soundPool.load(descriptor, 0);
+            plop1 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("plop2.wav");
-            plop2 = soundPool.load(descriptor, 0);
+            plop2 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("plop3.wav");
-            plop3 = soundPool.load(descriptor, 0);
+            plop3 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("plop4.wav");
-            plop4 = soundPool.load(descriptor, 0);
+            plop4 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("plop5.wav");
-            plop5 = soundPool.load(descriptor, 0);
+            plop5 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("plop6.wav");
-            plop6 = soundPool.load(descriptor, 0);
+            plop6 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("plop7.wav");
-            plop7 = soundPool.load(descriptor, 0);
+            plop7 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("plop8.wav");
-            plop8 = soundPool.load(descriptor, 0);
+            plop8 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("plop9.wav");
-            plop9 = soundPool.load(descriptor, 0);
+            plop9 = soundPool.load(descriptor, 1);
 
             descriptor = assetManager.openFd("gold1.wav");
-            gold1 = soundPool.load(descriptor, 0);
+            gold1 = soundPool.load(descriptor, 1);
         } catch (IOException e) {
             //Errormessage
-            Log.e("error", "failed to load sound files");
+            Log.e("FarmSoundError", "failed to load sound files");
         }
     }
 
     //Hintergrundmusikverwaltung
-    private void backgroundMusicPlayer(Context fullContext) {
+    private synchronized void backgroundMusicPlayer(Context fullContext) {
         try {
             //Beim ersten Start der Farmmusik
             if (backgroundloop1 == null && globalVariables.getMusicOn()) {
@@ -169,6 +177,9 @@ class FarmModeSound {
     void playSound(int whichOne, Context context) {
         //whichone Legende: 0 -> Hintergrundmusik; 1 -> Sähsound; 2 -> Uhr Sound; 3 -> Erntesound; 4 -> Buttonklick; 5 -> Geld
 
+        if (soundPool == null || !loaded) {
+            initialiseSound(context);
+        }
         //Zufallszahl generieren um die aussäh und erntegeräusche abwechslungsreicher zu machen
         Random random = new Random();
         int randomInt = 1;
@@ -217,9 +228,12 @@ class FarmModeSound {
             case 2:
                 if (globalVariables.getSoundOn()) {
                     if (ticktack) {
+                        Log.d("instance", "" + instance);
+                        Log.d("clock1", "" + clock1);
                         soundPool.play(clock1, 1, 1, 0, 0, 1);
                         ticktack = false;
                     } else {
+                        Log.d("clock2", "" + clock2);
                         soundPool.play(clock2, 1, 1, 0, 0, 1);
                         ticktack = true;
                     }
@@ -273,28 +287,12 @@ class FarmModeSound {
         //Audio releasen
         if (backgroundloop1 != null)
             backgroundloop1.pause();
-        soundPool.release();
-        click1 = -1;
-        clock1 = -1;
-        clock2 = -1;
-        dirt1 = -1;
-        dirt2 = -1;
-        dirt3 = -1;
-        dirt4 = -1;
-        dirt5 = -1;
-        dirt6 = -1;
-        dirt7 = -1;
-        dirt8 = -1;
-        dirt9 = -1;
-        plop1 = -1;
-        plop2 = -1;
-        plop3 = -1;
-        plop4 = -1;
-        plop5 = -1;
-        plop6 = -1;
-        plop7 = -1;
-        plop8 = -1;
-        plop9 = -1;
+        if (soundPool != null) {
+            soundPool.autoPause();
+            soundPool.release();
+            soundPool = null;
+        }
+        loaded = false;
         instance = null;
     }
 

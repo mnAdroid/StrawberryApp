@@ -51,7 +51,7 @@ class FarmModeSettings {
         globalVariables = GlobalVariables.getInstance();
 
         //Musik einlesen
-        farmModeSound = FarmModeSound.getInstance(context);
+        farmModeSound = FarmModeSound.getInstance();
 
         //Alle Grafiken einlesen
         initialiseGrafics();

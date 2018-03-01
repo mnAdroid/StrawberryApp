@@ -88,13 +88,13 @@ public class FarmMode {
         globalVariables = GlobalVariables.getInstance();
 
         //Musik einlesen
-        farmModeSound = FarmModeSound.getInstance(context);
+        farmModeSound = FarmModeSound.getInstance();
 
         //Farmliste einlesen
         farmModeList = new FarmModeList(context, screenX, screenY);
 
         //Backend einlesen
-        farmModeBackend = FarmModeBackend.getInstance(context, screenX);
+        farmModeBackend = FarmModeBackend.getInstance(screenX);
 
         //Bildqualitaet einstellen
         farmModeBackend.setBitmapMainQuality(500);
