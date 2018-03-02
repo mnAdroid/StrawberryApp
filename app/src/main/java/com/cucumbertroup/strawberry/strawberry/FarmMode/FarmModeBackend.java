@@ -2,6 +2,7 @@ package com.cucumbertroup.strawberry.strawberry.FarmMode;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.cucumbertroup.strawberry.strawberry.GlobalVariables;
@@ -41,10 +42,6 @@ class FarmModeBackend {
         setBitmapMainQuality(500);
 
         //getSharedPreferences(context);
-
-        //Preise initialisieren
-        priceAecker = getPrice(0);
-        priceGurken = getPrice(1);
 
         //Standard Erdbeerkoordinaten
         bitmapStrawberryX1 = getScaledCoordinates(screenX, 1080, 50);
@@ -127,6 +124,13 @@ class FarmModeBackend {
         //Initialisierung der gespeicherten Erdbeeren
         strawberries = new Strawberry[numAecker * 8];
 
+        Log.d("numGurken", "" + numGurken);
+        Log.d("numGurkenShared", "" +  sharedPreferences.getInt("numGurken", 1));
+        //Preise initialisieren
+        priceAecker = calcPrice(0);
+        priceGurken = calcPrice(1);
+
+        //Erdbeer Array erstellen
         //um keine IndexoutofBoundException zu bekommen
         if (!(strawberryStatus.equals(""))) {
             //1. String auseinander nehmen, 2. aus den Daten auslesen
@@ -157,7 +161,6 @@ class FarmModeBackend {
             strawberries = newStrawberrieArray(strawberries, 0, (numAecker * 8));
         }
     }
-
 
     //Das StrawberryArray an einer Stelle vergrößern oder (bei erstem Start) erstellen
     private Strawberry[] newStrawberrieArray(Strawberry[] strawberry, int range1, int range2) {
@@ -217,7 +220,7 @@ class FarmModeBackend {
     }
 
     //Gibt den Preis der Elemente aus dem Shop aus
-    private int getPrice(int whichOne) {
+    private int calcPrice(int whichOne) {
         //whichOne Legende: 0: Acker, 1: Gurke, 2: früher Land, 3: Werkzeug
         switch (whichOne) {
             case 0:
@@ -235,7 +238,7 @@ class FarmModeBackend {
         //Anzahl hochzählen und Gold abbuchen
         numAecker++;
         globalVariables.setGold(globalVariables.getGold() - priceAecker);
-        priceAecker = getPrice(0);
+        priceAecker = calcPrice(0);
 
         //Neues Strawberry Array erstellen
         Strawberry[] strawberriesTemp = Arrays.copyOf(strawberries, numAecker*8);
@@ -273,7 +276,7 @@ class FarmModeBackend {
     void gurkeGekauft() {
         numGurken++;
         globalVariables.setGold(globalVariables.getGold() - priceGurken);
-        priceGurken = getPrice(1);
+        priceGurken = calcPrice(1);
     }
 
     int getBitmapMainQuality() {
@@ -283,5 +286,15 @@ class FarmModeBackend {
     void setBitmapMainQuality(int bitmapMainQuality) {
         if (bitmapMainQuality >= 250 && bitmapMainQuality <= 1000)
             this.bitmapMainQuality = bitmapMainQuality;
+    }
+
+    void recycle() {
+        //Erdbeeren aufräumen
+        for (int i = 0; i < strawberries.length; i++)
+            strawberries[i] = null;
+        //Erdbeeren Array aufräumen
+        strawberries = null;
+        //Klasse selbst vernichten
+        instance = null;
     }
 }

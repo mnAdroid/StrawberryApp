@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
@@ -30,11 +31,13 @@ public class FarmMode {
     private float touchX1;
     private float touchX1down;
     private float touchY1;
+    private float touchY1down;
     //Berühren wir den Bildschirm mit mehr als einem Finger?
     private boolean touchPointer = false;
     //Abstand der letzten Bewegung auf dem Bildschirm
     private float deltaXMove;
-    private float deltaYMove;
+    //Wann fand das TouchEvent statt
+    private long touchTimer;
 
     //Ort des Hintergrundbildes
     private float backgroundOverlayX1;
@@ -173,10 +176,14 @@ public class FarmMode {
             case MotionEvent.ACTION_DOWN:
                 //Wo befanden wir uns am Anfang?
                 touchX1down = motionEvent.getX();
+                touchY1down = motionEvent.getY();
                 //Wo befinden wir uns gerade? (Hier noch identisch mit touchX1down)
                 touchX1 = motionEvent.getX();
                 touchY1 = motionEvent.getY();
+                //Der zweite Finger ist noch nicht auf dem Screen
                 touchPointer = false;
+                //Wie spät ist es?
+                touchTimer = System.currentTimeMillis();
 
                 //Wir erlauben keine Buttonklicks wenn wir gerade laden
                 if (!loading) {
@@ -213,7 +220,7 @@ public class FarmMode {
                 if (!touchPointer && !loading) {
                     //In welche Richtung hat sich der Finger bewegt? | Differenz der beiden Werte
                     deltaXMove = motionEvent.getX() - touchX1;
-                    deltaYMove = motionEvent.getY() - touchY1;
+                    float deltaYMove = motionEvent.getY() - touchY1;
                     //wo befinden wir uns in diesem Schritt
                     touchX1 = motionEvent.getX();
                     touchY1 = motionEvent.getY();
@@ -237,8 +244,19 @@ public class FarmMode {
             case MotionEvent.ACTION_UP:
                 //Wie weit hat sich der Finger insgesamt bewegt? | Differenz der beiden Werte
                 float deltaXClick = motionEvent.getX() - touchX1down;
+                float deltaYClick = motionEvent.getY() - touchY1down;
 
-                //reset der Hintergrundbildposition
+                //FLINGING DER ACKERLISTE
+                //Abhängigkeit zwischen touchTimer und deltaYClick muss aufgebaut werden
+                //touchtimer <100 fast scroll (exakt eine Sekunde lang)
+                //touch timer >100 etwas langsameres scrollen | wenn deltaYCLick > 700 ist (fast scroll)
+                //touchtimer >200 nur leichte Animation zum Ende (exakt 0,5 Sekunden lang
+                //scroll muss ne extra Funktion bekommen die im update() immer wieder aufgerufen wird für smooth animation
+                //farmModeList.scroll(deltaYMove);
+                Log.d("touchTimer", "" + (touchTimer - System.currentTimeMillis()));
+                Log.d("deltaYClick", "" + deltaYClick);
+
+                //RESET DER HINTERGRUNDBILDPOSITION
 
                 //Wären wir über den Rand gekommen?
                 if (((backgroundOverlayX1 + deltaXClick) > 0) || ((backgroundOverlayX1 + deltaXClick) < (-2 * screenX))) {
@@ -348,18 +366,42 @@ public class FarmMode {
     }
 
     //Wenn wir den Modus verlassen
-    public GlobalVariables recycle() {
+    public void recycle() {
         loading = true;
         farmModeBackend.setSharedPreferences(fullContext);
 
         //Sound recyclen
-        farmModeSound.recycle();
+        if (farmModeSound != null) {
+            farmModeSound.recycle();
+            farmModeSound = null;
+        }
+
+        //Backend recyclen
+        if (farmModeBackend != null) {
+            farmModeBackend.recycle();
+            farmModeBackend = null;
+        }
+
+        //AckerList recyclen
+        if (farmModeList != null) {
+            farmModeList.recycle();
+            farmModeList = null;
+        }
+
+        //Shop und Settings recyclen
+        if (farmModeShop != null) {
+            farmModeShop.recycle();
+            farmModeShop = null;
+        }
+        if (farmModeSettings != null) {
+            farmModeSettings.recycle();
+            farmModeSettings = null;
+        }
         //Bitmaps Recyclen
         bitmapBackgroundLand.recycle();
         bitmapBackgroundLand = null;
         bitmapBackgroundOverlay.recycle();
         bitmapBackgroundOverlay = null;
-        return globalVariables;
     }
 
     public void onBackPressed() {

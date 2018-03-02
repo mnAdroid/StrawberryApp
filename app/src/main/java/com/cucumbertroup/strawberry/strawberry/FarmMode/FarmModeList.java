@@ -201,4 +201,20 @@ class FarmModeList {
             }
         }
     }
+
+    void recycle() {
+        bitmapAcker.recycle();
+        bitmapAcker = null;
+        bitmapErdbeere1.recycle();
+        bitmapErdbeere1 = null;
+        bitmapErdbeere2.recycle();
+        bitmapErdbeere2 = null;
+        bitmapErdbeere3.recycle();
+        bitmapErdbeere3 = null;
+        bitmapErdbeere4.recycle();
+        bitmapErdbeere4 = null;
+        bitmapErdbeere5.recycle();
+        bitmapErdbeere5 = null;
+        bitmapAckerY = null;
+    }
 }

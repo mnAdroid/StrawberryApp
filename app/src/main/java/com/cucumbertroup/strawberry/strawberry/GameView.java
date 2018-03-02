@@ -147,7 +147,7 @@ class GameView extends SurfaceView implements Runnable {
             gameMode = -1;
             //Farmmode aufräumen
             if (farmMode != null)
-                globalVariables = farmMode.recycle();
+                farmMode.recycle();
             farmMode = null;
             //Die Allgemeinen Daten abspeichern
             setSharedPreferences();
@@ -277,7 +277,7 @@ class GameView extends SurfaceView implements Runnable {
     public void pause() {
         isPlaying = false;
         if (farmMode != null) {
-            globalVariables = farmMode.recycle();
+            farmMode.recycle();
             farmMode = null;
         }
         if (fightMode != null) {
@@ -333,6 +333,9 @@ class GameView extends SurfaceView implements Runnable {
                 fightMode = new FightMode(fullContext, screenX, screenY);
             }
         }
+
+        //Auslesen der Modebezogenen Daten
+        getSharedPreferences();
 
         modeChanging = false;
         start = true;
