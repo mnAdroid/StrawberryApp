@@ -121,6 +121,7 @@ class FarmModeBackend {
         numAecker = sharedPreferences.getInt("numAecker", 1);
         String strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
         numGurken = sharedPreferences.getInt("numGurken", 1);
+
         //Initialisierung der gespeicherten Erdbeeren
         strawberries = new Strawberry[numAecker * 8];
 

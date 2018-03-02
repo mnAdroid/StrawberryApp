@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.util.Log;
 
 import com.cucumbertroup.strawberry.strawberry.R;
 
@@ -47,6 +48,15 @@ class FarmModeList {
     //obere Grenze beim scrollen
     private int maxHeight;
 
+    //Scrollen wir gerade
+    private boolean scrolling;
+    //wie lange wird NOCH gescrollt
+    private long scrollTimer;
+    //true = fling, false = ausscrollen
+    private boolean scrollTypeFling;
+    //true = scroll nach oben, false = scroll nach unten
+    private boolean scrollDirectionUp;
+
     FarmModeList(Context context, int screenX, int screenY) {
         fullContext = context;
 
@@ -54,6 +64,7 @@ class FarmModeList {
         this.screenX = screenX;
         this.screenY = screenY;
 
+        //Speichern der Y Koordinaten der Äcker
         bitmapAckerY = new Float[0];
 
         //Standard Ackerkoordinaten
@@ -61,11 +72,14 @@ class FarmModeList {
         bitmapAckerAbstand = getScaledCoordinates(screenY, 1920, 550);
         //Wie weit oben der Acker sein muss bis er nicht mehr gemalt wird
         maxHeight = getScaledCoordinates(screenY, 1920, -50);
-
+        //Wie weit sind die Erdbeeren übereinander
         bitmapStrawberryYAbstand = getScaledCoordinates(screenY, 1920, 200);
 
         //Backend einlesen
         farmModeBackend = FarmModeBackend.getInstance(screenX);
+
+        //zum Start scrollen wir nicht
+        stopScrollAnimation();
 
         //Alle Grafiken einlesen
         initialiseGrafics();
@@ -173,6 +187,7 @@ class FarmModeList {
         }
     }
 
+    //aktives Scrollen = Finger bewegt sich auf dem Bildschirm
     void scroll(float difference) {
         if (farmModeBackend.getNumAecker() > 2) {
             //wir scrollen nicht nach oben zu viel
@@ -190,6 +205,8 @@ class FarmModeList {
                         bitmapAckerY[i] -= tmp;
                     }
                     completeAckerHeight -= tmp;
+                    //wir sind schon da wo wir hin wollen, kein scrollen benötigt
+                    stopScrollAnimation();
                 }
             }
             //falls wir oben an die Grenze stossen
@@ -198,8 +215,71 @@ class FarmModeList {
                     bitmapAckerY[i] -= completeAckerHeight;
                 }
                 completeAckerHeight -= completeAckerHeight;
+                //wir sind schon da wo wir hin wollen, kein scrollen benötigt
+                stopScrollAnimation();
             }
         }
+    }
+
+    //Beginn der fling oder der ausroll Animation = ACTION_UP
+    void startScrollAnimation(long touchTime, float delta) {
+        //Stop der alten Animation
+        if (scrolling)
+            stopScrollAnimation();
+
+        //welche Art ScrollAnimation wird ausgelöst
+        scrollTypeFling = Math.abs(touchTime) <= 100;
+
+        //wann beginnt der Scroller
+        scrollTimer = System.currentTimeMillis();
+
+        //Entscheidung in welche Richtung gescrollt wird
+        //von oben nach unten := positiv / von unten nach oben := negativ
+        scrollDirectionUp = delta >= 0;
+
+        //Beginn der Animation
+        scrolling = true;
+
+        Log.d("ScrollState", "scrolling " + scrolling + ", scrollTypeFling " + scrollTypeFling + ", scrollTimer " + scrollTimer + ", scrollDirectionUp " + scrollDirectionUp);
+    }
+
+    //solange Animation läuft wird hier die Animation erstellt
+    void updateScrollAnimation() {
+        //da die Funktion auch aufgerufen wird wenn nicht gescrollt werden soll
+        if (scrolling) {
+            //fling
+            if (scrollTypeFling) {
+                if (scrollDirectionUp)
+                    scroll(100);
+                else
+                    scroll(-100);
+                //Eine Sekunde ist die maximale Länge des Scrollens (fling ist immer 1 Sekunde lang)
+                if (System.currentTimeMillis() - scrollTimer > 1000) {
+                    //Am Ende scrollen wir noch aus
+                    if (scrollDirectionUp)
+                        startScrollAnimation(1000, 1);
+                    else
+                        startScrollAnimation(1000, -1);
+                }
+            }
+            //ausscrollen
+            else {
+                if (scrollDirectionUp)
+                    scroll(7);
+                else
+                    scroll(-7);
+                //Wenn kein Fling ist die maximale Länge 0,5 Sekunden
+                if (System.currentTimeMillis() - scrollTimer > 500) {
+                    stopScrollAnimation();
+                }
+            }
+        }
+    }
+
+    //Abbrechen oder planmäßiges Stoppen der Scrollanimation
+    private void stopScrollAnimation() {
+        scrolling = false;
+        scrollTimer = 0;
     }
 
     void recycle() {

@@ -38,6 +38,8 @@ public class FarmMode {
     private float deltaXMove;
     //Wann fand das TouchEvent statt
     private long touchTimer;
+    //in welche Richtung ging der letzte move
+    private boolean lastMoveVertical;
 
     //Ort des Hintergrundbildes
     private float backgroundOverlayX1;
@@ -112,8 +114,10 @@ public class FarmMode {
             farmModeBackend.strawberriesUpdate();
         if (farmModeSound != null)
             farmModeSound.playSound(0, fullContext);
-        if (farmModeList != null)
+        if (farmModeList != null) {
             farmModeList.updateAcker();
+            farmModeList.updateScrollAnimation();
+        }
     }
 
     //ZEICHNEN
@@ -231,8 +235,10 @@ public class FarmMode {
                             //Standardmovement (Folge dem Finger)
                             backgroundOverlayX1 += deltaXMove;
                         }
+                        lastMoveVertical = false;
                     }
                     else {
+                        lastMoveVertical = true;
                         farmModeList.scroll(deltaYMove);
                     }
                 }
@@ -252,7 +258,10 @@ public class FarmMode {
                 //touch timer >100 etwas langsameres scrollen | wenn deltaYCLick > 700 ist (fast scroll)
                 //touchtimer >200 nur leichte Animation zum Ende (exakt 0,5 Sekunden lang
                 //scroll muss ne extra Funktion bekommen die im update() immer wieder aufgerufen wird für smooth animation
-                //farmModeList.scroll(deltaYMove);
+
+                //Starten der Scrollanimation
+                if (farmModeList != null && lastMoveVertical)
+                    farmModeList.startScrollAnimation(touchTimer - System.currentTimeMillis(), deltaYClick);
                 Log.d("touchTimer", "" + (touchTimer - System.currentTimeMillis()));
                 Log.d("deltaYClick", "" + deltaYClick);
 
