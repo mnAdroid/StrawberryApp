@@ -22,6 +22,10 @@ class GameView extends SurfaceView implements Runnable {
     //der Thread, der mehr oder weniger der GameLoop sein wird
     Thread gameThread = null;
 
+    //FPS
+    private long fps = 0;
+    private long timeThisFrame;
+
     //Surfaceholder braucht man um im Thread zu malen
     SurfaceHolder ourHolder;
 
@@ -102,6 +106,8 @@ class GameView extends SurfaceView implements Runnable {
     public void run() {
         //Um Fehler abzufangen die auftreten wenn das hier aufgerufen wird bevor alles geladen hat
         while (isPlaying) {
+            // Capture the current time in milliseconds in startFrameTime
+            long startFrameTime = System.currentTimeMillis();
             //Farmmodus ist an
             if (gameMode == 0) {
                 //Dauerhaft gucken ob sich der Gamemodus wechselt
@@ -112,7 +118,7 @@ class GameView extends SurfaceView implements Runnable {
 
                 //update ist quasi das DENKEN in der App
                 if (farmMode != null)
-                    farmMode.updateFarm();
+                    farmMode.updateFarm(fps);
 
                 //draw ist das ZEICHNEN in der App
                 if (farmMode != null)
@@ -135,7 +141,11 @@ class GameView extends SurfaceView implements Runnable {
                         fightMode.drawFight(ourHolder, canvas, paint);
                 }
             }
-
+            //FPS Berechnung
+            timeThisFrame = System.currentTimeMillis() - startFrameTime;
+            if (timeThisFrame > 0) {
+                fps = 1000 / timeThisFrame;
+            }
         }
     }
 

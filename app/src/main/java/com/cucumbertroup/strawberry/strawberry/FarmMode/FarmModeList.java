@@ -53,9 +53,16 @@ class FarmModeList {
     //wie lange wird NOCH gescrollt
     private long scrollTimer;
     //true = fling, false = ausscrollen
-    private boolean scrollTypeFling;
+    //private boolean scrollTypeFling;
     //true = scroll nach oben, false = scroll nach unten
     private boolean scrollDirectionUp;
+    //eine angepasste Geschwindigkeit beim Scrollen
+    private float scrollSpeed; //derzeitige Geschwindigkeit
+    private float scrollSpeedBegin; //Startgeschwindigkeit
+
+    //Wie viele Schritte haben wir schon gerechnet? Maximal startFPS mal.
+    private int scrollAnimationCounter;
+    private long startFPS;
 
     FarmModeList(Context context, int screenX, int screenY) {
         fullContext = context;
@@ -228,10 +235,15 @@ class FarmModeList {
             stopScrollAnimation();
 
         //welche Art ScrollAnimation wird ausgelöst
-        scrollTypeFling = Math.abs(touchTime) <= 100;
+        //scrollTypeFling = Math.abs(touchTime) <= 100;
 
         //wann beginnt der Scroller
         scrollTimer = System.currentTimeMillis();
+
+        //Berechnung der ScrollSpeed
+        scrollSpeed = (delta * Math.abs(touchTime)) / 1000;
+        scrollSpeedBegin = scrollSpeed;
+        scrollAnimationCounter = 0;
 
         //Entscheidung in welche Richtung gescrollt wird
         //von oben nach unten := positiv / von unten nach oben := negativ
@@ -240,46 +252,48 @@ class FarmModeList {
         //Beginn der Animation
         scrolling = true;
 
-        Log.d("ScrollState", "scrolling " + scrolling + ", scrollTypeFling " + scrollTypeFling + ", scrollTimer " + scrollTimer + ", scrollDirectionUp " + scrollDirectionUp);
+        Log.d("ScrollState","scrollTimer " + scrollTimer + ", scrollSpeed " + scrollSpeed);
     }
 
     //solange Animation läuft wird hier die Animation erstellt
-    void updateScrollAnimation() {
+    void updateScrollAnimation(long fps) {
         //da die Funktion auch aufgerufen wird wenn nicht gescrollt werden soll
         if (scrolling) {
-            //fling
-            if (scrollTypeFling) {
-                if (scrollDirectionUp)
-                    scroll(100);
-                else
-                    scroll(-100);
-                //Eine Sekunde ist die maximale Länge des Scrollens (fling ist immer 1 Sekunde lang)
-                if (System.currentTimeMillis() - scrollTimer > 1000) {
-                    //Am Ende scrollen wir noch aus
-                    if (scrollDirectionUp)
-                        startScrollAnimation(1000, 1);
-                    else
-                        startScrollAnimation(1000, -1);
-                }
+            //tatsächliches Scrollen
+            scroll(scrollSpeed);
+            //Update der Geschwindigkeit
+            //Geschwindigkeit muss in fps (60) Schritten langsamer werden
+            //logistisches Wachstum mit untere Grenze = 1, obere Grenze gleich ScrollSpeed und k = -0.002
+            //die Rechnung beginnt bei dem größten scrollAnimationCounter (fps-scrollAnimationCounter) und geht dann bis zum Beginn um die Kurve so "umzudrehen"
+            scrollSpeed = (float) (1 * Math.abs(scrollSpeedBegin)/
+                    (1 + (Math.abs(scrollSpeedBegin) - 1) * Math.exp(-0.002*Math.abs(scrollSpeedBegin)*(startFPS- scrollAnimationCounter))));
+            //Wenn wir insgesamt fps Schritte gemacht haben oder auf die untere Grenze prallen (sollte eig gleichzeitig passieren)
+            if (startFPS == scrollAnimationCounter || Math.round(Math.abs(scrollSpeed)) == 1)
+                stopScrollAnimation();
+            //Um die Richtung in der wir scrollen beizubehalten multiplizieren wir manchmal mit -1
+            if ((scrollDirectionUp && scrollSpeed < 0) || (!scrollDirectionUp && scrollSpeed > 0))
+                scrollSpeed *= -1;
+            //Schrittzählr wird hochgerechnet
+            scrollAnimationCounter++;
+
+            //Eine Sekunde ist die maximale Länge des Scrollens (fling ist immer 1 Sekunde lang)
+            if (System.currentTimeMillis() - scrollTimer > 1000) {
+                stopScrollAnimation();
             }
-            //ausscrollen
-            else {
-                if (scrollDirectionUp)
-                    scroll(7);
-                else
-                    scroll(-7);
-                //Wenn kein Fling ist die maximale Länge 0,5 Sekunden
-                if (System.currentTimeMillis() - scrollTimer > 500) {
-                    stopScrollAnimation();
-                }
-            }
+        }
+        else {
+            //Zum abspeichern des jeweils letzten FPS für gleichmäßige Berechnung
+            startFPS = fps;
         }
     }
 
     //Abbrechen oder planmäßiges Stoppen der Scrollanimation
-    private void stopScrollAnimation() {
+    void stopScrollAnimation() {
         scrolling = false;
         scrollTimer = 0;
+        scrollSpeed = 0;
+        scrollSpeedBegin = 0;
+        scrollAnimationCounter = 0;
     }
 
     void recycle() {

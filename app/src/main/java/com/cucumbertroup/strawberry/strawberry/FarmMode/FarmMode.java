@@ -30,8 +30,11 @@ public class FarmMode {
     //Ort der letzten Berührung auf dem Bildschirm
     private float touchX1;
     private float touchX1down;
-    private float touchY1;
     private float touchY1down;
+    private float touchY1;
+    //Was war der höchste und niedrigste Punkt den wir berührt haben
+    private float touchY1MaxDown;
+    private float touchY1MaxUp;
     //Berühren wir den Bildschirm mit mehr als einem Finger?
     private boolean touchPointer = false;
     //Abstand der letzten Bewegung auf dem Bildschirm
@@ -40,6 +43,7 @@ public class FarmMode {
     private long touchTimer;
     //in welche Richtung ging der letzte move
     private boolean lastMoveVertical;
+    private boolean lastMoveUp;
 
     //Ort des Hintergrundbildes
     private float backgroundOverlayX1;
@@ -109,14 +113,14 @@ public class FarmMode {
     }
 
     //update ist quasi das DENKEN in der App
-    public void updateFarm() {
+    public void updateFarm(long fps) {
         if (farmModeBackend != null)
             farmModeBackend.strawberriesUpdate();
         if (farmModeSound != null)
             farmModeSound.playSound(0, fullContext);
         if (farmModeList != null) {
             farmModeList.updateAcker();
-            farmModeList.updateScrollAnimation();
+            farmModeList.updateScrollAnimation(fps);
         }
     }
 
@@ -181,6 +185,8 @@ public class FarmMode {
                 //Wo befanden wir uns am Anfang?
                 touchX1down = motionEvent.getX();
                 touchY1down = motionEvent.getY();
+                touchY1MaxDown = motionEvent.getY();
+                touchY1MaxUp = motionEvent.getY();
                 //Wo befinden wir uns gerade? (Hier noch identisch mit touchX1down)
                 touchX1 = motionEvent.getX();
                 touchY1 = motionEvent.getY();
@@ -188,6 +194,8 @@ public class FarmMode {
                 touchPointer = false;
                 //Wie spät ist es?
                 touchTimer = System.currentTimeMillis();
+                //ScrollAnimation beenden
+                farmModeList.stopScrollAnimation();
 
                 //Wir erlauben keine Buttonklicks wenn wir gerade laden
                 if (!loading) {
@@ -225,9 +233,18 @@ public class FarmMode {
                     //In welche Richtung hat sich der Finger bewegt? | Differenz der beiden Werte
                     deltaXMove = motionEvent.getX() - touchX1;
                     float deltaYMove = motionEvent.getY() - touchY1;
+                    Log.d("nach oben", "" + deltaYMove);
                     //wo befinden wir uns in diesem Schritt
                     touchX1 = motionEvent.getX();
                     touchY1 = motionEvent.getY();
+
+                    //Sind die neuen Werte höher oder niedriger als unser Maximum?
+                    if (touchY1 > touchY1MaxUp)
+                        touchY1MaxUp = touchY1;
+                    if (touchY1 < touchY1MaxDown)
+                        touchY1MaxDown = touchY1;
+                    Log.d("touchY1MaxUp", "" + touchY1MaxUp);
+                    Log.d("touchY1MaxDown", "" + touchY1MaxDown);
 
                     if (Math.abs(deltaXMove) > Math.abs(deltaYMove)) {
                         //Bedingung für die Äußeren Grenzen
@@ -239,6 +256,14 @@ public class FarmMode {
                     }
                     else {
                         lastMoveVertical = true;
+                        if (deltaYMove >= 0) {
+                            //Finger bewegt sich nach oben
+                            lastMoveUp = true;
+                        }
+                        else {
+                            //Finger bewegt sich nach unten
+                            lastMoveUp = false;
+                        }
                         farmModeList.scroll(deltaYMove);
                     }
                 }
@@ -251,19 +276,27 @@ public class FarmMode {
                 //Wie weit hat sich der Finger insgesamt bewegt? | Differenz der beiden Werte
                 float deltaXClick = motionEvent.getX() - touchX1down;
                 float deltaYClick = motionEvent.getY() - touchY1down;
+                Log.d("deltaYClick1", "" + deltaYClick);
+                if (lastMoveUp) {
+                    deltaYClick = motionEvent.getY() - touchY1MaxDown;
+                    Log.d("deltaYClick2", "" + deltaYClick);
+                }
+                else {
+                    deltaYClick = motionEvent.getY() - touchY1MaxUp;
+                    Log.d("deltaYClick3", "" + deltaYClick);
+                }
 
                 //FLINGING DER ACKERLISTE
-                //Abhängigkeit zwischen touchTimer und deltaYClick muss aufgebaut werden
-                //touchtimer <100 fast scroll (exakt eine Sekunde lang)
-                //touch timer >100 etwas langsameres scrollen | wenn deltaYCLick > 700 ist (fast scroll)
-                //touchtimer >200 nur leichte Animation zum Ende (exakt 0,5 Sekunden lang
-                //scroll muss ne extra Funktion bekommen die im update() immer wieder aufgerufen wird für smooth animation
 
                 //Starten der Scrollanimation
                 if (farmModeList != null && lastMoveVertical)
                     farmModeList.startScrollAnimation(touchTimer - System.currentTimeMillis(), deltaYClick);
                 Log.d("touchTimer", "" + (touchTimer - System.currentTimeMillis()));
                 Log.d("deltaYClick", "" + deltaYClick);
+
+                //resetten der touchY1 Koordinaten
+                touchY1MaxDown = screenY;
+                touchY1MaxUp = 0;
 
                 //RESET DER HINTERGRUNDBILDPOSITION
 
