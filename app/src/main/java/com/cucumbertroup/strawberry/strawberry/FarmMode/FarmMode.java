@@ -256,14 +256,9 @@ public class FarmMode {
                     }
                     else {
                         lastMoveVertical = true;
-                        if (deltaYMove >= 0) {
-                            //Finger bewegt sich nach oben
-                            lastMoveUp = true;
-                        }
-                        else {
-                            //Finger bewegt sich nach unten
-                            lastMoveUp = false;
-                        }
+                        //Finger bewegt sich nach oben / unten
+                        lastMoveUp = deltaYMove >= 0;
+                        //einfaches Scrollen (Am Finger kleben)
                         farmModeList.scroll(deltaYMove);
                     }
                 }

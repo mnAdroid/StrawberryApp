@@ -259,6 +259,8 @@ class FarmModeList {
     void updateScrollAnimation(long fps) {
         //da die Funktion auch aufgerufen wird wenn nicht gescrollt werden soll
         if (scrolling) {
+            if (scrollSpeed == 0)
+                stopScrollAnimation();
             //tatsächliches Scrollen
             scroll(scrollSpeed);
             //Update der Geschwindigkeit
@@ -297,6 +299,7 @@ class FarmModeList {
     }
 
     void recycle() {
+        stopScrollAnimation();
         bitmapAcker.recycle();
         bitmapAcker = null;
         bitmapErdbeere1.recycle();
