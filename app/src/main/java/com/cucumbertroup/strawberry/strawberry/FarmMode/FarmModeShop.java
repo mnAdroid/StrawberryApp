@@ -37,6 +37,9 @@ class FarmModeShop {
     private FarmModeSound farmModeSound;
     private FarmModeBackend farmModeBackend;
 
+    //FreedBitmaps?
+    private boolean recycled;
+
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     FarmModeShop(Context context, int screenX, int screenY) {
         //Auf den Context können alle FarmMode Funktionen zugreifen
@@ -57,36 +60,40 @@ class FarmModeShop {
 
         //Alle Grafiken einlesen
         initialiseGrafics();
+
+        recycled = false;
     }
 
     //ZEICHNEN
     void drawFarmShop(Canvas canvas, Paint paint) {
-        try {
-            //Standardfehlerabfangen
-            //Hintergrund ist erstmal einfach schwarz
-            //Pinselfarbe wählen (bisher nur für den Text)
-            canvas.drawColor(Color.BLACK);
-            //Pinselfarbe wählen (bisher nur für den Text)
-            paint.setColor(Color.argb(255, 249, 129, 0));
-            paint.setStyle(Paint.Style.FILL);
-            paint.setTextSize(textSize);
+        if (!recycled) {
+            try {
+                //Standardfehlerabfangen
+                //Hintergrund ist erstmal einfach schwarz
+                //Pinselfarbe wählen (bisher nur für den Text)
+                canvas.drawColor(Color.BLACK);
+                //Pinselfarbe wählen (bisher nur für den Text)
+                paint.setColor(Color.argb(255, 249, 129, 0));
+                paint.setStyle(Paint.Style.FILL);
+                paint.setTextSize(textSize);
 
-            //Anzahl Gurken
-            canvas.drawText("Gurken: " + farmModeBackend.getNumGurken() + " | Kosten: " + farmModeBackend.getPriceGurken() + " Gold", textX, 2 * textY, paint);
+                //Anzahl Gurken
+                canvas.drawText("Gurken: " + farmModeBackend.getNumGurken() + " | Kosten: " + farmModeBackend.getPriceGurken() + " Gold", textX, 2 * textY, paint);
 
-            //Anzahl Äcker
-            canvas.drawText("Äcker: " + farmModeBackend.getNumAecker() + " | Kosten: " + farmModeBackend.getPriceAecker() + " Gold", textX, 4 * textY, paint);
+                //Anzahl Äcker
+                canvas.drawText("Äcker: " + farmModeBackend.getNumAecker() + " | Kosten: " + farmModeBackend.getPriceAecker() + " Gold", textX, 4 * textY, paint);
 
-            //Wie viel Gold haben wir eigentlich?
-            canvas.drawText("Gold: " + globalVariables.getGold(), textX, 6 * textY, paint);
+                //Wie viel Gold haben wir eigentlich?
+                canvas.drawText("Gold: " + globalVariables.getGold(), textX, 6 * textY, paint);
 
-            //Button malen
-            if (bitmapAckerKaufenButton != null)
-                canvas.drawBitmap(bitmapAckerKaufenButton, bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY, paint);
-            if (bitmapGurkeKaufenButton != null)
-                canvas.drawBitmap(bitmapGurkeKaufenButton, bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY, paint);
-        } catch (NullPointerException e) {
-            farmModeBackend.setSharedPreferences(fullContext);
+                //Button malen
+                if (bitmapAckerKaufenButton != null)
+                    canvas.drawBitmap(bitmapAckerKaufenButton, bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY, paint);
+                if (bitmapGurkeKaufenButton != null)
+                    canvas.drawBitmap(bitmapGurkeKaufenButton, bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY, paint);
+            } catch (NullPointerException e) {
+                farmModeBackend.setSharedPreferences(fullContext);
+            }
         }
     }
 
@@ -160,6 +167,7 @@ class FarmModeShop {
 
     //Wenn wir den Modus verlassen
     void recycle() {
+        recycled = true;
         //Bitmaps Recyclen
         bitmapAckerKaufenButton.recycle();
         bitmapAckerKaufenButton = null;

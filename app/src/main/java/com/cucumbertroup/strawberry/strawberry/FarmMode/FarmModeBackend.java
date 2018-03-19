@@ -88,15 +88,20 @@ class FarmModeBackend {
                 break;
             case 1:
                 //Wachsen / Giessen: Man gießt jede Pflanze einzeln.
-                for(int j = 1; j <= numGurken; j++) {
-                    for (int i = 0; i < numAecker * 8; i++) {
-                        if (strawberries[i].incrWachsStatus(1)) {
-                            if (j == 1) {
+                for (int i = 0; i < numAecker * 8; i++) {
+                    boolean tmp = false;
+                    for(int j = 0; j < numGurken; j++) {
+                        if (i < numStrawberries)
+                            tmp = strawberries[i].incrWachsStatus();
+                        if (tmp) {
+                            i++;
+                            if (j == 0) {
                                 farmModeSound.playSound(2, fullContext);
                             }
-                            break;
                         }
                     }
+                    if (tmp)
+                        break;
                 }
                 /*Altes Wachsen:
                 if (numStrawberries > 0) {
