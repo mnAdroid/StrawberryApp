@@ -24,8 +24,6 @@ class FarmModeSound {
     //Musik initialisieren
     private SoundPool soundPool;
     private int click1 = -1;
-    private int clock1 = -1;
-    private int clock2 = -1;
     private int dirt1 = -1;
     private int dirt2 = -1;
     private int dirt3 = -1;
@@ -35,6 +33,15 @@ class FarmModeSound {
     private int dirt7 = -1;
     private int dirt8 = -1;
     private int dirt9 = -1;
+    private int water1 = -1;
+    private int water2 = -1;
+    private int water3 = -1;
+    private int water4 = -1;
+    private int water5 = -1;
+    private int water6 = -1;
+    private int water7 = -1;
+    private int water8 = -1;
+    private int water9 = -1;
     private int plop1 = -1;
     private int plop2 = -1;
     private int plop3 = -1;
@@ -46,7 +53,6 @@ class FarmModeSound {
     private int plop9 = -1;
     private int gold1 = -1;
     private MediaPlayer backgroundloop1; //Farmmusik
-    private boolean ticktack = true; //für den Uhr Sound
     private boolean loaded = false; //ist der soundPool fertig
 
     private FarmModeSound() {
@@ -89,11 +95,32 @@ class FarmModeSound {
                 descriptor = assetManager.openFd("click1.wav");
                 click1 = soundPool.load(descriptor, 1);
 
-                descriptor = assetManager.openFd("clock1.wav");
-                clock1 = soundPool.load(descriptor, 1);
+                descriptor = assetManager.openFd("water1.wav");
+                water1 = soundPool.load(descriptor, 1);
 
-                descriptor = assetManager.openFd("clock2.wav");
-                clock2 = soundPool.load(descriptor, 1);
+                descriptor = assetManager.openFd("water2.wav");
+                water2 = soundPool.load(descriptor, 1);
+
+                descriptor = assetManager.openFd("water3.wav");
+                water3 = soundPool.load(descriptor, 1);
+
+                descriptor = assetManager.openFd("water4.wav");
+                water4 = soundPool.load(descriptor, 1);
+
+                descriptor = assetManager.openFd("water5.wav");
+                water5 = soundPool.load(descriptor, 1);
+
+                descriptor = assetManager.openFd("water6.wav");
+                water6 = soundPool.load(descriptor, 1);
+
+                descriptor = assetManager.openFd("water7.wav");
+                water7 = soundPool.load(descriptor, 1);
+
+                descriptor = assetManager.openFd("water8.wav");
+                water8 = soundPool.load(descriptor, 1);
+
+                descriptor = assetManager.openFd("water9.wav");
+                water9 = soundPool.load(descriptor, 1);
 
                 descriptor = assetManager.openFd("dirt1.wav");
                 dirt1 = soundPool.load(descriptor, 1);
@@ -230,12 +257,34 @@ class FarmModeSound {
                 break;
             case 2:
                 if (globalVariables.getSoundOn()) {
-                    if (ticktack) {
-                        soundPool.play(clock1, 1, 1, 0, 0, 1);
-                        ticktack = false;
-                    } else {
-                        soundPool.play(clock2, 1, 1, 0, 0, 1);
-                        ticktack = true;
+                    switch (randomInt) {
+                        case 1:
+                            soundPool.play(water1, 1, 1, 0, 0, 1);
+                            break;
+                        case 2:
+                            soundPool.play(water2, 1, 1, 0, 0, 1);
+                            break;
+                        case 3:
+                            soundPool.play(water3, 1, 1, 0, 0, 1);
+                            break;
+                        case 4:
+                            soundPool.play(water4, 1, 1, 0, 0, 1);
+                            break;
+                        case 5:
+                            soundPool.play(water5, 1, 1, 0, 0, 1);
+                            break;
+                        case 6:
+                            soundPool.play(water6, 1, 1, 0, 0, 1);
+                            break;
+                        case 7:
+                            soundPool.play(water7, 1, 1, 0, 0, 1);
+                            break;
+                        case 8:
+                            soundPool.play(water8, 1, 1, 0, 0, 1);
+                            break;
+                        case 9:
+                            soundPool.play(water9, 1, 1, 0, 0, 1);
+                            break;
                     }
                 }
                 break;

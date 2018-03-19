@@ -28,11 +28,13 @@ class Strawberry {
         this.reihe1 = reihe1;
     }
 
-    void incrWachsStatus(int setz) {
+    boolean incrWachsStatus(int setz) {
         //wir wollen ja keine Erdbeeren wachsen lassen die nicht gesäht oder schon ausgewachsen sind
         if (wachsStatus < 4 && wachsStatus >= 0) {
             wachsStatus += setz;
+            return true;
         }
+        return false;
     }
     //um Bedingungen beim Denken zu finden
     int getWachsStatus() {

@@ -87,13 +87,24 @@ class FarmModeBackend {
                 }
                 break;
             case 1:
-                //Wachsen: Alles wächst viel schneller, aber es wächst auch schon so langsam.
+                //Wachsen / Giessen: Man gießt jede Pflanze einzeln.
+                for(int j = 1; j <= numGurken; j++) {
+                    for (int i = 0; i < numAecker * 8; i++) {
+                        if (strawberries[i].incrWachsStatus(1)) {
+                            if (j == 1) {
+                                farmModeSound.playSound(2, fullContext);
+                            }
+                            break;
+                        }
+                    }
+                }
+                /*Altes Wachsen:
                 if (numStrawberries > 0) {
                     for (int i = 0; i < numAecker * 8; i++) {
                         strawberries[i].incrWachsStatus(1);
                     }
                 }
-                farmModeSound.playSound(2, fullContext);
+                farmModeSound.playSound(2, fullContext);*/
                 break;
             case 2:
                 //Ernten: Prüfen ob Erdbeeren fertig, wenn ja: Gold bekommen und Platz machen zum Aussähen
