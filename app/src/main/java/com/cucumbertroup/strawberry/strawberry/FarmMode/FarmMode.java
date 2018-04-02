@@ -167,7 +167,8 @@ public class FarmMode {
                     canvas.drawText("Gold: " + globalVariables.getGold(), 3 * textX, 2 * textY, paint);
                 }
             } catch (NullPointerException e) {
-                farmModeBackend.setSharedPreferences(fullContext);
+                if (farmModeBackend != null)
+                    farmModeBackend.setSharedPreferences(fullContext);
                 return;
             }
             //Alles auf den Bildschirm malen
@@ -233,7 +234,6 @@ public class FarmMode {
                     //In welche Richtung hat sich der Finger bewegt? | Differenz der beiden Werte
                     deltaXMove = motionEvent.getX() - touchX1;
                     float deltaYMove = motionEvent.getY() - touchY1;
-                    Log.d("nach oben", "" + deltaYMove);
                     //wo befinden wir uns in diesem Schritt
                     touchX1 = motionEvent.getX();
                     touchY1 = motionEvent.getY();
@@ -243,8 +243,6 @@ public class FarmMode {
                         touchY1MaxUp = touchY1;
                     if (touchY1 < touchY1MaxDown)
                         touchY1MaxDown = touchY1;
-                    Log.d("touchY1MaxUp", "" + touchY1MaxUp);
-                    Log.d("touchY1MaxDown", "" + touchY1MaxDown);
 
                     if (Math.abs(deltaXMove) > Math.abs(deltaYMove)) {
                         //Bedingung für die Äußeren Grenzen
@@ -271,14 +269,11 @@ public class FarmMode {
                 //Wie weit hat sich der Finger insgesamt bewegt? | Differenz der beiden Werte
                 float deltaXClick = motionEvent.getX() - touchX1down;
                 float deltaYClick = motionEvent.getY() - touchY1down;
-                Log.d("deltaYClick1", "" + deltaYClick);
                 if (lastMoveUp) {
                     deltaYClick = motionEvent.getY() - touchY1MaxDown;
-                    Log.d("deltaYClick2", "" + deltaYClick);
                 }
                 else {
                     deltaYClick = motionEvent.getY() - touchY1MaxUp;
-                    Log.d("deltaYClick3", "" + deltaYClick);
                 }
 
                 //FLINGING DER ACKERLISTE
@@ -286,8 +281,6 @@ public class FarmMode {
                 //Starten der Scrollanimation
                 if (farmModeList != null && lastMoveVertical)
                     farmModeList.startScrollAnimation(touchTimer - System.currentTimeMillis(), deltaYClick);
-                Log.d("touchTimer", "" + (touchTimer - System.currentTimeMillis()));
-                Log.d("deltaYClick", "" + deltaYClick);
 
                 //resetten der touchY1 Koordinaten
                 touchY1MaxDown = screenY;
@@ -405,7 +398,8 @@ public class FarmMode {
     //Wenn wir den Modus verlassen
     public void recycle() {
         loading = true;
-        farmModeBackend.setSharedPreferences(fullContext);
+        if (farmModeBackend != null)
+            farmModeBackend.setSharedPreferences(fullContext);
 
         //Sound recyclen
         if (farmModeSound != null) {
@@ -453,10 +447,12 @@ public class FarmMode {
     }
 
     public void getSharedPreferences() {
-        farmModeBackend.getSharedPreferences(fullContext);
+        if (farmModeBackend != null)
+            farmModeBackend.getSharedPreferences(fullContext);
     }
 
     public void setSharedPreferences() {
-        farmModeBackend.setSharedPreferences(fullContext);
+        if (farmModeBackend != null)
+            farmModeBackend.setSharedPreferences(fullContext);
     }
 }

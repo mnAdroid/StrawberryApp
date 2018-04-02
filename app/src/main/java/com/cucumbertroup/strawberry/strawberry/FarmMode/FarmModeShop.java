@@ -92,7 +92,8 @@ class FarmModeShop {
                 if (bitmapGurkeKaufenButton != null)
                     canvas.drawBitmap(bitmapGurkeKaufenButton, bitmapGurkeKaufenButtonX, bitmapGurkeKaufenButtonY, paint);
             } catch (NullPointerException e) {
-                farmModeBackend.setSharedPreferences(fullContext);
+                if (farmModeBackend != null)
+                    farmModeBackend.setSharedPreferences(fullContext);
             }
         }
     }

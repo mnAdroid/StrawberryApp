@@ -251,8 +251,6 @@ class FarmModeList {
 
         //Beginn der Animation
         scrolling = true;
-
-        Log.d("ScrollState","scrollTimer " + scrollTimer + ", scrollSpeed " + scrollSpeed);
     }
 
     //solange Animation läuft wird hier die Animation erstellt

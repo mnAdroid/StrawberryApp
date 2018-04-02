@@ -71,7 +71,7 @@ class GameView extends SurfaceView implements Runnable {
     private boolean start;
 
     //alle 90 Sekunden wird autosafed
-    private long autosafeTimer;
+    private long autosaveTimer;
 
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     public GameView(Context context, int screenX, int screenY) {
@@ -102,7 +102,7 @@ class GameView extends SurfaceView implements Runnable {
         globalVariables = GlobalVariables.getInstance(gold, clickCount, musicOn, soundOn, alphaTester, betaTester);
         farmMode = new FarmMode(context, screenX, screenY);
 
-        autosafeTimer = System.currentTimeMillis();
+        autosaveTimer = System.currentTimeMillis();
     }
     //Der vermutlich wichtigste (und in der letzten App fehleranfälligste) Teil der Gameview
     //run() ist quasi eine Endlosschleife (solange das Game läuft) in dem alles passiert
@@ -151,11 +151,17 @@ class GameView extends SurfaceView implements Runnable {
                 fps = 1000 / timeThisFrame;
             }
 
-            //Autosafe alle 90 Sekunden
-            if (System.currentTimeMillis() - autosafeTimer > 90000) {
+            //Autosave alle 90 Sekunden
+            if (System.currentTimeMillis() - autosaveTimer > 60000) {
                 setSharedPreferences();
-                autosafeTimer = System.currentTimeMillis();
-                showToast("Autosave");
+                autosaveTimer = System.currentTimeMillis();
+                Log.d("Autosaved", "true");
+                this.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        showToast("Autosaved");
+                    }
+                });
             }
         }
     }
@@ -275,7 +281,7 @@ class GameView extends SurfaceView implements Runnable {
     //SharedPreferences wieder sicher verwahren
     private void setSharedPreferences() {
         //AutoSafeTimerReset
-        autosafeTimer = System.currentTimeMillis();
+        autosaveTimer = System.currentTimeMillis();
 
         //Allgemeine Daten die beide Modi brauchen können
         SharedPreferences sharedPreferences = fullContext.getSharedPreferences("StrawberrySettings", 0);
@@ -396,6 +402,7 @@ class GameView extends SurfaceView implements Runnable {
             Toast.makeText(fullContext, text, Toast.LENGTH_SHORT).show();
         } catch (RuntimeException e) {
             //unlucky
+            Log.e("showToast", e.toString());
         }
     }
 
