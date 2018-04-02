@@ -6,7 +6,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
@@ -30,7 +29,6 @@ public class FarmMode {
     //Ort der letzten Berührung auf dem Bildschirm
     private float touchX1;
     private float touchX1down;
-    private float touchY1down;
     private float touchY1;
     //Was war der höchste und niedrigste Punkt den wir berührt haben
     private float touchY1MaxDown;
@@ -185,7 +183,6 @@ public class FarmMode {
             case MotionEvent.ACTION_DOWN:
                 //Wo befanden wir uns am Anfang?
                 touchX1down = motionEvent.getX();
-                touchY1down = motionEvent.getY();
                 touchY1MaxDown = motionEvent.getY();
                 touchY1MaxUp = motionEvent.getY();
                 //Wo befinden wir uns gerade? (Hier noch identisch mit touchX1down)
@@ -268,7 +265,7 @@ public class FarmMode {
             case MotionEvent.ACTION_UP:
                 //Wie weit hat sich der Finger insgesamt bewegt? | Differenz der beiden Werte
                 float deltaXClick = motionEvent.getX() - touchX1down;
-                float deltaYClick = motionEvent.getY() - touchY1down;
+                float deltaYClick;
                 if (lastMoveUp) {
                     deltaYClick = motionEvent.getY() - touchY1MaxDown;
                 }

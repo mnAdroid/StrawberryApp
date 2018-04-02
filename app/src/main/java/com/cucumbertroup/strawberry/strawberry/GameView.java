@@ -263,7 +263,7 @@ class GameView extends SurfaceView implements Runnable {
     private void getSharedPreferences() {
         //Allgemeine Daten die beide Modi brauchen können
         SharedPreferences sharedPreferences = fullContext.getSharedPreferences("StrawberrySettings", 0);
-        gold = sharedPreferences.getInt("gold", 5);
+        gold = sharedPreferences.getInt("gold", 25);
         clickCount = sharedPreferences.getInt("clicks", 0);
         musicOn = sharedPreferences.getBoolean("musicOn", true);
         soundOn = sharedPreferences.getBoolean("soundOn", true);

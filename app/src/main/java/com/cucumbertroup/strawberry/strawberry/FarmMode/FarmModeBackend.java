@@ -33,7 +33,7 @@ class FarmModeBackend {
     private int bitmapStrawberryX1, bitmapStrawberryX2,
             bitmapStrawberryX3, bitmapStrawberryX4;
     //Erdbeerkosten
-    private final int STRAWBERRY_PRICE = 1;
+    private int strawberryPrice = 1;
 
     private FarmModeBackend(int screenX) {
         globalVariables = GlobalVariables.getInstance();
@@ -73,10 +73,10 @@ class FarmModeBackend {
                 for(int j = 1; j <= numGurken; j++) {
                     if (numStrawberries < (numAecker * 8)) {
                         for (int i = 0; i < numAecker * 8; i++) {
-                            if (globalVariables.getGold() >= STRAWBERRY_PRICE && strawberries[i].getWachsStatus() <= -1) {
+                            if (globalVariables.getGold() >= strawberryPrice && strawberries[i].getWachsStatus() <= -1) {
                                 strawberries[i].setStrawberry();
                                 numStrawberries++;
-                                globalVariables.setGold(globalVariables.getGold() - STRAWBERRY_PRICE);
+                                globalVariables.setGold(globalVariables.getGold() - strawberryPrice);
                                 if(j == 1) {
                                     farmModeSound.playSound(1, fullContext);
                                 }
@@ -103,13 +103,6 @@ class FarmModeBackend {
                     if (tmp)
                         break;
                 }
-                /*Altes Wachsen:
-                if (numStrawberries > 0) {
-                    for (int i = 0; i < numAecker * 8; i++) {
-                        strawberries[i].incrWachsStatus(1);
-                    }
-                }
-                farmModeSound.playSound(2, fullContext);*/
                 break;
             case 2:
                 //Ernten: Prüfen ob Erdbeeren fertig, wenn ja: Gold bekommen und Platz machen zum Aussähen
@@ -137,6 +130,7 @@ class FarmModeBackend {
         numAecker = sharedPreferences.getInt("numAecker", 1);
         String strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
         numGurken = sharedPreferences.getInt("numGurken", 1);
+        strawberryPrice = sharedPreferences.getInt("strawberryPrice",5);
 
         //Initialisierung der gespeicherten Erdbeeren
         strawberries = new Strawberry[numAecker * 8];
@@ -213,6 +207,7 @@ class FarmModeBackend {
         editor.putInt("numStrawberries", numStrawberries);
         editor.putInt("numAecker", numAecker);
         editor.putInt("numGurken", numGurken);
+        editor.putInt("strawberryPrice", strawberryPrice);
 
         //Hier kommen alle derzeitigen Erdbeeren rein um gespeichert zu werden
         StringBuilder strawberryStatus = new StringBuilder();
@@ -279,8 +274,8 @@ class FarmModeBackend {
         return priceGurken;
     }
 
-    int getSTRAWBERRY_PRICE() {
-        return STRAWBERRY_PRICE;
+    int getStrawberryPrice() {
+        return strawberryPrice;
     }
 
     Strawberry getSpecificStrawberry(int index) {

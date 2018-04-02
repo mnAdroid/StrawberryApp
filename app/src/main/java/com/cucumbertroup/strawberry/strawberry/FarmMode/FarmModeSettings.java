@@ -38,9 +38,6 @@ class FarmModeSettings {
     private GlobalVariables globalVariables;
     private FarmModeSound farmModeSound;
 
-    //FreedBitmaps?
-    private boolean recycled;
-
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     FarmModeSettings(Context context, int screenX, int screenY) {
         //Auf den Context können alle FarmMode Funktionen zugreifen
@@ -58,9 +55,7 @@ class FarmModeSettings {
 
         //Alle Grafiken einlesen
         initialiseGrafics();
-
-        recycled = false;
-    }
+        }
 
     //ZEICHNEN
     void drawFarmSettings(Canvas canvas, Paint paint) {
@@ -221,7 +216,6 @@ class FarmModeSettings {
 
     //Wenn wir den Modus verlassen
     void recycle() {
-        recycled = true;
         //Bitmaps Recyclen
         bitmapFightButton.recycle();
         bitmapFightButton = null;

@@ -110,7 +110,7 @@ class FarmModeShop {
 
                 if (touchX1 >= bitmapAckerKaufenButtonX && touchX1 < (bitmapAckerKaufenButtonX + bitmapAckerKaufenButton.getWidth())
                         && touchY1 >= bitmapAckerKaufenButtonY && touchY1 < (bitmapAckerKaufenButtonY + bitmapAckerKaufenButton.getHeight())) {
-                    if (globalVariables.getGold() >= (farmModeBackend.getPriceAecker() + farmModeBackend.getSTRAWBERRY_PRICE())) {
+                    if (globalVariables.getGold() >= (farmModeBackend.getPriceAecker() + farmModeBackend.getStrawberryPrice())) {
                         farmModeBackend.ackerGekauft();
                         farmModeSound.playSound(5, fullContext);
                     } else
@@ -120,7 +120,7 @@ class FarmModeShop {
                 //gurke kaufen button
                 if (touchX1 >= bitmapGurkeKaufenButtonX && touchX1 < (bitmapGurkeKaufenButtonX + bitmapGurkeKaufenButton.getWidth())
                         && touchY1 >= bitmapGurkeKaufenButtonY && touchY1 < (bitmapGurkeKaufenButtonY + bitmapGurkeKaufenButton.getHeight())) {
-                    if (globalVariables.getGold() >= (farmModeBackend.getPriceGurken() + farmModeBackend.getSTRAWBERRY_PRICE())) {
+                    if (globalVariables.getGold() >= (farmModeBackend.getPriceGurken() + farmModeBackend.getStrawberryPrice())) {
                         farmModeBackend.gurkeGekauft();
                         farmModeSound.playSound(5, fullContext);
                     } else
