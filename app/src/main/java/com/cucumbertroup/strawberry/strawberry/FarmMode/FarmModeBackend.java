@@ -34,7 +34,11 @@ class FarmModeBackend {
     private int bitmapStrawberryX1, bitmapStrawberryX2,
             bitmapStrawberryX3, bitmapStrawberryX4;
     //Erdbeerkosten
-    private int strawberryPrice = 1;
+    private int strawberryPrice;
+    //Erdbeergewinn
+    private int strawberryProfits;
+    //Düngereffekt
+    private int dunger;
 
     private FarmModeBackend(int screenX) {
         globalVariables = GlobalVariables.getInstance();
@@ -112,7 +116,7 @@ class FarmModeBackend {
                         if (strawberries[i].getWachsStatus() >= 4) {
                             strawberries[i].resetStrawberry();
                             numStrawberries--;
-                            globalVariables.setGold(globalVariables.getGold() + 10);
+                            globalVariables.setGold(globalVariables.getGold() + strawberryProfits);
                             if (j == 1) {
                                 farmModeSound.playSound(3, fullContext);
                             }
@@ -132,6 +136,8 @@ class FarmModeBackend {
         String strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
         numGurken = sharedPreferences.getInt("numGurken", 1);
         strawberryPrice = sharedPreferences.getInt("strawberryPrice",5);
+        strawberryProfits = sharedPreferences.getInt("strawberryProfits", 7);
+        dunger = sharedPreferences.getInt("dunger", 1);
 
         //Initialisierung der gespeicherten Erdbeeren
         strawberries = new Strawberry[numAecker * 8];
@@ -209,6 +215,8 @@ class FarmModeBackend {
         editor.putInt("numAecker", numAecker);
         editor.putInt("numGurken", numGurken);
         editor.putInt("strawberryPrice", strawberryPrice);
+        editor.putInt("strawberryProfits", strawberryProfits);
+        editor.putInt("dunger", dunger);
 
         //Hier kommen alle derzeitigen Erdbeeren rein um gespeichert zu werden
         StringBuilder strawberryStatus = new StringBuilder();
@@ -352,6 +360,99 @@ class FarmModeBackend {
         return shopElements;
     }
 
+    ArrayList<FarmModeShopElement> buyShopElements(Context fullContext, FarmModeShopElement shopElement) {
+        //Bekommen wir null übergeben oder darf Nutzer gar nicht kaufen -> return
+        if (shopElement == null || shopElement.getNecessaryAecker() < numAecker ||
+                shopElement.getPrice() + strawberryPrice < globalVariables.getGold())
+            return null;
+
+        //Wenn alles ok ist ziehen wir das Geld ab
+        globalVariables.setGold(globalVariables.getGold() - shopElement.getPrice());
+        //und speichern dass es gekauft wurde
+        ArrayList<FarmModeShopElement> shopElements = null;
+
+        SharedPreferences sharedPreferencesElements = fullContext.getSharedPreferences("StrawberryShopElements", 0);
+        String listString = sharedPreferencesElements.getString("listString", "@@SamenI@@VerkaufI@GurkeI@@SamenII@GurkeII@@VerkaufII@GurkeIII@DungerI@GurkeIV@@Fabrik@");
+
+        //um keine IndexoutofBoundException zu bekommen
+        if (listString.equals("")) {
+            Log.e("StrawberryShopElements", "Einlesen fehlgeschlagen");
+            listString = "@@SamenI@@VerkaufI@GurkeI@@SamenII@GurkeII@@VerkaufII@GurkeIII@DungerI@GurkeIV@@Fabrik@";
+        }
+        //1. String auseinander nehmen, 2. passende Daten verändern
+        String[] shopElementsString = listString.split("@");
+        String tmpString = shopElementsString[shopElement.getNecessaryAecker()];
+        shopElementsString[shopElement.getNecessaryAecker() - 1] = "€" + tmpString;
+
+        //String Array wieder in ein String packen
+        StringBuilder tmpStringBuilder = new StringBuilder();
+        for (String aShopElementsString : shopElementsString) {
+            tmpStringBuilder.append(aShopElementsString);
+        }
+
+        //String wieder in die SharedPreferences rein
+        SharedPreferences.Editor editor = sharedPreferencesElements.edit();
+        editor.putString("listString", tmpStringBuilder.toString());
+        editor.apply();
+
+        //und speichern den Bonus des Items
+        SharedPreferences sharedPreferencesSettings = fullContext.getSharedPreferences("StrawberrySettings", 0);
+        editor = sharedPreferencesSettings.edit();
+
+        switch(shopElement.getName()) {
+            //Preis für Aussähen: 5/3/2/1/0
+            case "Samen":
+                if (strawberryPrice == 5) {
+                    strawberryPrice = 3;
+                    editor.putInt("strawberryPrice", strawberryPrice);
+                    break;
+                }
+                if (strawberryPrice <= 0) {
+                    strawberryPrice = 0;
+                    editor.putInt("strawberryPrice", strawberryPrice);
+                    break;
+                }
+                strawberryPrice--;
+                editor.putInt("strawberryPrice", strawberryPrice);
+                break;
+            //Gewinn bei Ernte: 7/11/13/17/19
+            case "Verkauf":
+                switch(strawberryProfits) {
+                    case 11:
+                        strawberryProfits = 13;
+                        break;
+                    case 13:
+                        strawberryProfits = 17;
+                        break;
+                    case 17:
+                        strawberryProfits = 19;
+                        break;
+                    default:
+                        strawberryProfits = 11;
+                        break;
+                }
+                editor.putInt("strawberryProfits", strawberryProfits);
+                break;
+            case "Gurke":
+                if (shopElement.getNecessaryAecker() == 6)
+                    numGurken = 1;
+                else {
+                    numGurken++;
+                }
+                editor.putInt("numGurken", numGurken);
+                break;
+            //Düngereffekt: 1/2/3/4
+            case "Dünger":
+                dunger++;
+                editor.putInt("dunger", dunger);
+                break;
+            case "Fabrik":
+                break;
+        }
+        editor.apply();
+        //und geben die neuen drei Items zurück
+        return getShopElements(fullContext);
+    }
     void recycle() {
         //Erdbeeren aufräumen
         for (int i = 0; i < strawberries.length; i++)
