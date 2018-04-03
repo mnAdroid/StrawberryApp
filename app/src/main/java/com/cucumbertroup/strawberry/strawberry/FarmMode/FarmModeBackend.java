@@ -7,6 +7,7 @@ import android.widget.Toast;
 
 import com.cucumbertroup.strawberry.strawberry.GlobalVariables;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static com.cucumbertroup.strawberry.strawberry.BitmapCalculations.getScaledCoordinates;
@@ -298,6 +299,57 @@ class FarmModeBackend {
     void setBitmapMainQuality(int bitmapMainQuality) {
         if (bitmapMainQuality >= 250 && bitmapMainQuality <= 1000)
             this.bitmapMainQuality = bitmapMainQuality;
+    }
+
+    ArrayList<FarmModeShopElement> getShopElements(Context fullContext) {
+        ArrayList<FarmModeShopElement> shopElements = null;
+
+        SharedPreferences sharedPreferences = fullContext.getSharedPreferences("StrawberryShopElements", 0);
+        String listString = sharedPreferences.getString("listString", "@@SamenI@@VerkaufI@GurkeI@@SamenII@GurkeII@@VerkaufII@GurkeIII@DungerI@GurkeIV@@Fabrik@");
+
+        //um keine IndexoutofBoundException zu bekommen
+        if (listString.equals("")) {
+            Log.e("StrawberryShopElements", "Einlesen fehlgeschlagen");
+            listString = "@@SamenI@@VerkaufI@GurkeI@@SamenII@GurkeII@@VerkaufII@GurkeIII@DungerI@GurkeIV@@Fabrik@";
+        }
+
+        /*Stringgestaltung:
+        1. -
+        2. -
+        3. Samen I
+        4. -
+        5. Verkauf I
+        6. Gurke I
+        7. -
+        8. Samen II
+        9. Gurke II
+        10. -
+        11. Verkauf II
+        12. Gurke III
+        13. Dunger I
+        14. Gurke IV
+        15 -
+        16. Fabrik
+         */
+
+        //1. String auseinander nehmen, 2. aus den Daten auslesen
+        String[] shopElementsString = listString.split("@");
+
+        for (String aShopElementsString : shopElementsString) {
+            //Ist das Element leer ist es egal
+            //"€" ist das zeichen für Verkauft
+            if (aShopElementsString.equals("") && shopElementsString[0].equals("€"))
+                continue;
+
+            //Neues Shop Element einfügen
+            shopElements.add(new FarmModeShopElement(aShopElementsString));
+
+            //Wenn bereits drei Elemente abgerufen wurden reichts
+            if (shopElements.size() >= 3)
+                break;
+        }
+
+        return shopElements;
     }
 
     void recycle() {
