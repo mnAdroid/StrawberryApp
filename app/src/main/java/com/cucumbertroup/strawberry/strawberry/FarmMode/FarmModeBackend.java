@@ -64,7 +64,7 @@ class FarmModeBackend {
 
     //Erdbeeren wachsen hier automatisch durch Zeit
     void strawberriesUpdate() {
-        for(int i = 0; i < numStrawberries; i++) {
+        for(int i = 0; i < numAecker * 8; i++) {
             strawberries[i].update();
         }
     }
@@ -96,15 +96,20 @@ class FarmModeBackend {
                 for (int i = 0; i < numAecker * 8; i++) {
                     boolean tmp = false;
                     for(int j = 0; j <= numGurken; j++) {
-                        if (i < numStrawberries)
+                        //Wenn wir mit i noch kleiner sind als es Erdbeeren gibt
+                        if (i < numAecker * 8)
                             tmp = strawberries[i].incrWachsStatus();
+                        //Wenn tmp true ist ist eine Erdbeere gewachsen
                         if (tmp) {
+                            //i wird erhöht damit die nächste Gurke die nächste Pflanze wachsen lässt
                             i++;
+                            //Die erste Gurke spielt den Sound
                             if (j == 0) {
                                 farmModeSound.playSound(2, fullContext);
                             }
                         }
                     }
+                    //Wenn etwas erhöht wurde hat der Klick funktioniert
                     if (tmp)
                         break;
                 }
@@ -292,12 +297,6 @@ class FarmModeBackend {
             return strawberries[index];
         }
         return null;
-    }
-
-    void gurkeGekauft() {
-        numGurken++;
-        globalVariables.setGold(globalVariables.getGold() - priceGurken);
-        priceGurken = calcPrice(1);
     }
 
     int getBitmapMainQuality() {
