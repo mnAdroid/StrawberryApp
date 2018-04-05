@@ -75,14 +75,14 @@ class FarmModeBackend {
         switch(zustand) {
             case 0:
                 //Aussähen: Prüfen ob noch Platz ist, wenn ja: Aussähen.
-                for(int j = 1; j <= numGurken; j++) {
+                for(int j = 0; j <= numGurken; j++) {
                     if (numStrawberries < (numAecker * 8)) {
                         for (int i = 0; i < numAecker * 8; i++) {
                             if (globalVariables.getGold() >= strawberryPrice && strawberries[i].getWachsStatus() <= -1) {
                                 strawberries[i].setStrawberry();
                                 numStrawberries++;
                                 globalVariables.setGold(globalVariables.getGold() - strawberryPrice);
-                                if(j == 1) {
+                                if(j == 0) {
                                     farmModeSound.playSound(1, fullContext);
                                 }
                                 break;
@@ -95,7 +95,7 @@ class FarmModeBackend {
                 //Wachsen / Giessen: Man gießt jede Pflanze einzeln.
                 for (int i = 0; i < numAecker * 8; i++) {
                     boolean tmp = false;
-                    for(int j = 0; j < numGurken; j++) {
+                    for(int j = 0; j <= numGurken; j++) {
                         if (i < numStrawberries)
                             tmp = strawberries[i].incrWachsStatus();
                         if (tmp) {
@@ -111,13 +111,13 @@ class FarmModeBackend {
                 break;
             case 2:
                 //Ernten: Prüfen ob Erdbeeren fertig, wenn ja: Gold bekommen und Platz machen zum Aussähen
-                for(int j = 1; j <= numGurken; j++) {
+                for(int j = 0; j <= numGurken; j++) {
                     for (int i = 0; i < numAecker * 8; i++) {
                         if (strawberries[i].getWachsStatus() >= 4) {
                             strawberries[i].resetStrawberry();
                             numStrawberries--;
                             globalVariables.setGold(globalVariables.getGold() + strawberryProfits);
-                            if (j == 1) {
+                            if (j == 0) {
                                 farmModeSound.playSound(3, fullContext);
                             }
                             break;
@@ -134,7 +134,7 @@ class FarmModeBackend {
         numStrawberries = sharedPreferences.getInt("numStrawberries", 0);
         numAecker = sharedPreferences.getInt("numAecker", 1);
         String strawberryStatus = sharedPreferences.getString("strawberryStatus", "");
-        numGurken = sharedPreferences.getInt("numGurken", 1);
+        numGurken = sharedPreferences.getInt("numGurken", 0);
         strawberryPrice = sharedPreferences.getInt("strawberryPrice",5);
         strawberryProfits = sharedPreferences.getInt("strawberryProfits", 7);
         dunger = sharedPreferences.getInt("dunger", 1);
@@ -310,7 +310,7 @@ class FarmModeBackend {
     }
 
     ArrayList<FarmModeShopElement> getShopElements(Context fullContext) {
-        ArrayList<FarmModeShopElement> shopElements = null;
+        ArrayList<FarmModeShopElement> shopElements = new ArrayList<>();
 
         SharedPreferences sharedPreferences = fullContext.getSharedPreferences("StrawberryShopElements", 0);
         String listString = sharedPreferences.getString("listString", "@@SamenI@@VerkaufI@GurkeI@@SamenII@GurkeII@@VerkaufII@GurkeIII@DungerI@GurkeIV@@Fabrik@");
@@ -343,12 +343,14 @@ class FarmModeBackend {
         //1. String auseinander nehmen, 2. aus den Daten auslesen
         String[] shopElementsString = listString.split("@");
 
+        Log.d("ShopElementTest", shopElementsString[0]);
         for (String aShopElementsString : shopElementsString) {
             //Ist das Element leer ist es egal
-            //"€" ist das zeichen für Verkauft
-            if (aShopElementsString.equals("") && shopElementsString[0].equals("€"))
+            if (aShopElementsString.equals(""))
                 continue;
-
+            //"€" ist das Zeichen für Verkauft
+            if (!aShopElementsString.isEmpty() && aShopElementsString.charAt(0) == '€')
+                continue;
             //Neues Shop Element einfügen
             shopElements.add(new FarmModeShopElement(aShopElementsString));
 
@@ -362,8 +364,8 @@ class FarmModeBackend {
 
     ArrayList<FarmModeShopElement> buyShopElements(Context fullContext, FarmModeShopElement shopElement) {
         //Bekommen wir null übergeben oder darf Nutzer gar nicht kaufen -> return
-        if (shopElement == null || shopElement.getNecessaryAecker() < numAecker ||
-                shopElement.getPrice() + strawberryPrice < globalVariables.getGold())
+        if (shopElement == null || shopElement.getNecessaryAecker() > numAecker ||
+                shopElement.getPrice() + strawberryPrice > globalVariables.getGold())
             return null;
 
         //Wenn alles ok ist ziehen wir das Geld ab
@@ -381,19 +383,21 @@ class FarmModeBackend {
         }
         //1. String auseinander nehmen, 2. passende Daten verändern
         String[] shopElementsString = listString.split("@");
-        String tmpString = shopElementsString[shopElement.getNecessaryAecker()];
+        String tmpString = shopElementsString[shopElement.getNecessaryAecker() - 1];
         shopElementsString[shopElement.getNecessaryAecker() - 1] = "€" + tmpString;
 
         //String Array wieder in ein String packen
         StringBuilder tmpStringBuilder = new StringBuilder();
         for (String aShopElementsString : shopElementsString) {
             tmpStringBuilder.append(aShopElementsString);
+            tmpStringBuilder.append("@");
         }
 
         //String wieder in die SharedPreferences rein
         SharedPreferences.Editor editor = sharedPreferencesElements.edit();
         editor.putString("listString", tmpStringBuilder.toString());
         editor.apply();
+        Log.d("tmpStringBuilder", tmpStringBuilder.toString());
 
         //und speichern den Bonus des Items
         SharedPreferences sharedPreferencesSettings = fullContext.getSharedPreferences("StrawberrySettings", 0);
