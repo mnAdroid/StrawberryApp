@@ -98,21 +98,21 @@ class FarmModeShop {
                 canvas.drawText("Äcker: " + farmModeBackend.getNumAecker() + " | Kosten: " + farmModeBackend.getPriceAecker() + " Gold", textX, 4 * textY, paint);
 
                 //Elementeinfo malen
-                if (farmModeShopElements != null && farmModeShopElements.size() == 3) {
+                if (farmModeShopElements != null) {
                     //Erstes Element
-                    if (farmModeShopElements.get(0) != null) {
+                    if (farmModeShopElements.size() >= 1 && farmModeShopElements.get(0) != null) {
                         if (farmModeShopElements.get(0).getNecessaryAecker() <= farmModeBackend.getNumAecker())
                             canvas.drawText(farmModeShopElements.get(0).getName() + " | Kosten: " + farmModeShopElements.get(0).getPrice() + " Gold", textX, 7 * textY, paint);
                         else
                             canvas.drawText(farmModeShopElements.get(0).getName() + " | Benötigte Äcker: " + farmModeShopElements.get(0).getNecessaryAecker(), textX, 7 * textY, paint);
                     }
-                    if (farmModeShopElements.get(1) != null) {
+                    if (farmModeShopElements.size() >= 2 && farmModeShopElements.get(1) != null) {
                         if (farmModeShopElements.get(1).getNecessaryAecker() <= farmModeBackend.getNumAecker())
                             canvas.drawText(farmModeShopElements.get(1).getName() + " | Kosten: " + farmModeShopElements.get(1).getPrice() + " Gold", textX, 10 * textY, paint);
                         else
                             canvas.drawText(farmModeShopElements.get(1).getName() + " | Benötigte Äcker: " + farmModeShopElements.get(1).getNecessaryAecker(), textX, 10 * textY, paint);
                     }
-                    if (farmModeShopElements.get(2) != null) {
+                    if (farmModeShopElements.size() == 3 && farmModeShopElements.get(2) != null) {
                         if (farmModeShopElements.get(2).getNecessaryAecker() <= farmModeBackend.getNumAecker())
                             canvas.drawText(farmModeShopElements.get(2).getName() + " | Kosten: " + farmModeShopElements.get(2).getPrice() + " Gold", textX, 13 * textY, paint);
                         else
@@ -159,38 +159,41 @@ class FarmModeShop {
                         farmModeSound.playSound(4, fullContext);
                     break;
                 }
-                if (farmModeShopElements != null && farmModeShopElements.size() == 3) {
+                if (farmModeShopElements != null && farmModeShopElements.size() >= 1 && farmModeShopElements.get(0) != null) {
                     //Element 1 kaufen button
                     if (touchX1 >= bitmapShopElement1ButtonX && touchX1 < (bitmapShopElement1ButtonX + bitmapGurkeKaufenButton.getWidth())
                             && touchY1 >= bitmapShopElement1ButtonY && touchY1 < (bitmapShopElement1ButtonY + bitmapGurkeKaufenButton.getHeight())) {
-                        if (farmModeShopElements.get(0) != null && globalVariables.getGold() >= (farmModeShopElements.get(0).getPrice() + farmModeBackend.getStrawberryPrice())) {
+                        if (globalVariables.getGold() >= (farmModeShopElements.get(0).getPrice() + farmModeBackend.getStrawberryPrice())) {
                             farmModeShopElements = farmModeBackend.buyShopElements(fullContext, farmModeShopElements.get(0));
                             farmModeSound.playSound(5, fullContext);
                         } else
                             farmModeSound.playSound(4, fullContext);
                     }
-
+                }
+                if (farmModeShopElements != null && farmModeShopElements.size() >= 2 && farmModeShopElements.get(1) != null) {
                     //Element 2 kaufen button
                     if (touchX1 >= bitmapShopElement2ButtonX && touchX1 < (bitmapShopElement2ButtonX + bitmapGurkeKaufenButton.getWidth())
                             && touchY1 >= bitmapShopElement2ButtonY && touchY1 < (bitmapShopElement2ButtonY + bitmapGurkeKaufenButton.getHeight())) {
-                        if (farmModeShopElements.get(1) != null && globalVariables.getGold() >= (farmModeShopElements.get(1).getPrice() + farmModeBackend.getStrawberryPrice())) {
+                        if (globalVariables.getGold() >= (farmModeShopElements.get(1).getPrice() + farmModeBackend.getStrawberryPrice())) {
                             farmModeShopElements = farmModeBackend.buyShopElements(fullContext, farmModeShopElements.get(1));
                             farmModeSound.playSound(5, fullContext);
                         } else
                             farmModeSound.playSound(4, fullContext);
                     }
+                }
 
+                if (farmModeShopElements != null && farmModeShopElements.size() == 3 && farmModeShopElements.get(2) != null) {
                     //Element 3 kaufen button
                     if (touchX1 >= bitmapShopElement3ButtonX && touchX1 < (bitmapShopElement3ButtonX + bitmapGurkeKaufenButton.getWidth())
                             && touchY1 >= bitmapShopElement3ButtonY && touchY1 < (bitmapShopElement3ButtonY + bitmapGurkeKaufenButton.getHeight())) {
-                        if (farmModeShopElements.get(2) != null && globalVariables.getGold() >= (farmModeShopElements.get(2).getPrice() + farmModeBackend.getStrawberryPrice())) {
+                        if (globalVariables.getGold() >= (farmModeShopElements.get(2).getPrice() + farmModeBackend.getStrawberryPrice())) {
                             farmModeShopElements = farmModeBackend.buyShopElements(fullContext, farmModeShopElements.get(2));
                             farmModeSound.playSound(5, fullContext);
                         } else
                             farmModeSound.playSound(4, fullContext);
                     }
-
                 }
+
                 //Bei Fehler beim Kaufen wird farmModeShopElements = null sein
                 if (farmModeShopElements == null) {
                     farmModeShopElements = farmModeBackend.getShopElements(fullContext);
