@@ -97,8 +97,14 @@ class FarmModeBackend {
                     boolean tmp = false;
                     for(int j = 0; j <= numGurken; j++) {
                         //Wenn wir mit i noch kleiner sind als es Erdbeeren gibt
-                        if (i < numAecker * 8)
+                        if (i < numAecker * 8) {
+                            //Einmal wird auf jeden Fall gewachsen
                             tmp = strawberries[i].incrWachsStatus();
+                            //Dünger Schleife für Dünger > 1
+                            for (int x = 2; x <= dunger; x++) {
+                                strawberries[i].incrWachsStatus();
+                            }
+                        }
                         //Wenn tmp true ist ist eine Erdbeere gewachsen
                         if (tmp) {
                             //i wird erhöht damit die nächste Gurke die nächste Pflanze wachsen lässt
