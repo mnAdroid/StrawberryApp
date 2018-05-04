@@ -26,7 +26,6 @@ class FarmModeBackend {
     private int priceAecker;
     //Anzahl und Preis der arbeitenden Gurken
     private int numGurken;
-    private int priceGurken;
 
     //Qualität: 250 - 1000
     private int bitmapMainQuality;
@@ -156,8 +155,7 @@ class FarmModeBackend {
         Log.d("numGurken", "" + numGurken);
         Log.d("numGurkenShared", "" +  sharedPreferences.getInt("numGurken", 1));
         //Preise initialisieren
-        priceAecker = calcPrice(0);
-        priceGurken = calcPrice(1);
+        priceAecker = calcPriceAecker();
 
         //Erdbeer Array erstellen
         //um keine IndexoutofBoundException zu bekommen
@@ -252,17 +250,8 @@ class FarmModeBackend {
     }
 
     //Gibt den Preis der Elemente aus dem Shop aus
-    private int calcPrice(int whichOne) {
-        //whichOne Legende: 0: Acker, 1: Gurke, 2: früher Land, 3: Werkzeug
-        switch (whichOne) {
-            case 0:
-                return (int) (50*Math.pow((double) numAecker, 1.7));
-            case 1:
-                return (int) (500*Math.pow((double) numGurken, 1.5));
-            case 3:
-                return 42;
-        }
-        return -1;
+    private int calcPriceAecker() {
+        return (int) (50*Math.pow((double) numAecker, 1.7));
     }
 
     //Wenn ein Acker gekauft wurde
@@ -270,7 +259,7 @@ class FarmModeBackend {
         //Anzahl hochzählen und Gold abbuchen
         numAecker++;
         globalVariables.setGold(globalVariables.getGold() - priceAecker);
-        priceAecker = calcPrice(0);
+        priceAecker = calcPriceAecker();
 
         //Neues Strawberry Array erstellen
         Strawberry[] strawberriesTemp = Arrays.copyOf(strawberries, numAecker*8);
@@ -288,10 +277,6 @@ class FarmModeBackend {
 
     int getPriceAecker() {
         return priceAecker;
-    }
-
-    int getPriceGurken() {
-        return priceGurken;
     }
 
     int getStrawberryPrice() {
@@ -376,7 +361,6 @@ class FarmModeBackend {
         //Wenn alles ok ist ziehen wir das Geld ab
         globalVariables.setGold(globalVariables.getGold() - shopElement.getPrice());
         //und speichern dass es gekauft wurde
-        ArrayList<FarmModeShopElement> shopElements = null;
 
         SharedPreferences sharedPreferencesElements = fullContext.getSharedPreferences("StrawberryShopElements", 0);
         String listString = sharedPreferencesElements.getString("listString", "@@SamenI@@VerkaufI@GurkeI@@SamenII@GurkeII@@VerkaufII@GurkeIII@DungerI@GurkeIV@@Fabrik@");

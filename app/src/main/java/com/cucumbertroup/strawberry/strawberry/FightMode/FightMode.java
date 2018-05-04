@@ -425,6 +425,7 @@ public class FightMode {
 
             } catch (NullPointerException e) {
                 setSharedPreferences();
+                initialiseGrafics();
                 return;
             }
             //Alles auf den Bildschirm malen

@@ -74,8 +74,6 @@ class FarmModeShop {
         farmModeShopElements = farmModeBackend.getShopElements(context);
 
         recycled = false;
-
-        globalVariables.setGold(globalVariables.getGold() + 10000);
     }
 
     //ZEICHNEN
