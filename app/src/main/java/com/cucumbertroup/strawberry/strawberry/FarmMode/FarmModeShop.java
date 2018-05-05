@@ -31,7 +31,7 @@ class FarmModeShop {
     //nicht interaktive Bitmaps:
     private Bitmap bitmapShopKeeper;
     //p2w Button
-    private Bitmap bitmapP2Button;
+    private Bitmap bitmapP2WButton;
 
     //Testbuttons FARM erstellen
     private Bitmap bitmapAckerKaufenButton;
@@ -45,7 +45,7 @@ class FarmModeShop {
     private int bitmapShopElement3ButtonX, bitmapShopElement3ButtonY;
 
     private int bitmapShopKeeperX, bitmapShopKeeperY;
-    private int bitmapP2ButtonX, bitmapP2ButtonY;
+    private int bitmapP2WButtonX, bitmapP2WButtonY;
 
 
     //Globale Variablenübertragungsklasse ;)
@@ -90,11 +90,16 @@ class FarmModeShop {
     void drawFarmShop(Canvas canvas, Paint paint) {
         if (!recycled) {
             try {
-                //Standardfehlerabfangen
-                //Hintergrund ist erstmal einfach schwarz
-                //Pinselfarbe wählen (bisher nur für den Text)
+                //Hintergrund malen
                 if (bitmapShopBackground != null)
                     canvas.drawBitmap(bitmapShopBackground, 0, 0, paint);
+                //Shopkeeper malen
+                if (bitmapShopKeeper != null)
+                    canvas.drawBitmap(bitmapShopKeeper, bitmapShopKeeperX, bitmapShopKeeperY, paint);
+                //P2W Button malen
+                if (bitmapP2WButton != null)
+                    canvas.drawBitmap(bitmapP2WButton, bitmapP2WButtonX, bitmapP2WButtonY, paint);
+
                 //Pinselfarbe wählen (bisher nur für den Text)
                 paint.setColor(Color.argb(255, 249, 129, 0));
                 paint.setStyle(Paint.Style.FILL);
@@ -229,22 +234,38 @@ class FarmModeShop {
         options.inJustDecodeBounds = true;
         bitmapAckerKaufenButton = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.ackerkaufen_button, options);
         //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
-        bitmapAckerKaufenButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.ackerkaufen_button, 100, 100);
+        bitmapAckerKaufenButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.ackerkaufen_button, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
         bitmapAckerKaufenButton = Bitmap.createScaledBitmap(bitmapAckerKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
         //Gurke Kaufen Button
         options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         bitmapGurkeKaufenButton = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.gurkekaufen_button, options);
-        bitmapGurkeKaufenButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.gurkekaufen_button, 100, 100);
+        bitmapGurkeKaufenButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.gurkekaufen_button, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
         bitmapGurkeKaufenButton = Bitmap.createScaledBitmap(bitmapGurkeKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
+        //Hintergrund
         options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         bitmapShopBackground = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.shop_background, options);
         //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
         bitmapShopBackground = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.shop_background, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
         bitmapShopBackground = Bitmap.createScaledBitmap(bitmapShopBackground, screenX, screenY, false);
+
+        //Shop Keeper
+        options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        bitmapShopKeeper = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.shopkeeper, options);
+        bitmapShopKeeper = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.shopkeeper, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
+        bitmapShopKeeper = Bitmap.createScaledBitmap(bitmapShopKeeper, getScaledBitmapSize(screenX, 1080, 655), getScaledBitmapSize(screenY, 1920, 698), false);
+
+        //P2W Button
+        options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        bitmapP2WButton = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.p2w_box, options);
+        bitmapP2WButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.p2w_box, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
+        bitmapP2WButton = Bitmap.createScaledBitmap(bitmapP2WButton, getScaledBitmapSize(screenX, 1080, 311), getScaledBitmapSize(screenY, 1920, 206), false);
+
 
         //Feste Werte setzen
         bitmapAckerKaufenButtonX = getScaledCoordinates(screenX, 1080, 800);
@@ -255,6 +276,12 @@ class FarmModeShop {
         bitmapShopElement2ButtonY = getScaledCoordinates(screenY, 1920, 440);
         bitmapShopElement3ButtonX = bitmapShopElement1ButtonX;
         bitmapShopElement3ButtonY = getScaledCoordinates(screenY, 1920, 590);
+
+        bitmapShopKeeperX = getScaledCoordinates(screenX, 1080, 425);
+        bitmapShopKeeperY = getScaledCoordinates(screenY, 1920, 1222);
+
+        bitmapP2WButtonX = getScaledCoordinates(screenX, 1080, 400);
+        bitmapP2WButtonY = getScaledCoordinates(screenY, 1920, 960);
     }
 
     //Wenn wir den Modus verlassen
