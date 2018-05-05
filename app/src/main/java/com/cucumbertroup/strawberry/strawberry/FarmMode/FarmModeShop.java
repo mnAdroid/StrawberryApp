@@ -26,6 +26,13 @@ class FarmModeShop {
     //Bildschirmkoordinaten
     private int screenX, screenY;
 
+    //Background
+    private Bitmap bitmapShopBackground;
+    //nicht interaktive Bitmaps:
+    private Bitmap bitmapShopKeeper;
+    //p2w Button
+    private Bitmap bitmapP2Button;
+
     //Testbuttons FARM erstellen
     private Bitmap bitmapAckerKaufenButton;
     private Bitmap bitmapGurkeKaufenButton;
@@ -36,6 +43,9 @@ class FarmModeShop {
     private int bitmapShopElement1ButtonX, bitmapShopElement1ButtonY;
     private int bitmapShopElement2ButtonX, bitmapShopElement2ButtonY;
     private int bitmapShopElement3ButtonX, bitmapShopElement3ButtonY;
+
+    private int bitmapShopKeeperX, bitmapShopKeeperY;
+    private int bitmapP2ButtonX, bitmapP2ButtonY;
 
 
     //Globale Variablenübertragungsklasse ;)
@@ -83,7 +93,8 @@ class FarmModeShop {
                 //Standardfehlerabfangen
                 //Hintergrund ist erstmal einfach schwarz
                 //Pinselfarbe wählen (bisher nur für den Text)
-                canvas.drawColor(Color.BLACK);
+                if (bitmapShopBackground != null)
+                    canvas.drawBitmap(bitmapShopBackground, 0, 0, paint);
                 //Pinselfarbe wählen (bisher nur für den Text)
                 paint.setColor(Color.argb(255, 249, 129, 0));
                 paint.setStyle(Paint.Style.FILL);
@@ -228,6 +239,13 @@ class FarmModeShop {
         bitmapGurkeKaufenButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.gurkekaufen_button, 100, 100);
         bitmapGurkeKaufenButton = Bitmap.createScaledBitmap(bitmapGurkeKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
+        options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        bitmapShopBackground = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.shop_background, options);
+        //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
+        bitmapShopBackground = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.shop_background, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
+        bitmapShopBackground = Bitmap.createScaledBitmap(bitmapShopBackground, screenX, screenY, false);
+
         //Feste Werte setzen
         bitmapAckerKaufenButtonX = getScaledCoordinates(screenX, 1080, 800);
         bitmapAckerKaufenButtonY = getScaledCoordinates(screenY, 1920, 140);
@@ -247,5 +265,7 @@ class FarmModeShop {
         bitmapAckerKaufenButton = null;
         bitmapGurkeKaufenButton.recycle();
         bitmapGurkeKaufenButton = null;
+        bitmapShopBackground.recycle();
+        bitmapShopBackground = null;
     }
 }

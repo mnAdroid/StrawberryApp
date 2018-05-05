@@ -373,7 +373,7 @@ public class FarmMode {
         //Hintergrundbild einfügen
         bitmapBackgroundLoading = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.loadingscreen, options);
         //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
-        bitmapBackgroundLoading = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.loadingscreen, 250, 250);
+        bitmapBackgroundLoading = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.loadingscreen, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
         bitmapBackgroundLoading = Bitmap.createScaledBitmap(bitmapBackgroundLoading, screenX, screenY, false);
 
         //Einstellungen Öffnen Button
