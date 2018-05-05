@@ -294,5 +294,9 @@ class FarmModeShop {
         bitmapGurkeKaufenButton = null;
         bitmapShopBackground.recycle();
         bitmapShopBackground = null;
+        bitmapShopKeeper.recycle();
+        bitmapShopKeeper = null;
+        bitmapP2WButton.recycle();
+        bitmapP2WButton = null;
     }
 }
