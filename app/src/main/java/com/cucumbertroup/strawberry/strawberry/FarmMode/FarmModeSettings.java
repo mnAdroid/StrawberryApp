@@ -122,16 +122,10 @@ class FarmModeSettings {
         textSize = getScaledBitmapSize(screenX, 1080, 50);
 
         //Fight Button
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        bitmapFightButton = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.fight_button, options);
         bitmapFightButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.fight_button, 100, 100);
         bitmapFightButton = Bitmap.createScaledBitmap(bitmapFightButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 
         //Musik Button
-        options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        bitmapMusikAnAusButton = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.musikanaus_button, options);
         bitmapMusikAnAusButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.musikanaus_button, 100, 100);
         bitmapMusikAnAusButton = Bitmap.createScaledBitmap(bitmapMusikAnAusButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
 

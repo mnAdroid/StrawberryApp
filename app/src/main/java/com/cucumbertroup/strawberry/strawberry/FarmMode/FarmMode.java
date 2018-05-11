@@ -348,31 +348,14 @@ public class FarmMode {
         backgroundLandY1 = 0;
 
         //Hintergrundbild:
-        //Um das ganze effizient einzufügen müssen wir hier mit den Bitmapfactory Otions spielen
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true; //Nur die Ränder werden eingefügt
-        //Hintergrundbild einfügen
-        bitmapBackgroundOverlay = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.background_farm1, options);
-        //Dadurch, dass wir nur die Ränder haben wird nicht so viel RAM verbraucht und wir können trz die Größe erfahren und rescalen
-        //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
         bitmapBackgroundOverlay = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.background_farm1, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
         bitmapBackgroundOverlay = Bitmap.createScaledBitmap(bitmapBackgroundOverlay, screenX * 3, screenY, false);
 
         //Hintergrundland Bild:
-        options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true; //Nur die Ränder werden eingefügt
-        //Hintergrundbild einfügen
-        bitmapBackgroundLand = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.background_farm2, options);
-        //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
         bitmapBackgroundLand = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.background_farm2, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
         bitmapBackgroundLand = Bitmap.createScaledBitmap(bitmapBackgroundLand, screenX, screenY, false);
 
         //Loadingscreen Bild:
-        options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true; //Nur die Ränder werden eingefügt
-        //Hintergrundbild einfügen
-        bitmapBackgroundLoading = BitmapFactory.decodeResource(fullContext.getResources(), R.drawable.loadingscreen, options);
-        //Dann Bitmap gerescaled einfügen und die Anzeige auf die Standardgröße neuscalen
         bitmapBackgroundLoading = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.loadingscreen, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
         bitmapBackgroundLoading = Bitmap.createScaledBitmap(bitmapBackgroundLoading, screenX, screenY, false);
 
