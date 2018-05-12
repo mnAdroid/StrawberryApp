@@ -79,6 +79,9 @@ public class FarmMode {
     //Acker und Erdbeeren malen
     private FarmModeList farmModeList;
 
+    //effizientes malen
+    private int update;
+
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     public FarmMode(Context context, int screenX, int screenY) {
         //Auf den Context können alle FarmMode Funktionen zugreifen
@@ -113,7 +116,8 @@ public class FarmMode {
     //update ist quasi das DENKEN in der App
     public void updateFarm(long fps) {
         if (farmModeBackend != null)
-            farmModeBackend.strawberriesUpdate();
+            if (farmModeBackend.strawberriesUpdate())
+                update = 0;
         if (farmModeSound != null)
             farmModeSound.playSound(0, fullContext);
         if (farmModeList != null) {
@@ -144,25 +148,28 @@ public class FarmMode {
                 } else if (farmModeShop != null) {
                     farmModeShop.drawFarmShop(canvas, paint);
                 } else {
-                    //Absoluter Hintergrund
-                    if (bitmapBackgroundLand != null)
-                        canvas.drawBitmap(bitmapBackgroundLand, 0, backgroundLandY1, paint);
+                    if (update <= 144) {
+                        //Absoluter Hintergrund
+                        if (bitmapBackgroundLand != null)
+                            canvas.drawBitmap(bitmapBackgroundLand, 0, backgroundLandY1, paint);
+                        //Acker und Erdbeeren malen
+                        if (farmModeList != null)
+                            update = farmModeList.drawFarmList(canvas, paint, update);
 
-                    //Acker und Erdbeeren malen
-                    if (farmModeList != null)
-                        farmModeList.drawFarmList(canvas, paint);
+                        //Hintergrund Overlay
+                        if (bitmapBackgroundOverlay != null)
+                            canvas.drawBitmap(bitmapBackgroundOverlay, backgroundOverlayX1, 0, paint);
 
-                    //Hintergrund Overlay
-                    if (bitmapBackgroundOverlay != null)
-                        canvas.drawBitmap(bitmapBackgroundOverlay, backgroundOverlayX1, 0, paint);
+                        //Pinselfarbe wählen (bisher nur für den Text)
+                        paint.setColor(Color.argb(255, 249, 129, 0));
+                        paint.setStyle(Paint.Style.FILL);
+                        paint.setTextSize(textSize);
 
-                    //Pinselfarbe wählen (bisher nur für den Text)
-                    paint.setColor(Color.argb(255, 249, 129, 0));
-                    paint.setStyle(Paint.Style.FILL);
-                    paint.setTextSize(textSize);
+                        //Wie viel Gold haben wir?
+                        canvas.drawText("Gold: " + globalVariables.getGold(), 3 * textX, 2 * textY, paint);
 
-                    //Wie viel Gold haben wir?
-                    canvas.drawText("Gold: " + globalVariables.getGold(), 3 * textX, 2 * textY, paint);
+                        update++;
+                    }
                 }
             } catch (NullPointerException e) {
                 if (farmModeBackend != null)
@@ -177,6 +184,7 @@ public class FarmMode {
 
     //Was passiert wenn man den Touchscreen im FARM Modus berührt
     public boolean onTouchFarm(MotionEvent motionEvent) {
+        update = 0;
         //Alle Arten von Bewegung (auf dem Screen) die man bearbeiten will
         switch (motionEvent.getAction() & MotionEvent.ACTION_MASK) {
             //Spieler berührt den Bildschirm
@@ -373,6 +381,8 @@ public class FarmMode {
 
         //Wir haben alles geladen
         loading = false;
+
+        update = 0;
     }
 
     //Wenn wir den Modus verlassen
@@ -424,11 +434,13 @@ public class FarmMode {
             farmModeSettings.recycle();
             farmModeSettings = null;
         }
+        update = 0;
     }
 
     public void getSharedPreferences() {
         if (farmModeBackend != null)
             farmModeBackend.getSharedPreferences(fullContext);
+        update = 0;
     }
 
     public void setSharedPreferences() {

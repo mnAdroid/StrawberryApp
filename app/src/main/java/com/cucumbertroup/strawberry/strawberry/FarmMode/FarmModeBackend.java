@@ -62,10 +62,12 @@ class FarmModeBackend {
     }
 
     //Erdbeeren wachsen hier automatisch durch Zeit
-    void strawberriesUpdate() {
+    boolean strawberriesUpdate() {
+        boolean tmp = false;
         for(int i = 0; i < numAecker * 8; i++) {
-            strawberries[i].update();
+            tmp = strawberries[i].update();
         }
+        return tmp;
     }
 
     //Was passiert wenn der Spieler im FARM Modus klickt?

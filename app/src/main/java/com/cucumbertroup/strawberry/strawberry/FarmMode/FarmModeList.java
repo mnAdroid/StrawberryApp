@@ -2,7 +2,6 @@ package com.cucumbertroup.strawberry.strawberry.FarmMode;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 
@@ -63,6 +62,9 @@ class FarmModeList {
     private int scrollAnimationCounter;
     private long startFPS;
 
+    //effizientes malen
+    private int update;
+
     FarmModeList(Context context, int screenX, int screenY) {
         fullContext = context;
 
@@ -116,20 +118,22 @@ class FarmModeList {
         //Erdbeere5 einlesen
         bitmapErdbeere5 = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.erdbeere5, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
         bitmapErdbeere5 = Bitmap.createScaledBitmap(bitmapErdbeere5, getScaledBitmapSize(screenX, 1080, 271), getScaledBitmapSize(screenY, 1920, 268), false);
+
+        update = 0;
     }
 
-    void drawFarmList(Canvas canvas, Paint paint) {
+    int drawFarmList(Canvas canvas, Paint paint, int update) {
         //Acker malen
-        if (bitmapAcker != null && bitmapAckerY.length > 0) {
+        if (bitmapAcker != null && bitmapAckerY.length > 0 && update <= 144) {
             //alle Aecker durchgehen und testen ob er auf dem Screen waere, wenn ja malen
-            for (int j = 0; j < bitmapAckerY.length; j++)
+            for (int j = 0; j < bitmapAckerY.length; j++) {
                 if (bitmapAckerY[j] >= maxHeight && bitmapAckerY[j] <= screenY) {
                     canvas.drawBitmap(bitmapAcker, bitmapAckerX, bitmapAckerY[j], paint);
                     //Erdbeere testweise malen
-                    for (int i = 0; i < bitmapAckerY.length*8; i++) {
+                    for (int i = 0; i < bitmapAckerY.length * 8; i++) {
                         Strawberry tmp = farmModeBackend.getSpecificStrawberry(i);
                         if (tmp != null && tmp.getWachsStatus() != -1) {
-                            if (tmp.getAcker() == (i/8 + 1) && tmp.getAcker() == ( j + 1)) {
+                            if (tmp.getAcker() == (i / 8 + 1) && tmp.getAcker() == (j + 1)) {
                                 if (tmp.isReihe1())
                                     canvas.drawBitmap(getCorrectStrawberryImage(tmp.getWachsStatus()), tmp.getCoordinateX(), bitmapAckerY[j], paint);
                                 else
@@ -138,8 +142,10 @@ class FarmModeList {
                         }
                     }
                 }
-
+            }
         }
+        this.update++;
+        return this.update -1;
     }
 
     private Bitmap getCorrectStrawberryImage(int wachsstatus) {
@@ -160,7 +166,7 @@ class FarmModeList {
 
     //regelmaessiges checken ob neuer Acker hinzugefuegt werden muss
     void updateAcker() {
-       while (bitmapAckerY.length != farmModeBackend.getNumAecker()) {
+        while (bitmapAckerY.length != farmModeBackend.getNumAecker()) {
            Float[] bitmapAckerYTemp = Arrays.copyOf(bitmapAckerY, bitmapAckerY.length + 1);
            if (bitmapAckerY.length == 0) {
                bitmapAckerYTemp[0] = (float) getScaledCoordinates(screenY, 1920, 500);
@@ -172,11 +178,13 @@ class FarmModeList {
                bitmapAckerYTemp[bitmapAckerYTemp.length - 1] = (bitmapAckerY[bitmapAckerY.length - 1] + bitmapAckerAbstand);
                bitmapAckerY = bitmapAckerYTemp;
            }
+            update = 0;
         }
     }
 
     //aktives Scrollen = Finger bewegt sich auf dem Bildschirm
     void scroll(float difference) {
+        update = 0;
         if (farmModeBackend.getNumAecker() > 2) {
             //wir scrollen nicht nach oben zu viel
             if (completeAckerHeight + difference < 0) {
