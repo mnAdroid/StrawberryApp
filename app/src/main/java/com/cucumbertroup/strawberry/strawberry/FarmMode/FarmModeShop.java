@@ -114,7 +114,7 @@ class FarmModeShop {
 
     //ZEICHNEN
     void drawFarmShop(Canvas canvas, Paint paint) {
-        if (!recycled && update<=144) {
+        if (!recycled && update<=5) {
             try {
                 //Popup muss gemalt werden
                 if (popUp) {

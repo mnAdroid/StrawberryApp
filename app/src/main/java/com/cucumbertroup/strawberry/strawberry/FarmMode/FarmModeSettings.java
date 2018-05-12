@@ -60,7 +60,7 @@ class FarmModeSettings {
     //ZEICHNEN
     void drawFarmSettings(Canvas canvas, Paint paint) {
         try {
-            if (update <= 144) {
+            if (update <= 5) {
                 canvas.drawColor(Color.BLACK);
                 //Pinselfarbe wählen (bisher nur für den Text)
                 paint.setColor(Color.argb(255, 249, 129, 0));

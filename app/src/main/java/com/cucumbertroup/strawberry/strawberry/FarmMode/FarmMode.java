@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
@@ -30,9 +29,7 @@ public class FarmMode {
     private float touchX1;
     private float touchX1down;
     private float touchY1;
-    //Was war der höchste und niedrigste Punkt den wir berührt haben
-    private float touchY1MaxDown;
-    private float touchY1MaxUp;
+    private float touchY1down;
     //Berühren wir den Bildschirm mit mehr als einem Finger?
     private boolean touchPointer = false;
     //Abstand der letzten Bewegung auf dem Bildschirm
@@ -41,7 +38,6 @@ public class FarmMode {
     private long touchTimer;
     //in welche Richtung ging der letzte move
     private boolean lastMoveVertical;
-    private boolean lastMoveUp;
 
     //Ort des Hintergrundbildes
     private float backgroundOverlayX1;
@@ -191,8 +187,7 @@ public class FarmMode {
             case MotionEvent.ACTION_DOWN:
                 //Wo befanden wir uns am Anfang?
                 touchX1down = motionEvent.getX();
-                touchY1MaxDown = motionEvent.getY();
-                touchY1MaxUp = motionEvent.getY();
+                touchY1down = motionEvent.getY();
                 //Wo befinden wir uns gerade? (Hier noch identisch mit touchX1down)
                 touchX1 = motionEvent.getX();
                 touchY1 = motionEvent.getY();
@@ -243,12 +238,6 @@ public class FarmMode {
                     touchX1 = motionEvent.getX();
                     touchY1 = motionEvent.getY();
 
-                    //Sind die neuen Werte höher oder niedriger als unser Maximum?
-                    if (touchY1 > touchY1MaxUp)
-                        touchY1MaxUp = touchY1;
-                    if (touchY1 < touchY1MaxDown)
-                        touchY1MaxDown = touchY1;
-
                     if (Math.abs(deltaXMove) > Math.abs(deltaYMove)) {
                         //Bedingung für die Äußeren Grenzen
                         if (((backgroundOverlayX1 + deltaXMove) < 0) && ((backgroundOverlayX1 + deltaXMove) > (-2 * screenX))) {
@@ -260,7 +249,6 @@ public class FarmMode {
                     else {
                         lastMoveVertical = true;
                         //Finger bewegt sich nach oben / unten
-                        lastMoveUp = deltaYMove >= 0;
                         //einfaches Scrollen (Am Finger kleben)
                         farmModeList.scroll(deltaYMove);
                     }
@@ -273,23 +261,13 @@ public class FarmMode {
             case MotionEvent.ACTION_UP:
                 //Wie weit hat sich der Finger insgesamt bewegt? | Differenz der beiden Werte
                 float deltaXClick = motionEvent.getX() - touchX1down;
-                float deltaYClick;
-                if (lastMoveUp) {
-                    deltaYClick = motionEvent.getY() - touchY1MaxDown;
-                }
-                else {
-                    deltaYClick = motionEvent.getY() - touchY1MaxUp;
-                }
+                float deltaYClick = motionEvent.getY() - touchY1down;
 
                 //FLINGING DER ACKERLISTE
 
                 //Starten der Scrollanimation
                 if (farmModeList != null && lastMoveVertical)
                     farmModeList.startScrollAnimation(touchTimer - System.currentTimeMillis(), deltaYClick);
-
-                //resetten der touchY1 Koordinaten
-                touchY1MaxDown = screenY;
-                touchY1MaxUp = 0;
 
                 //RESET DER HINTERGRUNDBILDPOSITION
 

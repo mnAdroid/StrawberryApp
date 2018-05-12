@@ -230,7 +230,8 @@ class FarmModeList {
         scrollTimer = System.currentTimeMillis();
 
         //Berechnung der ScrollSpeed
-        scrollSpeed = (delta * Math.abs(touchTime)) / 1000;
+        scrollSpeed = (delta * Math.abs(touchTime)) / 2000;
+        //scrollSpeed = (delta) / 10;
         scrollSpeedBegin = scrollSpeed;
         scrollAnimationCounter = 0;
 
