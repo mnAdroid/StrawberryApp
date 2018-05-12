@@ -35,6 +35,9 @@ class FarmModeSettings {
     private GlobalVariables globalVariables;
     private FarmModeSound farmModeSound;
 
+    //effizienteres Canvaszeichnen
+    private int update;
+
     //Konstruktor (um die ganze Klasse überhaupt verwenden zu können)
     FarmModeSettings(Context context, int screenX, int screenY) {
         //Auf den Context können alle FarmMode Funktionen zugreifen
@@ -57,20 +60,25 @@ class FarmModeSettings {
     //ZEICHNEN
     void drawFarmSettings(Canvas canvas, Paint paint) {
         try {
-            canvas.drawColor(Color.BLACK);
-            //Pinselfarbe wählen (bisher nur für den Text)
-            paint.setColor(Color.argb(255, 249, 129, 0));
-            paint.setStyle(Paint.Style.FILL);
-            paint.setTextSize(textSize);
+            if (update <= 5) {
+                canvas.drawColor(Color.BLACK);
+                //Pinselfarbe wählen (bisher nur für den Text)
+                paint.setColor(Color.argb(255, 249, 129, 0));
+                paint.setStyle(Paint.Style.FILL);
+                paint.setTextSize(textSize);
 
-            //Klickcounter malen
-            canvas.drawText("Clicks: " + globalVariables.getClickCount(), textX, 2* textY, paint);
+                //Klickcounter malen
+                canvas.drawText("Clicks: " + globalVariables.getClickCount(), textX, 2 * textY, paint);
 
-            //Test Button malen
-            if (bitmapFightButton != null)
-                canvas.drawBitmap(bitmapFightButton, bitmapFightButtonX, bitmapFightButtonY, paint);
-            if (bitmapMusikAnAusButton != null)
-                canvas.drawBitmap(bitmapMusikAnAusButton, bitmapMusikAnAusButtonX, bitmapMusikAnAusButtonY, paint);
+                //Test Button malen
+                if (bitmapFightButton != null)
+                    canvas.drawBitmap(bitmapFightButton, bitmapFightButtonX, bitmapFightButtonY, paint);
+                if (bitmapMusikAnAusButton != null)
+                    canvas.drawBitmap(bitmapMusikAnAusButton, bitmapMusikAnAusButtonX, bitmapMusikAnAusButtonY, paint);
+
+                //es wurde alles gemalt
+                update++;
+            }
         } catch (NullPointerException e) {
             recycle();
         }
@@ -135,6 +143,9 @@ class FarmModeSettings {
         bitmapFightButtonY = 4 * textY;
         bitmapMusikAnAusButtonX = getScaledCoordinates(screenX, 1080, 20);
         bitmapMusikAnAusButtonY = 4 * textY;
+
+        //beim Öffnen der Einstellungen wird gemalt
+        update = 0;
     }
 
     //Wenn wir den Modus verlassen

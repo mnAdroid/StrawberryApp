@@ -4,7 +4,7 @@ class FarmModeShopElement {
     private String name;
     private int price;
     private int necessaryAecker;
-    //private String infotext;
+    private String infotext;
     //private Bitmap icon;
 
     //Erstellung falls nicht vorgegeben
@@ -15,6 +15,7 @@ class FarmModeShopElement {
     }
 
     FarmModeShopElement(String bezeichnung) {
+        infotext = bezeichnung;
         switch (bezeichnung) {
             case "SamenI":
                 name = "Samen";
@@ -65,12 +66,14 @@ class FarmModeShopElement {
                 name = "Fabrik";
                 price = 42;
                 necessaryAecker = 15;
+                infotext = "Hallo ich bin Max und mir gehts gut";
                 break;
 
                 default:
                     name = "Fehler";
                     price = 17;
                     necessaryAecker = 0;
+                    infotext = "Das hier solltest\n du nicht sehen.";
                     break;
         }
     }
@@ -85,5 +88,9 @@ class FarmModeShopElement {
 
     public int getNecessaryAecker() {
         return necessaryAecker;
+    }
+
+    String getInfotext() {
+        return infotext;
     }
 }

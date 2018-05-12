@@ -416,7 +416,7 @@ public class FarmMode {
     }
 
     public void onBackPressed() {
-        if (farmModeShop != null) {
+        if (farmModeShop != null && !farmModeShop.onBackPressed()) {
             farmModeShop.recycle();
             farmModeShop = null;
         }

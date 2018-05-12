@@ -6,6 +6,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
+import android.text.Layout;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 import android.util.Log;
 import android.view.MotionEvent;
 
@@ -55,8 +59,13 @@ class FarmModeShop {
     //Wo kommen die Texte des PopUp Fensters hin?
     private int popupTextHeaderX, popupTextHeaderY, popupTextHeaderSize;
     private int popupTextPriceX, popupTextPriceY;
+    private int popupTextDescriptionX, popupTextDescriptionY, getPopupTextDescriptionWidth;
 
-    private String popupTextHeader, popupTextPrice, popupTextDescription;
+    private String popupTextHeader, popupTextPrice;
+
+    //Anzeige des Beschreibungstexts benötigt extra Arbeit damit AUTOMATISCHE ZEILENUMBRÜCHE funktionieren!
+    private TextPaint mTextPaint;
+    private StaticLayout mTextLayout;
 
     private Rect popupRectangle;
     //Globale Variablenübertragungsklasse ;)
@@ -109,21 +118,29 @@ class FarmModeShop {
             try {
                 //Popup muss gemalt werden
                 if (popUp) {
-                    //Leichte Transparenz
+                    //Den Rest des Shops ausgrauen
                     paint.setColor(Color.argb(100, 128, 128, 128));
                     canvas.drawRect(popupRectangle, paint);
-                    //Reset Color
-                    paint.setColor(Color.argb(255, 255, 255, 255));
+                    paint.setColor(Color.argb(255, 255, 255, 255)); //Weiss reset
 
                     //PopUp anzeigen
                     if (bitmapPopUpWindow != null)
                         canvas.drawBitmap(bitmapPopUpWindow, bitmapPopUpWindowX, bitmapPopUpWindowY, paint);
 
                     //Text malen
+                    //Header:
                     paint.setTextSize(popupTextHeaderSize);
+                    canvas.rotate(-3, popupTextHeaderX, popupTextHeaderY); //leicht schräg malen
                     canvas.drawText(popupTextHeader, popupTextHeaderX, popupTextHeaderY, paint);
-                    paint.setColor(Color.argb(255, 0, 0, 0));
+                    canvas.rotate(3, popupTextHeaderX, popupTextHeaderY); //reset
+
+                    //Preis zeichnen
+                    paint.setColor(Color.argb(255, 0, 0, 0)); //Schwarz
                     canvas.drawText(popupTextPrice, popupTextPriceX, popupTextPriceY, paint);
+
+                    //Description Box zeichnen
+                    canvas.translate(popupTextDescriptionX, popupTextDescriptionY);
+                    mTextLayout.draw(canvas);
                 } else {
                     //Hintergrund malen
                     if (bitmapShopBackground != null)
@@ -322,21 +339,37 @@ class FarmModeShop {
         bitmapPopUpWindowY = getScaledCoordinates(screenY, 1920, 483);
 
         popupTextHeaderX = getScaledCoordinates(screenX, 1080, 203);
-        popupTextHeaderY = getScaledCoordinates(screenY, 1920, 643);
+        popupTextHeaderY = getScaledCoordinates(screenY, 1920, 653);
         popupTextHeaderSize = getScaledBitmapSize(screenX, 1080, 75);
 
         popupTextPriceX = getScaledCoordinates(screenX, 1080, 203);
         popupTextPriceY = getScaledCoordinates(screenY, 1920, 1318);
+
+        popupTextDescriptionX = getScaledCoordinates(screenX, 1080, 560);
+        popupTextDescriptionY = getScaledCoordinates(screenY, 1920, 790);
+        getPopupTextDescriptionWidth = getScaledCoordinates(screenX, 1080, 300);
+
+        //einlesen der Descriptiontextbox
+        mTextPaint=new TextPaint();
+        mTextPaint.setTextSize(textSize);
+        Typeface customFont = Typeface.createFromAsset(fullContext.getAssets(),"fonts/caladea-bold.ttf");
+        mTextPaint.setTypeface(customFont);
 
         //Jetzt muss gemalt werden
         update = 0;
     }
 
     private void showPopUpWindow(FarmModeShopElement farmModeShopElement) {
+        //Fehlerabfangen
+        if (farmModeShopElement == null)
+            return;
+
         update = 0;
         popUp = true;
         popupTextHeader = farmModeShopElement.getName();
         popupTextPrice = String.valueOf(farmModeShopElement.getPrice());
+        mTextLayout = new StaticLayout(farmModeShopElement.getInfotext(), mTextPaint, getPopupTextDescriptionWidth, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
+
 
         /*if (farmModeShopElements != null && farmModeShopElements.size() >= 1 && farmModeShopElements.get(0) != null) {
             //Element 1 kaufen button
@@ -349,6 +382,15 @@ class FarmModeShop {
                     farmModeSound.playSound(4, fullContext);
             }
         }*/
+    }
+
+    boolean onBackPressed() {
+        if (popUp) {
+            popUp = false;
+            update = 0;
+            return true;
+        }
+        return false;
     }
 
     //Wenn wir den Modus verlassen
@@ -367,5 +409,6 @@ class FarmModeShop {
         bitmapP2WButton = null;
         bitmapPopUpWindow.recycle();
         bitmapPopUpWindow = null;
+        mTextLayout = null;
     }
 }
