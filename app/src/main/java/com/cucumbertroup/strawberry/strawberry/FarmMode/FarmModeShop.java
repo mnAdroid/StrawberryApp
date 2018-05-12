@@ -247,17 +247,15 @@ class FarmModeShop {
                         if (touchX1 >= bitmapShopElement1ButtonX && touchX1 < (bitmapShopElement1ButtonX + bitmapGurkeKaufenButton.getWidth())
                                 && touchY1 >= bitmapShopElement1ButtonY && touchY1 < (bitmapShopElement1ButtonY + bitmapGurkeKaufenButton.getHeight())) {
                             showPopUpWindow(farmModeShopElements.get(0));
+                            farmModeSound.playSound(4, fullContext);
                         }
                     }
                     if (farmModeShopElements != null && farmModeShopElements.size() >= 2 && farmModeShopElements.get(1) != null) {
                         //Element 2 kaufen button
                         if (touchX1 >= bitmapShopElement2ButtonX && touchX1 < (bitmapShopElement2ButtonX + bitmapGurkeKaufenButton.getWidth())
                                 && touchY1 >= bitmapShopElement2ButtonY && touchY1 < (bitmapShopElement2ButtonY + bitmapGurkeKaufenButton.getHeight())) {
-                            if (globalVariables.getGold() >= (farmModeShopElements.get(1).getPrice() + farmModeBackend.getStrawberryPrice())) {
-                                farmModeShopElements = farmModeBackend.buyShopElements(fullContext, farmModeShopElements.get(1));
-                                farmModeSound.playSound(5, fullContext);
-                            } else
-                                farmModeSound.playSound(4, fullContext);
+                            showPopUpWindow(farmModeShopElements.get(1));
+                            farmModeSound.playSound(4, fullContext);
                         }
                     }
 
@@ -265,11 +263,8 @@ class FarmModeShop {
                         //Element 3 kaufen button
                         if (touchX1 >= bitmapShopElement3ButtonX && touchX1 < (bitmapShopElement3ButtonX + bitmapGurkeKaufenButton.getWidth())
                                 && touchY1 >= bitmapShopElement3ButtonY && touchY1 < (bitmapShopElement3ButtonY + bitmapGurkeKaufenButton.getHeight())) {
-                            if (globalVariables.getGold() >= (farmModeShopElements.get(2).getPrice() + farmModeBackend.getStrawberryPrice())) {
-                                farmModeShopElements = farmModeBackend.buyShopElements(fullContext, farmModeShopElements.get(2));
-                                farmModeSound.playSound(5, fullContext);
-                            } else
-                                farmModeSound.playSound(4, fullContext);
+                            showPopUpWindow(farmModeShopElements.get(2));
+                            farmModeSound.playSound(4, fullContext);
                         }
                     }
 
