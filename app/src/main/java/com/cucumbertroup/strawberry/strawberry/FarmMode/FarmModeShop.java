@@ -53,6 +53,8 @@ class FarmModeShop {
     private int bitmapShopKeeperX, bitmapShopKeeperY;
     private int bitmapP2WButtonX, bitmapP2WButtonY;
     private int bitmapPopUpWindowX, bitmapPopUpWindowY;
+    private int bitmapPopUpExitButtonX, bitmapPopUpExitButtonY, bitmapPopUpExitButtonHeight, bitmapPopUpExitButtonWidth;
+    private int bitmapPopUpKaufenButtonX, bitmapPopUpKaufenButtonY, bitmapPopUpKaufenButtonHeight, bitmapPopUpKaufenButtonWidth;
 
     private int textSize, textX, textY;
 
@@ -62,6 +64,7 @@ class FarmModeShop {
     private int popupTextDescriptionX, popupTextDescriptionY, getPopupTextDescriptionWidth;
 
     private String popupTextHeader, popupTextPrice;
+    private int popupElementIndex;
 
     //Anzeige des Beschreibungstexts benötigt extra Arbeit damit AUTOMATISCHE ZEILENUMBRÜCHE funktionieren!
     private TextPaint mTextPaint;
@@ -229,6 +232,27 @@ class FarmModeShop {
                         break;
                     }
                     else {
+                        //Exit Button?
+                        if (touchX1 >= bitmapPopUpExitButtonX && touchX1 < (bitmapPopUpExitButtonX + bitmapPopUpExitButtonWidth)
+                                && touchY1 >= bitmapPopUpExitButtonY && touchY1 < (bitmapPopUpExitButtonY + bitmapPopUpExitButtonHeight)) {
+                            popUp = false;
+                            update = 0;
+                            break;
+                        }
+                        //Kaufen Button?
+                        if (touchX1 >= bitmapPopUpKaufenButtonX && touchX1 < (bitmapPopUpKaufenButtonX + bitmapPopUpKaufenButtonWidth)
+                                && touchY1 >= bitmapPopUpKaufenButtonY && touchY1 < (bitmapPopUpKaufenButtonY + bitmapPopUpKaufenButtonHeight)) {
+                            if (globalVariables.getGold() >= (Integer.parseInt(popupTextPrice) + farmModeBackend.getStrawberryPrice())) {
+                                Log.d("farmModeShopElements", "" + farmModeShopElements);
+                                Log.d("popupElementIndex", "" + popupElementIndex);
+                                farmModeShopElements = farmModeBackend.buyShopElements(fullContext, farmModeShopElements.get(popupElementIndex));
+                                farmModeSound.playSound(5, fullContext);
+                                popUp = false;
+                                update = 0;
+                            } else
+                                farmModeSound.playSound(4, fullContext);
+                            break;
+                        }
                         break;
                     }
                 }
@@ -240,13 +264,14 @@ class FarmModeShop {
                             farmModeSound.playSound(5, fullContext);
                         } else
                             farmModeSound.playSound(4, fullContext);
+                        update = 0;
                         break;
                     }
                     if (farmModeShopElements != null && farmModeShopElements.size() >= 1 && farmModeShopElements.get(0) != null) {
                         //Element 1 kaufen button
                         if (touchX1 >= bitmapShopElement1ButtonX && touchX1 < (bitmapShopElement1ButtonX + bitmapGurkeKaufenButton.getWidth())
                                 && touchY1 >= bitmapShopElement1ButtonY && touchY1 < (bitmapShopElement1ButtonY + bitmapGurkeKaufenButton.getHeight())) {
-                            showPopUpWindow(farmModeShopElements.get(0));
+                            showPopUpWindow(0);
                             farmModeSound.playSound(4, fullContext);
                         }
                     }
@@ -254,7 +279,7 @@ class FarmModeShop {
                         //Element 2 kaufen button
                         if (touchX1 >= bitmapShopElement2ButtonX && touchX1 < (bitmapShopElement2ButtonX + bitmapGurkeKaufenButton.getWidth())
                                 && touchY1 >= bitmapShopElement2ButtonY && touchY1 < (bitmapShopElement2ButtonY + bitmapGurkeKaufenButton.getHeight())) {
-                            showPopUpWindow(farmModeShopElements.get(1));
+                            showPopUpWindow(1);
                             farmModeSound.playSound(4, fullContext);
                         }
                     }
@@ -263,7 +288,7 @@ class FarmModeShop {
                         //Element 3 kaufen button
                         if (touchX1 >= bitmapShopElement3ButtonX && touchX1 < (bitmapShopElement3ButtonX + bitmapGurkeKaufenButton.getWidth())
                                 && touchY1 >= bitmapShopElement3ButtonY && touchY1 < (bitmapShopElement3ButtonY + bitmapGurkeKaufenButton.getHeight())) {
-                            showPopUpWindow(farmModeShopElements.get(2));
+                            showPopUpWindow(2);
                             farmModeSound.playSound(4, fullContext);
                         }
                     }
@@ -344,6 +369,16 @@ class FarmModeShop {
         popupTextDescriptionY = getScaledCoordinates(screenY, 1920, 790);
         getPopupTextDescriptionWidth = getScaledCoordinates(screenX, 1080, 300);
 
+        bitmapPopUpExitButtonHeight = getScaledBitmapSize(screenX, 1080, 179);
+        bitmapPopUpExitButtonWidth = getScaledBitmapSize(screenY, 1920, 129);
+        bitmapPopUpExitButtonX = getScaledBitmapSize(screenX, 1080, 780);
+        bitmapPopUpExitButtonY = getScaledBitmapSize(screenY, 1920, 549);
+
+        bitmapPopUpKaufenButtonHeight = getScaledBitmapSize(screenX, 1080, 204);
+        bitmapPopUpKaufenButtonWidth = getScaledBitmapSize(screenY, 1920, 346);
+        bitmapPopUpKaufenButtonX = getScaledBitmapSize(screenX, 1080, 136);
+        bitmapPopUpKaufenButtonY = getScaledBitmapSize(screenY, 1920, 1188);
+
         //einlesen der Descriptiontextbox
         mTextPaint=new TextPaint();
         mTextPaint.setTextSize(textSize);
@@ -354,7 +389,8 @@ class FarmModeShop {
         update = 0;
     }
 
-    private void showPopUpWindow(FarmModeShopElement farmModeShopElement) {
+    private void showPopUpWindow(int index) {
+        FarmModeShopElement farmModeShopElement = farmModeShopElements.get(index);
         //Fehlerabfangen
         if (farmModeShopElement == null)
             return;
@@ -363,20 +399,8 @@ class FarmModeShop {
         popUp = true;
         popupTextHeader = farmModeShopElement.getName();
         popupTextPrice = String.valueOf(farmModeShopElement.getPrice());
+        popupElementIndex = index;
         mTextLayout = new StaticLayout(farmModeShopElement.getInfotext(), mTextPaint, getPopupTextDescriptionWidth, Layout.Alignment.ALIGN_NORMAL, 1.0f, 0.0f, false);
-
-
-        /*if (farmModeShopElements != null && farmModeShopElements.size() >= 1 && farmModeShopElements.get(0) != null) {
-            //Element 1 kaufen button
-            if (touchX1 >= bitmapShopElement1ButtonX && touchX1 < (bitmapShopElement1ButtonX + bitmapGurkeKaufenButton.getWidth())
-                    && touchY1 >= bitmapShopElement1ButtonY && touchY1 < (bitmapShopElement1ButtonY + bitmapGurkeKaufenButton.getHeight())) {
-                if (globalVariables.getGold() >= (farmModeShopElements.get(0).getPrice() + farmModeBackend.getStrawberryPrice())) {
-                    farmModeShopElements = farmModeBackend.buyShopElements(fullContext, farmModeShopElements.get(0));
-                    farmModeSound.playSound(5, fullContext);
-                } else
-                    farmModeSound.playSound(4, fullContext);
-            }
-        }*/
     }
 
     boolean onBackPressed() {
