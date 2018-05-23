@@ -70,7 +70,10 @@ class FarmModeBackend {
     boolean strawberriesUpdate() {
         boolean tmp = false;
         for(int i = 0; i < numAecker * 8; i++) {
-            tmp = strawberries[i].update();
+            if(!tmp)
+                tmp = strawberries[i].update();
+            else
+                strawberries[i].update();
         }
         return tmp;
     }

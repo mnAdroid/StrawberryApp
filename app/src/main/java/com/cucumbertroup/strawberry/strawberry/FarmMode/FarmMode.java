@@ -100,7 +100,7 @@ public class FarmMode {
         farmModeList = new FarmModeList(context, screenX, screenY);
 
         //Backend einlesen
-        farmModeBackend = FarmModeBackend.getInstance(screenX);
+        farmModeBackend = FarmModeBackend.getInstance(screenX, screenY);
 
         //Bildqualitaet einstellen
         farmModeBackend.setBitmapMainQuality(500);
@@ -111,9 +111,11 @@ public class FarmMode {
 
     //update ist quasi das DENKEN in der App
     public void updateFarm(long fps) {
-        if (farmModeBackend != null)
-            if (farmModeBackend.strawberriesUpdate())
+        if (farmModeBackend != null) {
+            if (farmModeBackend.strawberriesUpdate()) {
                 update = 0;
+            }
+        }
         if (farmModeSound != null)
             farmModeSound.playSound(0, fullContext);
         if (farmModeList != null) {
