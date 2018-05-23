@@ -39,12 +39,17 @@ class FarmModeBackend {
     //Düngereffekt
     private int dunger;
 
-    private FarmModeBackend(int screenX) {
+    //Speichern der Screengröe
+    private int screenX, screenY;
+
+    private FarmModeBackend(int screenX, int screenY) {
         globalVariables = GlobalVariables.getInstance();
         farmModeSound = FarmModeSound.getInstance();
 
         setBitmapMainQuality(500);
 
+        this.screenX = screenX;
+        this.screenY = screenY;
         //getSharedPreferences(context);
 
         //Standard Erdbeerkoordinaten
@@ -54,9 +59,9 @@ class FarmModeBackend {
         bitmapStrawberryX4 = getScaledCoordinates(screenX, 1080, 770);
     }
 
-    static synchronized FarmModeBackend getInstance(int screenX) {
+    static synchronized FarmModeBackend getInstance(int screenX, int screenY) {
         if (FarmModeBackend.instance == null) {
-            FarmModeBackend.instance = new FarmModeBackend(screenX);
+            FarmModeBackend.instance = new FarmModeBackend(screenX, screenY);
         }
         return FarmModeBackend.instance;
     }
@@ -344,7 +349,7 @@ class FarmModeBackend {
             if (!aShopElementsString.isEmpty() && aShopElementsString.charAt(0) == '€')
                 continue;
             //Neues Shop Element einfügen
-            shopElements.add(new FarmModeShopElement(aShopElementsString));
+            shopElements.add(new FarmModeShopElement(aShopElementsString, fullContext, bitmapMainQuality, screenX, screenY));
 
             //Wenn bereits drei Elemente abgerufen wurden reichts
             if (shopElements.size() >= 3)
