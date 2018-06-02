@@ -38,15 +38,15 @@ class FarmModeShop {
     private Bitmap bitmapP2WButton;
     //popup für mehr info von Schopelemente
     private Bitmap bitmapPopUpWindow;
-
-    //Testbuttons FARM erstellen
-    private Bitmap bitmapAckerKaufenButton;
+    //einfaches Schild (erstmal nur als acker kaufen button)
+    private Bitmap bitmapSimpleShield;
 
     //Wo kommen die Buttons hin?
     private int bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY;
     private int bitmapShopElement1ButtonX, bitmapShopElement1ButtonY;
     private int bitmapShopElement2ButtonX, bitmapShopElement2ButtonY;
     private int bitmapShopElement3ButtonX, bitmapShopElement3ButtonY;
+    private int bitmapGoldSchildX, bitmapGoldSchildY;
 
     //Wo kommen die Grafikelemente hin?
     private int bitmapShopKeeperX, bitmapShopKeeperY;
@@ -56,6 +56,8 @@ class FarmModeShop {
     private int bitmapPopUpKaufenButtonX, bitmapPopUpKaufenButtonY, bitmapPopUpKaufenButtonHeight, bitmapPopUpKaufenButtonWidth;
 
     private int textSize, textX, textY;
+    private int textAckerKaufenX, textAckerKaufenY;
+    private int textGoldX, textGoldY;
 
     //Wo kommen die Texte des PopUp Fensters hin?
     private int popupTextHeaderX, popupTextHeaderY, popupTextHeaderSize;
@@ -160,47 +162,51 @@ class FarmModeShop {
                         canvas.drawBitmap(bitmapP2WButton, bitmapP2WButtonX, bitmapP2WButtonY, paint);
 
                     //Pinselfarbe wählen (bisher nur für den Text)
-                    paint.setColor(Color.argb(255, 249, 129, 0));
+                    paint.setColor(Color.argb(255, 255, 255, 255));
                     paint.setStyle(Paint.Style.FILL);
                     paint.setTextSize(textSize);
 
-                    //Wie viel Gold haben wir eigentlich?
-                    canvas.drawText("Gold: " + globalVariables.getGold(), textX, 2 * textY, paint);
+                    //Acker Kaufen Button malen
+                    if (bitmapSimpleShield != null)
+                        canvas.drawBitmap(bitmapSimpleShield, bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY, paint);
+                    //Anzahl Äcker und Preis
+                    canvas.drawText("Acker: " + farmModeBackend.getNumAecker(), textAckerKaufenX, textAckerKaufenY, paint);
+                    canvas.drawText("Preis: " + farmModeBackend.getPriceAecker() + " G", textAckerKaufenX, textAckerKaufenY + textY, paint);
 
-                    //Anzahl Äcker
-                    canvas.drawText("Äcker: " + farmModeBackend.getNumAecker() + " | Kosten: " + farmModeBackend.getPriceAecker() + " Gold", textX, 4 * textY, paint);
+                    //Gold Schild (provisorisch)
+                    if (bitmapSimpleShield != null)
+                        canvas.drawBitmap(bitmapSimpleShield, bitmapGoldSchildX, bitmapGoldSchildY, paint);
+                    //Goldmenge
+                    canvas.drawText("Gold: " + globalVariables.getGold(), textGoldX, textGoldY, paint);
+
 
                     //Elementeinfo malen
                     if (farmModeShopElements != null) {
                         //Erstes Element
                         if (farmModeShopElements.size() >= 1 && farmModeShopElements.get(0) != null && farmModeShopElements.get(0).getIcon() != null) {
-                            if (farmModeShopElements.get(0).getNecessaryAecker() <= farmModeBackend.getNumAecker())
+                            /*if (farmModeShopElements.get(0).getNecessaryAecker() <= farmModeBackend.getNumAecker())
                                 canvas.drawText(farmModeShopElements.get(0).getName() + " | Kosten: " + farmModeShopElements.get(0).getPrice() + " Gold", textX, 7 * textY, paint);
                             else
-                                canvas.drawText(farmModeShopElements.get(0).getName() + " | Benötigte Äcker: " + farmModeShopElements.get(0).getNecessaryAecker(), textX, 7 * textY, paint);
+                                canvas.drawText(farmModeShopElements.get(0).getName() + " | Benötigte Äcker: " + farmModeShopElements.get(0).getNecessaryAecker(), textX, 7 * textY, paint);*/
                             canvas.drawBitmap(farmModeShopElements.get(0).getIcon(), bitmapShopElement1ButtonX, bitmapShopElement1ButtonY, paint);
                         }
                         if (farmModeShopElements.size() >= 2 && farmModeShopElements.get(1) != null && farmModeShopElements.get(1).getIcon() != null) {
-                            if (farmModeShopElements.get(1).getNecessaryAecker() <= farmModeBackend.getNumAecker())
+                            /*if (farmModeShopElements.get(1).getNecessaryAecker() <= farmModeBackend.getNumAecker())
                                 canvas.drawText(farmModeShopElements.get(1).getName() + " | Kosten: " + farmModeShopElements.get(1).getPrice() + " Gold", textX, 10 * textY, paint);
                             else
-                                canvas.drawText(farmModeShopElements.get(1).getName() + " | Benötigte Äcker: " + farmModeShopElements.get(1).getNecessaryAecker(), textX, 10 * textY, paint);
+                                canvas.drawText(farmModeShopElements.get(1).getName() + " | Benötigte Äcker: " + farmModeShopElements.get(1).getNecessaryAecker(), textX, 10 * textY, paint);*/
                             canvas.drawBitmap(farmModeShopElements.get(1).getIcon(), bitmapShopElement2ButtonX, bitmapShopElement2ButtonY, paint);
                         }
                         if (farmModeShopElements.size() == 3 && farmModeShopElements.get(2) != null && farmModeShopElements.get(2).getIcon() != null) {
-                            if (farmModeShopElements.get(2).getNecessaryAecker() <= farmModeBackend.getNumAecker())
+                            /*if (farmModeShopElements.get(2).getNecessaryAecker() <= farmModeBackend.getNumAecker())
                                 canvas.drawText(farmModeShopElements.get(2).getName() + " | Kosten: " + farmModeShopElements.get(2).getPrice() + " Gold", textX, 13 * textY, paint);
                             else
-                                canvas.drawText(farmModeShopElements.get(2).getName() + " | Benötigte Äcker: " + farmModeShopElements.get(2).getNecessaryAecker(), textX, 13 * textY, paint);
+                                canvas.drawText(farmModeShopElements.get(2).getName() + " | Benötigte Äcker: " + farmModeShopElements.get(2).getNecessaryAecker(), textX, 13 * textY, paint);*/
                             canvas.drawBitmap(farmModeShopElements.get(2).getIcon(), bitmapShopElement3ButtonX, bitmapShopElement3ButtonY, paint);
                         }
                     } else {
                         farmModeShopElements = farmModeBackend.getShopElements(fullContext);
                     }
-
-                    //Button malen
-                    if (bitmapAckerKaufenButton != null)
-                        canvas.drawBitmap(bitmapAckerKaufenButton, bitmapAckerKaufenButtonX, bitmapAckerKaufenButtonY, paint);
                 }
                 //Es wurde gemalt
                 update++;
@@ -258,8 +264,8 @@ class FarmModeShop {
                     }
                 }
                 else {
-                    if (touchX1 >= bitmapAckerKaufenButtonX && touchX1 < (bitmapAckerKaufenButtonX + bitmapAckerKaufenButton.getWidth())
-                            && touchY1 >= bitmapAckerKaufenButtonY && touchY1 < (bitmapAckerKaufenButtonY + bitmapAckerKaufenButton.getHeight())) {
+                    if (touchX1 >= bitmapAckerKaufenButtonX && touchX1 < (bitmapAckerKaufenButtonX + bitmapSimpleShield.getWidth())
+                            && touchY1 >= bitmapAckerKaufenButtonY && touchY1 < (bitmapAckerKaufenButtonY + bitmapSimpleShield.getHeight())) {
                         if (globalVariables.getGold() >= (farmModeBackend.getPriceAecker() + farmModeBackend.getStrawberryPrice())) {
                             farmModeBackend.ackerGekauft();
                             farmModeSound.playSound(5, fullContext);
@@ -317,8 +323,8 @@ class FarmModeShop {
         //Bitmaps initialisieren
 
         //Acker Kaufen Button
-        bitmapAckerKaufenButton = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.ackerkaufen_button, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
-        bitmapAckerKaufenButton = Bitmap.createScaledBitmap(bitmapAckerKaufenButton, getScaledBitmapSize(screenX, 1080, 200), getScaledBitmapSize(screenY, 1920, 100), false);
+        bitmapSimpleShield = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.simple_shield, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
+        bitmapSimpleShield = Bitmap.createScaledBitmap(bitmapSimpleShield, getScaledBitmapSize(screenX, 1080, 327), getScaledBitmapSize(screenY, 1920, 192), false);
 
         //Hintergrund
         bitmapShopBackground = decodeSampledBitmapFromResource(fullContext.getResources(), R.drawable.shop_background, farmModeBackend.getBitmapMainQuality(), farmModeBackend.getBitmapMainQuality());
@@ -337,8 +343,19 @@ class FarmModeShop {
         bitmapPopUpWindow = Bitmap.createScaledBitmap(bitmapPopUpWindow, getScaledBitmapSize(screenX, 1080, 913), getScaledBitmapSize(screenY, 1920, 953), false);
 
         //Feste Werte setzen
-        bitmapAckerKaufenButtonX = getScaledCoordinates(screenX, 1080, 800);
-        bitmapAckerKaufenButtonY = getScaledCoordinates(screenY, 1920, 140);
+        //Acker Kaufen
+        bitmapAckerKaufenButtonX = getScaledCoordinates(screenX, 1080, 430);
+        bitmapAckerKaufenButtonY = getScaledCoordinates(screenY, 1920, 510);
+        textAckerKaufenX = getScaledCoordinates(screenX, 1080, 460);
+        textAckerKaufenY = getScaledCoordinates(screenY, 1920, 600);
+
+        //Gold Schild
+        bitmapGoldSchildX = getScaledCoordinates(screenX, 1080, 150);
+        bitmapGoldSchildY = getScaledCoordinates(screenY, 1920, 1250);
+        textGoldX = getScaledCoordinates(screenX, 1080, 185);
+        textGoldY = getScaledCoordinates(screenY, 1920, 1365);
+
+        //Shop Elemente Icons
         bitmapShopElement1ButtonX = getScaledCoordinates(screenX, 1080, 75);
         bitmapShopElement1ButtonY = getScaledCoordinates(screenY, 1920, 216);
         bitmapShopElement2ButtonX = getScaledCoordinates(screenX, 1080, 465);
@@ -346,12 +363,15 @@ class FarmModeShop {
         bitmapShopElement3ButtonX = getScaledCoordinates(screenX, 1080, 72);
         bitmapShopElement3ButtonY = getScaledCoordinates(screenY, 1920, 597);
 
+        //Shopgurke
         bitmapShopKeeperX = getScaledCoordinates(screenX, 1080, 425);
         bitmapShopKeeperY = getScaledCoordinates(screenY, 1920, 1222);
 
+        //Troll Button
         bitmapP2WButtonX = getScaledCoordinates(screenX, 1080, 400);
         bitmapP2WButtonY = getScaledCoordinates(screenY, 1920, 960);
 
+        //Pop Up Stuff
         bitmapPopUpWindowX = getScaledCoordinates(screenX, 1080, 83);
         bitmapPopUpWindowY = getScaledCoordinates(screenY, 1920, 483);
 
@@ -419,8 +439,8 @@ class FarmModeShop {
     void recycle() {
         recycled = true;
         //Bitmaps Recyclen
-        bitmapAckerKaufenButton.recycle();
-        bitmapAckerKaufenButton = null;
+        bitmapSimpleShield.recycle();
+        bitmapSimpleShield = null;
         bitmapShopBackground.recycle();
         bitmapShopBackground = null;
         bitmapShopKeeper.recycle();

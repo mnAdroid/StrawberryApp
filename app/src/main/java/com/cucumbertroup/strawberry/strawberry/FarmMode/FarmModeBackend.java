@@ -24,6 +24,8 @@ class FarmModeBackend {
     //Anzahl und Preis der Farmfläche
     private int numAecker;
     private int priceAecker;
+    //wenn gekauft wurde pausieren wir das update
+    private boolean mutexAcker;
     //Anzahl und Preis der arbeitenden Gurken
     private int numGurken;
 
@@ -68,6 +70,9 @@ class FarmModeBackend {
 
     //Erdbeeren wachsen hier automatisch durch Zeit
     boolean strawberriesUpdate() {
+        if (mutexAcker) {
+            return false;
+        }
         boolean tmp = false;
         for(int i = 0; i < numAecker * 8; i++) {
             if(!tmp)
@@ -159,6 +164,7 @@ class FarmModeBackend {
         strawberryProfits = sharedPreferences.getInt("strawberryProfits", 7);
         dunger = sharedPreferences.getInt("dunger", 1);
 
+        mutexAcker = true;
         //Initialisierung der gespeicherten Erdbeeren
         strawberries = new Strawberry[numAecker * 8];
 
@@ -197,6 +203,7 @@ class FarmModeBackend {
             //Neues StrawberryArray erstellen
             strawberries = newStrawberrieArray(strawberries, 0, (numAecker * 8));
         }
+        mutexAcker = false;
     }
 
     //Das StrawberryArray an einer Stelle vergrößern oder (bei erstem Start) erstellen
@@ -266,6 +273,8 @@ class FarmModeBackend {
 
     //Wenn ein Acker gekauft wurde
     void ackerGekauft() {
+        mutexAcker = true;
+
         //Anzahl hochzählen und Gold abbuchen
         numAecker++;
         globalVariables.setGold(globalVariables.getGold() - priceAecker);
@@ -275,14 +284,12 @@ class FarmModeBackend {
         Strawberry[] strawberriesTemp = Arrays.copyOf(strawberries, numAecker*8);
         //Das Strawberry Array wird in extra Funktion gefüllt
         strawberries = newStrawberrieArray(strawberriesTemp, ((numAecker-1) * 8), (numAecker * 8));
+
+        mutexAcker = false;
     }
 
     int getNumAecker() {
         return numAecker;
-    }
-
-    int getNumGurken() {
-        return numGurken;
     }
 
     int getPriceAecker() {
