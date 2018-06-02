@@ -453,6 +453,8 @@ class FarmModeBackend {
                 break;
         }
         editor.apply();
+        //Freen den RAM des Elements:
+        shopElement.recycle();
         //und geben die neuen drei Items zurück
         return getShopElements(fullContext);
     }

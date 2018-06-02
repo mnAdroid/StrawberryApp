@@ -84,7 +84,7 @@ class FarmModeList {
         bitmapStrawberryYAbstand = getScaledCoordinates(screenY, 1920, 200);
 
         //Backend einlesen
-        farmModeBackend = FarmModeBackend.getInstance(screenX);
+        farmModeBackend = FarmModeBackend.getInstance(screenX, screenY);
 
         //zum Start scrollen wir nicht
         stopScrollAnimation();

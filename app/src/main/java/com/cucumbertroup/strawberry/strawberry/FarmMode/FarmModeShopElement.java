@@ -116,7 +116,7 @@ class FarmModeShopElement {
         return price;
     }
 
-    public int getNecessaryAecker() {
+    int getNecessaryAecker() {
         return necessaryAecker;
     }
 
@@ -124,7 +124,12 @@ class FarmModeShopElement {
         return infotext;
     }
 
-    public Bitmap getIcon() {
+    Bitmap getIcon() {
         return icon;
+    }
+
+    void recycle() {
+        icon.recycle();
+        icon = null;
     }
 }
